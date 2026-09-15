@@ -11,6 +11,7 @@ Vestige remembers project decisions across sessions, retrieves focused context, 
 
 [Install](#install) · [Why not RAG](#why-not-just-rag) · [The Live Gate](#founding-operator) · [Continuity](#managed-continuity) · [Benchmark](#the-receipts-silent-rotation) · [Science](#the-science) · [Docs](#go-deeper)
 
+<a id="getting-started"></a>
 ## The cause never looks like the bug
 
 Agents re-learn the same lessons. They recommend a change you already tested and rejected, re-derive a fix that was already written down, and treat every session as if the last one never happened. Vestige is the memory layer that ends that. Any MCP-capable agent writes memories as you work and retrieves them later: redundant memories merge, contradicted ones are flagged, unused ones fade, and when a failure hits, Vestige reaches **backward** to the decision that set it up.
@@ -79,6 +80,7 @@ Receipt, then a one-use permit, then the effect. Or STOP with zero effects. Thin
 - Login and checkout: **https://vestige-pro-production.fly.dev/account**
 
 <a id="managed-continuity"></a>
+<a id="vestige-pro"></a>
 ## 🔄 Managed Continuity
 
 Your agent's memory survives crashes, new machines, and reinstalls. Decisions, receipts, traces, and memory PRs follow you everywhere.
