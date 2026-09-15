@@ -1,8 +1,14 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/samvallad33/vestige/media/vestige-logo.png" alt="Vestige" width="620">
+</p>
+
 # Vestige
 
-**Local-first memory for developers and their AI coding agents.**
+**The security kernel for AI agents.**
 
-Vestige remembers project decisions across sessions, retrieves focused context, and reaches backward through time to find the quiet decision that caused today's failure, not the lookalike. Runs locally through MCP. No API key, no cloud, no telemetry.
+Your agent can think anything. Vestige decides what it is allowed to do.
+
+It remembers every decision your project ever made, reaches backward through time to find the quiet choice behind today's failure, and blocks the actions your agent should never take. Receipt, one-use permit, effect. Or STOP with zero effects. Local. Encrypted. No cloud, no telemetry.
 
 [![Release](https://img.shields.io/github/v/release/samvallad33/vestige?color=06b6d4)](https://github.com/samvallad33/vestige/releases/latest)
 [![Tests](https://img.shields.io/badge/tests-1961_passing-22c55e)](https://github.com/samvallad33/vestige/actions)
