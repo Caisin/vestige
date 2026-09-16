@@ -85,6 +85,17 @@ Receipt, then a one-use permit, then the effect. Or STOP with zero effects. Thin
 - Includes Managed Continuity.
 - Login and checkout: **https://vestige-pro-production.fly.dev/account**
 
+**What Operator buys, the daily ritual surface:**
+
+- **Taste Lock** — the moment your agent commits to something consequential, it is locked and receipted before it can drift.
+- **The Seven** — seven signed receipts of the last consequential writes, laid out like polaroids. What your agent actually did today, at a glance.
+- **Almost-Forgot** — the three dim memories that are still load-bearing but fading, surfaced before they fail.
+- **Night Letter** — a signed letter from your store at night: what changed, what contradicted, what decayed. Not a merge log. A letter.
+- **Facepalm Backfill** — it broke again? Walk backward from the failure to the quiet decision that set it up, evidence path attached.
+- **Canary Bite** — a secret about to leave the store gets eaten before it ships.
+
+**Investigator ($79/mo)** is the instruments tier: deep backfill passes, evidence packets, retrieval tribunals, the full forensics surface for postmortems and audits. For engineers who debug with receipts.
+
 <a id="managed-continuity"></a>
 <a id="vestige-pro"></a>
 ## 🔄 Managed Continuity
