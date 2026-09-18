@@ -11,8 +11,8 @@ Your agent can think anything. Vestige decides what it is allowed to do.
 It remembers every decision your project ever made, reaches backward through time to find the quiet choice behind today's failure, and blocks the actions your agent should never take. Receipt, one-use permit, effect. Or STOP with zero effects. Local. Encrypted. No cloud, no telemetry.
 
 [![Release](https://img.shields.io/github/v/release/samvallad33/vestige?color=06b6d4)](https://github.com/samvallad33/vestige/releases/latest)
-[![Tests](https://img.shields.io/badge/tests-1961_passing-22c55e)](https://github.com/samvallad33/vestige/actions)
-[![Binary](https://img.shields.io/badge/binary-25MB_single_file-informational)](https://github.com/samvallad33/vestige/releases/latest)
+[![Tests](https://img.shields.io/github/actions/workflow/status/samvallad33/vestige/ci.yml?branch=main&label=CI)](https://github.com/samvallad33/vestige/actions)
+[![Binary](https://img.shields.io/badge/platforms-5_release_targets-informational)](https://github.com/samvallad33/vestige/releases/latest)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-3b82f6)](LICENSE)
 
 [Install](#install) · [Why not RAG](#why-not-just-rag) · [The Live Gate](#founding-operator) · [Continuity](#managed-continuity) · [Benchmark](#the-receipts-silent-rotation) · [Science](#the-science) · [Docs](#go-deeper)
