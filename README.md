@@ -4,7 +4,7 @@
 
 # Vestige
 
-**The security kernel for AI agents.**
+**Cognitive Deterministic Memory Security OS for Agentic AI.**
 
 Your agent can think anything. Vestige decides what it is allowed to do.
 
@@ -20,7 +20,7 @@ It remembers every decision your project ever made, reaches backward through tim
 <a id="getting-started"></a>
 ## The cause never looks like the bug
 
-Agents re-learn the same lessons. They recommend a change you already tested and rejected, re-derive a fix that was already written down, and treat every session as if the last one never happened. Vestige is the memory layer that ends that. Any MCP-capable agent writes memories as you work and retrieves them later: redundant memories merge, contradicted ones are flagged, unused ones fade, and when a failure hits, Vestige reaches **backward** to the decision that set it up.
+Agents re-learn the same lessons. They recommend a change you already tested and rejected, re-derive a fix that was already written down, and treat every session as if the last one never happened. Vestige is the deterministic memory security OS that ends that. Any MCP-capable agent writes memories as you work and retrieves them later: redundant memories merge, contradicted ones are flagged, unused ones fade, and when a failure hits, Vestige reaches **backward** to the decision that set it up.
 
 <p align="center">
   <a href="https://raw.githubusercontent.com/samvallad33/vestige/media/vestige-black-box.mp4">
