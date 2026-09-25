@@ -49,6 +49,7 @@ export interface OsRoute {
 
 // ── The registry — all 20 customer organs (order = canonical display order) ──
 export const OS_ROUTES: OsRoute[] = [
+    { href: '/account', label: '账户与空间', purpose: '管理私人记忆、共享成员和 Agent 凭据。', group: 'System', icon: 'settings', stage: 'dom', visibility: 'dock', ready: true },
     { href: '/writer', label: '编剧工作台', purpose: '从作品证据提炼方法，通过对话调校角色，与 Agent 完成原创剧本。', group: 'Primary', shortcut: 'W', icon: 'reasoning', stage: 'dom', visibility: 'dock', ready: true },
 	// PRIMARY — the spine of the product, in the persistent dock.
 	{ href: '/palace', label: zh("Palace"), purpose: zh("The spatial launcher — every organ as a constellation you fly into."), group: 'Primary', shortcut: 'P', icon: 'logo', stage: 'canvas', visibility: 'dock', ready: true },

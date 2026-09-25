@@ -21,6 +21,8 @@ pub const EVENT_CHANNEL_CAPACITY: usize = 4096;
 /// Shared application state for the dashboard
 #[derive(Clone)]
 pub struct AppState {
+    pub background: Option<Arc<crate::autopilot::AutopilotTasks>>,
+    pub access: Option<crate::identity::Access>,
     pub storage: Arc<Storage>,
     pub cognitive: Option<Arc<Mutex<CognitiveEngine>>>,
     pub event_tx: broadcast::Sender<VestigeEvent>,
@@ -32,6 +34,8 @@ impl AppState {
     pub fn new(storage: Arc<Storage>, cognitive: Option<Arc<Mutex<CognitiveEngine>>>) -> Self {
         let (event_tx, _) = broadcast::channel(EVENT_CHANNEL_CAPACITY);
         Self {
+            access: None,
+            background: None,
             storage,
             cognitive,
             event_tx,
@@ -51,6 +55,8 @@ impl AppState {
         event_tx: broadcast::Sender<VestigeEvent>,
     ) -> Self {
         Self {
+            access: None,
+            background: None,
             storage,
             cognitive,
             event_tx,

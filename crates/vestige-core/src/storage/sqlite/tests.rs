@@ -8366,3 +8366,83 @@ fn update_node_validity_merges_bounds_and_validates_the_effective_window() {
         .unwrap_err();
     assert!(matches!(error, StorageError::InvalidTimestamp(_)));
 }
+
+#[cfg(all(feature = "embeddings", feature = "vector-search"))]
+#[test]
+fn workspace_model_inheritance_shares_only_runner_not_memories_or_vectors() {
+    let source_dir = tempdir().unwrap();
+    let source = storage_with_marker_gate_runtime(&source_dir);
+    let private = source
+        .ingest(IngestInput {
+            content: "source private knowledge".into(),
+            ..Default::default()
+        })
+        .unwrap();
+    let target_dir = tempdir().unwrap();
+    let mut target = create_test_storage_at(&target_dir, "workspace.db");
+    target.inherit_workspace_embedding_runtime(&source).unwrap();
+    let profile = source
+        .active_embedding_profile()
+        .unwrap()
+        .unwrap()
+        .profile_id;
+    assert_eq!(
+        target
+            .active_embedding_profile()
+            .unwrap()
+            .unwrap()
+            .profile_id,
+        profile
+    );
+    assert_eq!(target.get_stats().unwrap().total_nodes, 0);
+    assert!(target.get_node_embedding(&private.id).unwrap().is_none());
+    assert!(Arc::ptr_eq(
+        &source.attached_embedder_for(&profile).unwrap().unwrap(),
+        &target.attached_embedder_for(&profile).unwrap().unwrap()
+    ));
+    target
+        .ingest(IngestInput {
+            content: "target isolated knowledge".into(),
+            ..Default::default()
+        })
+        .unwrap();
+    assert_eq!(source.get_stats().unwrap().total_nodes, 1);
+    assert_eq!(target.get_stats().unwrap().total_nodes, 1);
+    // Restart can reattach the same model without migrating or copying data.
+    drop(target);
+    let mut reopened = create_test_storage_at(&target_dir, "workspace.db");
+    reopened
+        .inherit_workspace_embedding_runtime(&source)
+        .unwrap();
+    assert_eq!(reopened.get_stats().unwrap().total_nodes, 1);
+}
+
+#[cfg(all(feature = "embeddings", feature = "vector-search"))]
+#[test]
+fn workspace_model_inheritance_rejects_implicit_migration_of_nonempty_store() {
+    let source_dir = tempdir().unwrap();
+    let source = storage_with_marker_gate_runtime(&source_dir);
+    let target_dir = tempdir().unwrap();
+    let mut target = create_test_storage_at(&target_dir, "workspace.db");
+    target
+        .ingest(IngestInput {
+            content: "existing private knowledge".into(),
+            ..Default::default()
+        })
+        .unwrap();
+    let before = target
+        .active_embedding_profile()
+        .unwrap()
+        .unwrap()
+        .profile_id;
+    assert!(target.inherit_workspace_embedding_runtime(&source).is_err());
+    assert_eq!(
+        target
+            .active_embedding_profile()
+            .unwrap()
+            .unwrap()
+            .profile_id,
+        before
+    );
+    assert_eq!(target.get_stats().unwrap().total_nodes, 1);
+}

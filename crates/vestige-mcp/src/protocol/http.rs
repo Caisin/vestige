@@ -72,6 +72,9 @@ pub async fn start_http_transport(
     auth_token: String,
     port: u16,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    if crate::identity::enabled(storage.data_dir()) {
+        return Err("Identity mode requires the authenticated daemon transport".into());
+    }
     let state = HttpTransportState {
         sessions: Arc::new(RwLock::new(HashMap::new())),
         storage,
@@ -235,7 +238,7 @@ fn validate_origin(
     }
 }
 
-fn validate_accept(headers: &HeaderMap) -> Result<(), (StatusCode, &'static str)> {
+pub(crate) fn validate_accept(headers: &HeaderMap) -> Result<(), (StatusCode, &'static str)> {
     let Some(accept) = headers.get(header::ACCEPT).and_then(|v| v.to_str().ok()) else {
         return Err((
             StatusCode::NOT_ACCEPTABLE,
@@ -252,8 +255,7 @@ fn validate_accept(headers: &HeaderMap) -> Result<(), (StatusCode, &'static str)
         // `*/*` accepts anything; `application/*` / `text/*` accept a whole type.
         // Honoring these lets generic HTTP clients (curl's default Accept: */*)
         // reach /mcp instead of getting a hard 406.
-        accepts_json |=
-            mime == "application/json" || mime == "application/*" || mime == "*/*";
+        accepts_json |= mime == "application/json" || mime == "application/*" || mime == "*/*";
         accepts_sse |= mime == "text/event-stream" || mime == "text/*" || mime == "*/*";
     }
 
@@ -273,7 +275,7 @@ fn protocol_version_from_headers(headers: &HeaderMap) -> Option<&str> {
         .and_then(|v| v.to_str().ok())
 }
 
-fn validate_protocol_version(
+pub(crate) fn validate_protocol_version(
     headers: &HeaderMap,
     expected: &str,
 ) -> Result<(), (StatusCode, &'static str)> {

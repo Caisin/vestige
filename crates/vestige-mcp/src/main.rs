@@ -291,7 +291,9 @@ fn prepare_storage_path(data_dir: Option<PathBuf>) -> io::Result<Option<PathBuf>
 
 fn main() {
     let runtime = tokio::runtime::Builder::new_multi_thread()
-        .enable_all().build().expect("initialize service runtime");
+        .enable_all()
+        .build()
+        .expect("initialize service runtime");
     runtime.block_on(run());
     // A first-run blocking model download must not hold stdio EOF or daemon
     // shutdown indefinitely. Accepted tool calls have completed before run()
@@ -340,6 +342,20 @@ async fn run() {
             std::process::exit(1);
         }
     };
+
+    let identity_config = match vestige_mcp::identity::Config::load(storage.data_dir()) {
+        Ok(c) => c,
+        Err(_) => {
+            error!("Invalid auth.json; refusing to start an unprotected service");
+            std::process::exit(1);
+        }
+    };
+    if identity_config.is_some() && !config.daemon {
+        error!(
+            "Identity mode requires --daemon --http; use a personal Agent token over HTTP instead of stdio"
+        );
+        std::process::exit(1);
+    }
 
     // One full HTTP runtime per data directory. Keep the advisory lock alive
     // through shutdown so desktop sidecars cannot duplicate a daemon's models
@@ -622,8 +638,48 @@ async fn run() {
         event_tx.clone(),
     );
 
+    if let Some(identity_config) = identity_config.clone() {
+        let state = vestige_mcp::dashboard::state::AppState::with_event_tx(
+            storage.clone(),
+            Some(cognitive.clone()),
+            event_tx.clone(),
+        );
+        let hub = match vestige_mcp::identity::Hub::new(identity_config, state) {
+            Ok(hub) => hub,
+            Err(_) => {
+                error!("Identity store initialization failed");
+                std::process::exit(1);
+            }
+        };
+        let router = vestige_mcp::identity::router(hub);
+        let dashboard_port = std::env::var("VESTIGE_DASHBOARD_PORT")
+            .ok()
+            .and_then(|s| s.parse::<u16>().ok())
+            .unwrap_or(3927);
+        let ports = if config.http_enabled && config.http_port != dashboard_port {
+            vec![dashboard_port, config.http_port]
+        } else {
+            vec![dashboard_port]
+        };
+        for port in ports {
+            let listener =
+                match tokio::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, port)).await {
+                    Ok(l) => l,
+                    Err(_) => {
+                        error!("Authenticated listener could not bind port {port}");
+                        std::process::exit(1);
+                    }
+                };
+            let app = router.clone();
+            tokio::spawn(async move {
+                let _ = axum::serve(listener, app).await;
+            });
+        }
+        info!("KX identity and isolated workspace services started");
+    }
+
     // Spawn dashboard HTTP server alongside MCP server (now with CognitiveEngine access)
-    if config.dashboard_enabled {
+    if config.dashboard_enabled && identity_config.is_none() {
         let dashboard_port = std::env::var("VESTIGE_DASHBOARD_PORT")
             .ok()
             .and_then(|s| s.parse::<u16>().ok())
@@ -653,7 +709,7 @@ async fn run() {
     }
 
     // Start optional HTTP MCP transport for clients that need Streamable HTTP.
-    if config.http_enabled {
+    if config.http_enabled && identity_config.is_none() {
         let http_storage = Arc::clone(&storage);
         let http_cognitive = Arc::clone(&cognitive);
         let http_event_tx = event_tx.clone();

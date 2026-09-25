@@ -48,6 +48,24 @@ pub fn build_router_with_event_tx(
 }
 
 fn build_router_inner(state: AppState, port: u16) -> (Router, AppState) {
+    match crate::identity::Config::load(state.storage.data_dir()) {
+        Ok(Some(config)) => match crate::identity::Hub::new(config, state.clone()) {
+            Ok(hub) => (crate::identity::router(hub), state),
+            Err(_) => (
+                Router::new().fallback(|| async { axum::http::StatusCode::SERVICE_UNAVAILABLE }),
+                state,
+            ),
+        },
+        Ok(None) => build_workspace_router(state, port),
+        Err(_) => (
+            Router::new().fallback(|| async { axum::http::StatusCode::SERVICE_UNAVAILABLE }),
+            state,
+        ),
+    }
+}
+
+/// Internal router: callers must authenticate and bind the workspace before dispatch.
+pub(crate) fn build_workspace_router(state: AppState, port: u16) -> (Router, AppState) {
     #[allow(unused_mut)]
     let mut origins = vec![
         format!("http://127.0.0.1:{}", port)
@@ -123,6 +141,14 @@ fn build_router_inner(state: AppState, port: u16) -> (Router, AppState) {
 
     let router = Router::new()
         // SvelteKit Dashboard v2.0 (embedded static build)
+        .route(
+            "/api/auth/config",
+            get(|| async { axum::Json(serde_json::json!({"enabled": false})) }),
+        )
+        .route(
+            "/api/auth/me",
+            get(|| async { axum::Json(serde_json::json!({"enabled": false})) }),
+        )
         .route("/dashboard", get(static_files::serve_dashboard_spa))
         .route(
             "/dashboard/{*path}",

@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { zh } from '$lib/i18n';
+    import { identity, loadIdentity } from '$lib/identity';
+    let authReady = $state(false);
+    let authError = $state('');
 	import '../app.css';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
@@ -50,7 +53,7 @@
 			$page.url.searchParams.has('frame')
 	);
 	// Show the floating OS shell on real dashboard routes (not marketing, not capture).
-	let showShell = $derived(!isMarketingRoute && !isCaptureMode);
+	let showShell = $derived(authReady && dashboardPath !== '/login' && (!$identity.enabled || !!$identity.user) && !isMarketingRoute && !isCaptureMode);
 
 	onMount(() => {
 		// Live nervous system: every immersive organ consumes the WebSocket
@@ -60,9 +63,17 @@
 		// (The prior guard `!isMarketingRoute && !isImmersiveRoute` was always
 		// false since isImmersiveRoute === !isMarketingRoute, so the socket never
 		// connected on any route and the live system was dead everywhere.)
-		if (!isMarketingRoute) {
-			websocket.connect();
-		}
+        void (async () => {
+            try {
+                const current = await loadIdentity();
+                if (current.enabled && !current.user && dashboardPath !== '/login') {
+                    location.replace(`${base}/login`);
+                    return;
+                }
+                authReady = true;
+                if (!isMarketingRoute && dashboardPath !== '/login') websocket.connect();
+            } catch (error) { authError = error instanceof Error ? error.message : String(error); }
+        })();
 		const teardownTheme = initTheme();
 
 		function onKeyDown(e: KeyboardEvent) {
@@ -72,7 +83,7 @@
 			// palette behind the takeover and steals Escape so it can't be closed.
 			// Cinema is PROTECTED, so we detect its active overlay read-only via the
 			// DOM (.cinema-overlay mounts only while open) rather than editing it.
-			if (isMarketingRoute || isCaptureMode || takeoverActive()) return;
+			if (!showShell || isMarketingRoute || isCaptureMode || takeoverActive()) return;
 			if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
 				e.preventDefault();
 				showCommandPalette = !showCommandPalette;
@@ -96,8 +107,14 @@
 			}
 		}
 
+        const onIdentityChange = (e: StorageEvent) => { if (e.key === 'vestige-identity-change') location.reload(); };
+        const onPageShow = (e: PageTransitionEvent) => { if (e.persisted) location.reload(); };
+        window.addEventListener('storage', onIdentityChange);
+        window.addEventListener('pageshow', onPageShow);
 		window.addEventListener('keydown', onKeyDown);
 		return () => {
+            window.removeEventListener('storage', onIdentityChange);
+            window.removeEventListener('pageshow', onPageShow);
 			websocket.disconnect();
 			window.removeEventListener('keydown', onKeyDown);
 			teardownTheme();
@@ -215,7 +232,11 @@
      WebGPU canvases). The OS shell floats OVER them, so it never fights the
      canvas layout the way the old flex-sidebar did. -->
 <div data-app-root data-shell={showShell} class="contents">
-	{@render children()}
+    {#if authReady && (!$identity.enabled || $identity.user || dashboardPath === '/login')}
+        {@render children()}
+    {:else}
+        <div class="auth-loading" role="status">{authError || '正在验证登录…'}{#if authError}<button onclick={() => location.reload()}>重新连接</button>{/if}</div>
+    {/if}
 </div>
 
 <!-- Root-owned portal veil: it stays mounted while Palace is destroyed and the
@@ -364,6 +385,7 @@
 {/if}
 
 <style>
+    .auth-loading { display:grid;place-content:center;gap:20px;min-height:100dvh;background:#080f0d;color:#cbd9c4;text-align:center; }
 	.safe-bottom {
 		padding-bottom: env(safe-area-inset-bottom, 0px);
 	}

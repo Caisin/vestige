@@ -78,7 +78,11 @@ async fn action(
     headers: HeaderMap,
     Json(args): Json<Value>,
 ) -> Response {
-    if let Err(error) = allowed(&headers) {
+    if let Err(error) = state
+        .access
+        .as_ref()
+        .map_or_else(|| allowed(&headers), |_| Ok(()))
+    {
         return failure(error);
     }
     if !crate::tools::writer::TOOLS
@@ -108,7 +112,11 @@ async fn upload(
     headers: HeaderMap,
     bytes: Bytes,
 ) -> Response {
-    if let Err(error) = allowed(&headers) {
+    if let Err(error) = state
+        .access
+        .as_ref()
+        .map_or_else(|| allowed(&headers), |_| Ok(()))
+    {
         return failure(error);
     }
     static PARSERS: OnceLock<Arc<Semaphore>> = OnceLock::new();
@@ -142,7 +150,11 @@ async fn download(
     headers: HeaderMap,
     Json(query): Json<DownloadParams>,
 ) -> Response {
-    if let Err(error) = allowed(&headers) {
+    if let Err(error) = state
+        .access
+        .as_ref()
+        .map_or_else(|| allowed(&headers), |_| Ok(()))
+    {
         return failure(error);
     }
     match tokio::task::spawn_blocking(move || {

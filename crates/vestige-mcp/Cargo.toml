@@ -78,6 +78,10 @@ tokio = { version = "1", features = ["full", "io-std"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.10"
+base64 = "0.22"
+chacha20poly1305 = "0.10"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+url = "2"
 unicode-normalization = "0.1"
 
 # Date/Time
@@ -113,7 +117,7 @@ rusqlite = { version = "0.40", features = ["bundled"] }
 
 # Dashboard (v2.0) - HTTP server + WebSocket + embedded SvelteKit
 axum = { version = "0.8", default-features = false, features = ["json", "query", "tokio", "http1", "ws"] }
-tower = { version = "0.5", features = ["limit"] }
+tower = { version = "0.5", features = ["limit", "util"] }
 tower-http = { version = "0.6", features = ["cors", "set-header"] }
 futures-util = "0.3"
 open = "5"
@@ -125,3 +129,4 @@ mime_guess = "2"
 tempfile = "3"
 
 [dev-dependencies]
+tokio-tungstenite = "0.29"

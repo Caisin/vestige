@@ -1704,6 +1704,56 @@ impl SqliteMemoryStore {
         false
     }
 
+    /// Give an isolated workspace the operator's verified model runtime, never its data.
+    /// Call before exposing the new store. Existing non-empty profiles are never migrated implicitly.
+    #[cfg(all(feature = "embeddings", feature = "vector-search"))]
+    pub fn inherit_workspace_embedding_runtime(&mut self, source: &Self) -> Result<()> {
+        let Some(source_active) = source.active_embedding_profile()? else {
+            return Ok(());
+        };
+        let Some(embedder) = source.attached_embedder_for(&source_active.profile_id)? else {
+            // The released Nomic model is already a process-wide immutable service.
+            return Ok(());
+        };
+        let active = self
+            .active_embedding_profile()?
+            .ok_or_else(|| StorageError::Init("workspace profile missing".into()))?;
+        if active.profile_id != source_active.profile_id {
+            if self.get_stats()?.total_nodes != 0 {
+                return Err(StorageError::InvalidEmbeddingProfile(
+                    "workspace model differs; an explicit migration is required".into(),
+                ));
+            }
+            let mut manifest = source
+                .embedding_profile_manifest(&source_active.profile_id)?
+                .ok_or_else(|| StorageError::Init("source profile missing".into()))?;
+            manifest.state = EmbeddingProfileState::Ready;
+            self.save_embedding_profile_manifest(&manifest)?;
+            let now = Utc::now();
+            // This is a real zero-row initialization, not a copied corpus migration.
+            self.save_profile_migration_checkpoint(&ProfileMigrationCheckpoint {
+                migration_id: Uuid::new_v4(),
+                source_profile_id: active.profile_id,
+                destination_profile_id: source_active.profile_id.clone(),
+                state: EmbeddingMigrationState::Completed,
+                total_memories: 0,
+                completed_memories: 0,
+                failed_memory_ids: vec![],
+                last_memory_id: None,
+                started_at: now,
+                updated_at: now,
+            })?;
+            self.save_embedding_profile_integrity_manifest(&EmbeddingProfileIntegrityManifest {
+                profile_id: source_active.profile_id.to_string(),
+                manifest_json: serde_json::json!({"initialization":"empty-isolated-workspace","vector_count":0}),
+                manifest_hash: manifest.manifest_hash(), vector_count: 0, index_member_count: 0,
+                index_integrity_hash: None, updated_at: now,
+            })?;
+            self.activate_embedding_profile(&source_active.profile_id)?;
+        }
+        self.attach_active_profile_embedder(&source_active.profile_id, embedder)
+    }
+
     /// Initialize the released Nomic default without widening optional profile
     /// activation into an implicit model-selection path.
     ///

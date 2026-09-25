@@ -4,6 +4,7 @@
 
 pub mod autopilot;
 pub mod cognitive;
+pub mod identity;
 pub mod dashboard;
 pub mod protocol;
 pub mod resources;

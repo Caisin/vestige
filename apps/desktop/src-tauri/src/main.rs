@@ -36,6 +36,22 @@ fn data_dir() -> Result<PathBuf, String> {
         .map(|p| p.data_dir().to_path_buf())
         .ok_or_else(|| "无法定位本地数据目录".into())
 }
+// Login redirects stay in this WebView so the state-binding cookie survives.
+// Remote pages still receive no Tauri IPC capabilities.
+fn login_origins(settings: &BTreeMap<String, String>) -> Vec<String> {
+    let path = settings.get("VESTIGE_AUTH_CONFIG").map(PathBuf::from)
+        .or_else(|| data_dir().ok().map(|p| p.join("auth.json")));
+    let config = path.and_then(|p| fs::read(p).ok()).and_then(|b| serde_json::from_slice::<serde_json::Value>(&b).ok());
+    let Some(config) = config else { return vec![]; };
+    let mut origins = vec!["https://login.dingtalk.com".to_string(), "https://oapi.dingtalk.com".to_string(), "https://passport.dingtalk.com".to_string()];
+    for value in [config.get("kx_api"), config.get("oauth").and_then(|o| o.get("authorize_url"))].into_iter().flatten() {
+        if let Some(url) = value.as_str().and_then(|s| tauri::Url::parse(s).ok()) {
+            if url.scheme() == "https" { origins.push(url.origin().ascii_serialization()); }
+        }
+    }
+    origins
+}
+
 fn sidecar() -> Result<PathBuf, String> {
     let extension = if cfg!(windows) { ".exe" } else { "" };
     let exe = std::env::current_exe().map_err(|e| e.to_string())?;
@@ -69,6 +85,7 @@ fn service_environment() -> Result<BTreeMap<String, String>, String> {
         let configured: serde_json::Value =
             serde_json::from_str(&content).map_err(|_| "桌面服务配置不是有效 JSON")?;
         for key in [
+            "VESTIGE_AUTH_CONFIG",
             "VESTIGE_EMBEDDING_ARTIFACT_DIR",
             "VESTIGE_QWEN_DEVICE",
             "VESTIGE_RERANKER_MODEL",
@@ -81,7 +98,7 @@ fn service_environment() -> Result<BTreeMap<String, String>, String> {
             }
         }
     }
-    for key in ["HOME", "PATH", "TMPDIR", "LANG", "USER", "LOGNAME"] {
+    for key in ["HOME", "PATH", "TMPDIR", "LANG", "USER", "LOGNAME", "VESTIGE_AUTH_CONFIG"] {
         if let Ok(value) = std::env::var(key) {
             values.insert(key.into(), value);
         }
@@ -245,6 +262,7 @@ fn main() {
                 .cloned()
                 .unwrap_or_else(|| "3927".into());
             let origin = format!("http://127.0.0.1:{port}");
+            let identity_origins = login_origins(&settings);
             let window =
                 WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
                     .title("Vestige 编剧工作台")
@@ -254,6 +272,7 @@ fn main() {
                         if url.scheme() == "tauri"
                             || url.origin().ascii_serialization() == "http://tauri.localhost"
                             || url.origin().ascii_serialization() == origin
+                            || identity_origins.contains(&url.origin().ascii_serialization())
                         || (url.scheme() == "blob" && url.path().strip_prefix(&origin).is_some_and(|suffix| suffix.starts_with('/')))
                         {
                             return true;

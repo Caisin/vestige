@@ -24,20 +24,23 @@ pub async fn ws_handler(
 ) -> impl IntoResponse {
     // Validate Origin header (browsers always send it for WebSocket upgrades).
     // Non-browser clients (curl, wscat) won't have Origin — allowed since localhost-only.
-    match headers.get("origin").and_then(|v| v.to_str().ok()) {
-        Some(origin) => {
-            let allowed =
-                origin.starts_with("http://127.0.0.1:") || origin.starts_with("http://localhost:");
-            #[cfg(debug_assertions)]
-            let allowed =
-                allowed || origin == "http://localhost:5173" || origin == "http://127.0.0.1:5173";
-            if !allowed {
-                warn!("Rejected WebSocket connection from origin: {}", origin);
-                return StatusCode::FORBIDDEN.into_response();
+    if state.access.is_none() {
+        match headers.get("origin").and_then(|v| v.to_str().ok()) {
+            Some(origin) => {
+                let allowed = origin.starts_with("http://127.0.0.1:")
+                    || origin.starts_with("http://localhost:");
+                #[cfg(debug_assertions)]
+                let allowed = allowed
+                    || origin == "http://localhost:5173"
+                    || origin == "http://127.0.0.1:5173";
+                if !allowed {
+                    warn!("Rejected WebSocket connection from origin: {}", origin);
+                    return StatusCode::FORBIDDEN.into_response();
+                }
             }
-        }
-        None => {
-            debug!("WebSocket connection without Origin header (non-browser client)");
+            None => {
+                debug!("WebSocket connection without Origin header (non-browser client)");
+            }
         }
     }
     ws.max_frame_size(64 * 1024)
@@ -104,12 +107,22 @@ async fn handle_socket(socket: WebSocket, state: AppState) {
     });
 
     // Main loop: forward events + heartbeats to client, handle incoming messages
+    let mut authorization_tick = tokio::time::interval(std::time::Duration::from_secs(5));
     loop {
+        if let Some(access) = &state.access
+            && access.hub.check(&access.grant).is_err()
+        {
+            break;
+        }
         tokio::select! {
+            _ = authorization_tick.tick() => {
+                if let Some(access) = &state.access && access.hub.authenticate(&access.token, "session").await.is_err() { break; }
+            }
             // Broadcast event from cognitive engine
             received = event_rx.recv() => {
                 match received {
                     Ok(event) => {
+                        if let Some(access) = &state.access && access.hub.check(&access.grant).is_err() { break; }
                         let json = event.to_json();
                         if sender.send(Message::Text(json.into())).await.is_err() {
                             break;
@@ -137,6 +150,7 @@ async fn handle_socket(socket: WebSocket, state: AppState) {
             }
             // Heartbeat
             Some(hb) = heartbeat_rx.recv() => {
+                if let Some(access) = &state.access && access.hub.check(&access.grant).is_err() { break; }
                 if sender.send(Message::Text(hb.into())).await.is_err() {
                     break;
                 }

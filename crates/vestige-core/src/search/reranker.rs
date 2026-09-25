@@ -96,7 +96,7 @@ impl Default for RerankerConfig {
 pub struct Reranker {
     config: RerankerConfig,
     #[cfg(feature = "embeddings")]
-    cross_encoder: Option<TextRerank>,
+    cross_encoder: Option<std::sync::Arc<std::sync::Mutex<TextRerank>>>,
 }
 
 impl Default for Reranker {
@@ -106,6 +106,15 @@ impl Default for Reranker {
 }
 
 impl Reranker {
+    /// Share only the immutable model weights/runner; candidate data and ranking state stay local.
+    pub fn share_model_from(&mut self, other: &Self) {
+        #[cfg(feature = "embeddings")]
+        if self.cross_encoder.is_none() {
+            self.cross_encoder = other.cross_encoder.clone();
+        }
+        let _ = other;
+    }
+
     /// Create a new reranker with the given configuration
     ///
     /// The cross-encoder model is NOT loaded here — call `init_cross_encoder()`
@@ -165,7 +174,7 @@ impl Reranker {
         if self.cross_encoder.is_some() {
             return;
         }
-        self.cross_encoder = Some(model);
+        self.cross_encoder = Some(std::sync::Arc::new(std::sync::Mutex::new(model)));
     }
 
     /// Initialize the cross-encoder model (Jina Reranker v1 Turbo, ~150MB)
@@ -180,7 +189,7 @@ impl Reranker {
             return; // Already initialized
         }
         if let Some(model) = Self::load_cross_encoder() {
-            self.cross_encoder = Some(model);
+            self.cross_encoder = Some(std::sync::Arc::new(std::sync::Mutex::new(model)));
         }
     }
 
@@ -220,7 +229,9 @@ impl Reranker {
 
         // Try cross-encoder first
         #[cfg(feature = "embeddings")]
-        if let Some(ref mut model) = self.cross_encoder {
+        if let Some(model) = &self.cross_encoder
+            && let Ok(mut model) = model.lock()
+        {
             let documents: Vec<&str> = candidates.iter().map(|(_, text)| text.as_str()).collect();
 
             if let Ok(rerank_results) = model.rerank(query, &documents, false, None) {

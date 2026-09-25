@@ -27,6 +27,7 @@ export default defineConfig({
 				target: dashboardApiTarget,
 				changeOrigin: false
 			},
+			'/mcp': { target: dashboardApiTarget, changeOrigin: false },
 			'/ws': {
 				target: dashboardApiTarget.replace('http', 'ws'),
 				ws: true

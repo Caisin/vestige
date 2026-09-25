@@ -77,6 +77,14 @@ struct DedupSweepState {
     in_flight: Option<tokio::task::JoinHandle<()>>,
 }
 
+impl Drop for DedupSweepState {
+    fn drop(&mut self) {
+        if let Some(task) = &self.in_flight {
+            task.abort();
+        }
+    }
+}
+
 impl DedupSweepState {
     fn new() -> Self {
         Self {
@@ -112,6 +120,34 @@ pub fn spawn(
     storage: Arc<Storage>,
     event_tx: broadcast::Sender<VestigeEvent>,
 ) {
+    let mut tasks = spawn_managed(cognitive, storage, event_tx);
+    // The process-wide runtime lives until process shutdown.
+    tasks.0.clear();
+}
+
+/// Background cognitive jobs owned by one workspace runtime.
+pub struct AutopilotTasks(Vec<tokio::task::JoinHandle<()>>);
+impl Drop for AutopilotTasks {
+    fn drop(&mut self) {
+        for task in &self.0 {
+            task.abort();
+        }
+    }
+}
+struct AbortOnDrop<T>(tokio::task::JoinHandle<T>);
+impl<T> Drop for AbortOnDrop<T> {
+    fn drop(&mut self) {
+        self.0.abort();
+    }
+}
+
+/// Start supervised jobs which stop when the workspace runtime is retired.
+pub fn spawn_managed(
+    cognitive: Arc<Mutex<CognitiveEngine>>,
+    storage: Arc<Storage>,
+    event_tx: broadcast::Sender<VestigeEvent>,
+) -> AutopilotTasks {
+    let mut tasks = AutopilotTasks(Vec::new());
     // Opt-out: users upgrading in place from v2.0.8 may want to keep the
     // "passive library" contract. Set VESTIGE_AUTOPILOT_ENABLED=0 to skip
     // spawning both background tasks. Anything else (unset, "1", "true", etc.)
@@ -122,7 +158,7 @@ pub fn spawn(
                 "Autopilot disabled via VESTIGE_AUTOPILOT_ENABLED — \
                  cognitive modules remain passive (v2.0.8 behavior)"
             );
-            return;
+            return tasks;
         }
         _ => {}
     }
@@ -132,16 +168,16 @@ pub fn spawn(
         let cognitive = cognitive.clone();
         let storage = storage.clone();
         let event_tx = event_tx.clone();
-        tokio::spawn(async move {
+        tasks.0.push(tokio::spawn(async move {
             loop {
                 let rx = event_tx.subscribe();
                 let cog = cognitive.clone();
                 let sto = storage.clone();
                 let etx = event_tx.clone();
-                let handle = tokio::spawn(async move {
+                let mut handle = AbortOnDrop(tokio::spawn(async move {
                     run_event_subscriber(rx, cog, sto, etx).await;
-                });
-                match handle.await {
+                }));
+                match (&mut handle.0).await {
                     Ok(()) => {
                         info!("Autopilot event subscriber exited cleanly");
                         break;
@@ -161,19 +197,19 @@ pub fn spawn(
                     }
                 }
             }
-        });
+        }));
     }
 
     // Prospective-memory poller supervisor — symmetric restart semantics.
     {
         let cognitive = cognitive.clone();
-        tokio::spawn(async move {
+        tasks.0.push(tokio::spawn(async move {
             loop {
                 let cog = cognitive.clone();
-                let handle = tokio::spawn(async move {
+                let mut handle = AbortOnDrop(tokio::spawn(async move {
                     run_prospective_poller(cog).await;
-                });
-                match handle.await {
+                }));
+                match (&mut handle.0).await {
                     Ok(()) => {
                         info!("Autopilot prospective poller exited cleanly");
                         break;
@@ -193,10 +229,11 @@ pub fn spawn(
                     }
                 }
             }
-        });
+        }));
     }
 
     info!("Autopilot spawned (event-subscriber + prospective poller, supervised)");
+    tasks
 }
 
 async fn run_event_subscriber(
