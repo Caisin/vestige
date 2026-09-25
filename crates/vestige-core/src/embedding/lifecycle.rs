@@ -701,8 +701,10 @@ impl<'a> EmbeddingProfileLifecycle<'a> {
                 &artifacts,
             )?,
         );
+        let mut runtime = local_runtime(&profile);
+        runtime.device = runner.runtime_device();
         self.registry
-            .install_verified(profile.clone(), &artifacts, local_runtime(&profile), runner)
+            .install_verified(profile.clone(), &artifacts, runtime, runner)
             .map_err(Into::into)
     }
 
@@ -752,7 +754,7 @@ fn local_runtime(profile: &EmbeddingProfile) -> EmbeddingRuntimeMetadata {
     EmbeddingRuntimeMetadata {
         backend: profile.runtime_backend,
         device: EmbeddingDevice::Cpu,
-        runtime_version: "fastembed=5.13.4;candle=0.10.2".to_string(),
+        runtime_version: "fastembed=5.13.2;candle=0.10.2;dtype=f32".to_string(),
         initialized_at: Utc::now(),
         local_only: true,
     }
@@ -1488,7 +1490,9 @@ mod tests {
         // Reproduce a clean host without legacy model artifacts even when the
         // developer machine has a cached legacy embedding runtime.
         let connection = rusqlite::Connection::open(temp.path().join("store.sqlite")).unwrap();
-        connection.execute("UPDATE knowledge_nodes SET has_embedding = 0", []).unwrap();
+        connection
+            .execute("UPDATE knowledge_nodes SET has_embedding = 0", [])
+            .unwrap();
         drop(connection);
         storage
             .activate_embedding_profile(&profile.profile_id)

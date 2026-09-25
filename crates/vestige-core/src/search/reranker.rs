@@ -133,13 +133,22 @@ impl Reranker {
     /// fallback.
     #[cfg(feature = "embeddings")]
     pub fn load_cross_encoder() -> Option<TextRerank> {
-        let options = RerankInitOptions::new(RerankerModel::JINARerankerV1TurboEn)
+        let selection = std::env::var("VESTIGE_RERANKER_MODEL")
+            .unwrap_or_else(|_| "jinaai/jina-reranker-v1-turbo-en".to_string());
+        let model = match selection.parse::<RerankerModel>() {
+            Ok(model) => model,
+            Err(error) => {
+                eprintln!("[vestige] Requested reranker unavailable: {error}");
+                return None;
+            }
+        };
+        let options = RerankInitOptions::new(model)
             .with_cache_dir(get_cache_dir())
             .with_show_download_progress(true);
 
         match TextRerank::try_new(options) {
             Ok(model) => {
-                eprintln!("[vestige] Cross-encoder reranker loaded (Jina Reranker v1 Turbo)");
+                eprintln!("[vestige] Cross-encoder reranker loaded ({selection})");
                 Some(model)
             }
             Err(e) => {

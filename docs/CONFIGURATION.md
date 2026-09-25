@@ -36,6 +36,9 @@ Qwen3 currently uses Hugging Face Hub's Candle loader directly, so use the stand
 | `VESTIGE_DATA_DIR` | OS per-user data directory | Storage directory fallback; overridden by `--data-dir`; database lives at `<dir>/vestige.db` |
 | `RUST_LOG` | `info` (via tracing-subscriber) | Log verbosity + per-module filtering |
 | `FASTEMBED_CACHE_PATH` | Platform cache directory; `./.fastembed_cache` fallback | Embedding model cache location |
+| `VESTIGE_EMBEDDING_ARTIFACT_DIR` | unset | Explicit local artifact directory for the already activated Qwen or Granite profile. MCP startup re-verifies and attaches it; it never installs, migrates, activates, or downloads an optional profile. Required on every server start with an optional profile active. |
+| `VESTIGE_QWEN_DEVICE` | `cpu` | Explicit Qwen device: `cpu` or `metal` (requires a build with `qwen3-embeddings,metal`). No automatic fallback; FP32 precision is preserved on both devices. |
+| `VESTIGE_RERANKER_MODEL` | `jinaai/jina-reranker-v1-turbo-en` | Explicit fastembed cross-encoder model ID. For Chinese/multilingual retrieval, `rozgo/bge-reranker-v2-m3` is available. Selecting it downloads and caches its larger artifacts on first use; model load failures are logged and use the existing fallback ranking. |
 | `VESTIGE_DASHBOARD_PORT` | `3927` | Dashboard HTTP + WebSocket port |
 | `VESTIGE_HTTP_ENABLED` | `false` | Set `true` or `1` to enable optional MCP-over-HTTP |
 | `VESTIGE_HTTP_PORT` | `3928` | Optional MCP-over-HTTP port; `--http-port` also enables HTTP |

@@ -322,6 +322,44 @@ async fn main() {
         }
     };
 
+    // Reattach an explicitly activated optional profile on every server start.
+    // Artifacts are supplied by the operator and reverified locally. This does
+    // not install, migrate, activate, download, or select a profile implicitly.
+    let active_profile = storage.active_embedding_profile().unwrap_or_else(|error| {
+        error!(%error, "Cannot read active embedding profile");
+        std::process::exit(1);
+    });
+    let optional_profile_attached = active_profile
+        .as_ref()
+        .is_some_and(|active| active.profile_id.as_str() != "nomic-v1.5-legacy-raw-256");
+    if let Some(active) = active_profile.filter(|_| optional_profile_attached) {
+        let artifact_root = std::env::var_os("VESTIGE_EMBEDDING_ARTIFACT_DIR")
+            .filter(|value| !value.is_empty())
+            .map(PathBuf::from)
+            .unwrap_or_else(|| {
+                error!("Active optional embedding profile requires VESTIGE_EMBEDDING_ARTIFACT_DIR");
+                std::process::exit(1);
+            });
+        let profile_id = active.profile_id.to_string();
+        let profile_storage = Arc::clone(&storage);
+        let loaded = tokio::task::spawn_blocking(move || {
+            let lifecycle = vestige_core::EmbeddingProfileLifecycle::new(&profile_storage);
+            if profile_id.starts_with("qwen3-") {
+                lifecycle.attach_active_qwen3_local(&artifact_root)
+            } else {
+                lifecycle.attach_active_granite_onnx(&artifact_root)
+            }
+        })
+        .await;
+        match loaded {
+            Ok(Ok(profile)) => info!(%profile, "Verified optional embedding runtime attached"),
+            other => {
+                error!(?other, "Active optional embedding runtime could not start");
+                std::process::exit(1);
+            }
+        }
+    }
+
     // Preserve the released Nomic default in the background so MCP clients can
     // finish their stdio handshake before a first-run model download. Optional
     // profiles reject this compatibility path: their artifact verification,
@@ -336,7 +374,7 @@ async fn main() {
     let _notifier: Notifier = notifier.clone();
 
     #[cfg(feature = "embeddings")]
-    {
+    if !optional_profile_attached {
         let storage_clone = Arc::clone(&storage);
         let notifier = notifier.clone();
         tokio::task::spawn_blocking(move || {
@@ -384,7 +422,9 @@ async fn main() {
     // Startup hygiene: sweep Black Box traces past VESTIGE_TRACE_RETENTION_DAYS
     // now, not only when the consolidation cycle next runs. Best-effort.
     match storage.prune_agent_traces() {
-        Ok(deleted) if deleted > 0 => info!(deleted, "Pruned expired agent trace events at startup"),
+        Ok(deleted) if deleted > 0 => {
+            info!(deleted, "Pruned expired agent trace events at startup")
+        }
         Ok(_) => {}
         Err(e) => warn!("Startup trace retention sweep failed: {}", e),
     }
@@ -521,10 +561,9 @@ async fn main() {
     info!("CognitiveEngine initialized and hydrated");
 
     // Create shared event broadcast channel for dashboard <-> MCP tool events
-    let (event_tx, _) =
-        tokio::sync::broadcast::channel::<vestige_mcp::dashboard::events::VestigeEvent>(
-            vestige_mcp::dashboard::state::EVENT_CHANNEL_CAPACITY,
-        );
+    let (event_tx, _) = tokio::sync::broadcast::channel::<
+        vestige_mcp::dashboard::events::VestigeEvent,
+    >(vestige_mcp::dashboard::state::EVENT_CHANNEL_CAPACITY);
 
     // v2.0.9 "Autopilot" — spawn the backend event-subscriber that routes
     // every live WebSocket event into the cognitive modules that already
@@ -610,7 +649,7 @@ async fn main() {
         info!("HTTP MCP transport disabled; set VESTIGE_HTTP_ENABLED=1 or pass --http to enable");
     }
 
-    // Load cross-encoder reranker in the background (downloads ~150MB on first run)
+    // Load the explicitly selected cross-encoder (English compact by default).
     #[cfg(all(feature = "vector-search", feature = "embeddings"))]
     {
         let cog_clone = Arc::clone(&cognitive);
@@ -623,7 +662,8 @@ async fn main() {
                 "vestige.reranker",
                 serde_json::json!({
                     "event": "reranker_loading",
-                    "note": "a first run downloads about 150 MB; recall ranks by BM25 until it is ready",
+                    "model": std::env::var("VESTIGE_RERANKER_MODEL").unwrap_or_else(|_| "jinaai/jina-reranker-v1-turbo-en".to_string()),
+                    "note": "first use downloads the selected model; recall uses fallback ranking until it is ready",
                 }),
             );
             // The model load is synchronous and downloads ~150MB on a fresh
@@ -633,10 +673,9 @@ async fn main() {
             // every startup rather than on demand, and it blocked a tokio
             // worker thread while it ran. Load on the blocking pool holding
             // nothing, then take the lock only to install the result.
-            let loaded = tokio::task::spawn_blocking(
-                vestige_core::search::Reranker::load_cross_encoder,
-            )
-            .await;
+            let loaded =
+                tokio::task::spawn_blocking(vestige_core::search::Reranker::load_cross_encoder)
+                    .await;
             match loaded {
                 Ok(Some(model)) => {
                     let mut cog = cog_clone.lock().await;

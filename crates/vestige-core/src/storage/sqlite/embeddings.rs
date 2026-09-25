@@ -2,6 +2,37 @@
 
 use super::*;
 
+/// The storage API is synchronous, but MCP invokes it from Tokio workers.
+/// Run an attached async embedder on a scoped thread when already inside a
+/// runtime; nesting Runtime::block_on would panic (and abort release servers).
+#[cfg(all(feature = "embeddings", feature = "vector-search"))]
+fn run_local_embedding<F>(future: F) -> Result<Vec<f32>>
+where
+    F: std::future::Future<Output = crate::embedder::EmbedderResult<Vec<f32>>> + Send,
+{
+    let run = move || {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .map_err(|error| {
+                StorageError::Init(format!("Create local embedding runtime: {error}"))
+            })?;
+        runtime
+            .block_on(future)
+            .map_err(|error| StorageError::Init(format!("Local embedding failed: {error}")))
+    };
+    if tokio::runtime::Handle::try_current().is_ok() {
+        std::thread::scope(|scope| {
+            scope
+                .spawn(run)
+                .join()
+                .map_err(|_| StorageError::Init("Local embedding worker panicked".to_string()))?
+        })
+    } else {
+        run()
+    }
+}
+
 impl SqliteMemoryStore {
     #[cfg(feature = "vector-search")]
     pub(super) fn vector_search_enabled_by_cpu() -> bool {
@@ -358,12 +389,7 @@ impl SqliteMemoryStore {
 
         let (embedding_bytes, embedding_dimensions, model_name, vector) =
             if let Some(embedder) = self.attached_embedder_for(&active.profile_id)? {
-                let runtime = tokio::runtime::Runtime::new().map_err(|error| {
-                    StorageError::Init(format!("Create local embedding runtime: {error}"))
-                })?;
-                let vector = runtime
-                    .block_on(embedder.embed_document(content))
-                    .map_err(|error| StorageError::Init(format!("Embedding failed: {error}")))?;
+                let vector = run_local_embedding(embedder.embed_document(content))?;
                 let bytes = vector
                     .iter()
                     .flat_map(|value| value.to_le_bytes())
@@ -1734,12 +1760,7 @@ impl SqliteMemoryStore {
         // missing explicit attachment is an availability error, not permission
         // to issue a semantically invalid query.
         let vector = if let Some(embedder) = self.attached_embedder_for(&active.profile_id)? {
-            let runtime = tokio::runtime::Runtime::new().map_err(|error| {
-                StorageError::Init(format!("Create local query runtime: {error}"))
-            })?;
-            runtime
-                .block_on(embedder.embed_query(query))
-                .map_err(|error| StorageError::Init(format!("Failed to embed query: {error}")))?
+            run_local_embedding(embedder.embed_query(query))?
         } else if manifest.profile.runtime_backend == EmbeddingRuntimeBackend::FastembedCandle {
             return Err(StorageError::InvalidEmbeddingProfile(format!(
                 "active profile '{}' requires an explicitly attached verified local runtime; supply its artifact directory for this process",
@@ -1787,12 +1808,7 @@ impl SqliteMemoryStore {
             .embedding_profile_manifest(&active.profile_id)?
             .ok_or_else(|| StorageError::NotFound(active.profile_id.to_string()))?;
         let vector = if let Some(embedder) = self.attached_embedder_for(&active.profile_id)? {
-            let runtime = tokio::runtime::Runtime::new().map_err(|error| {
-                StorageError::Init(format!("Create local document runtime: {error}"))
-            })?;
-            runtime
-                .block_on(embedder.embed_document(content))
-                .map_err(|error| StorageError::Init(format!("Failed to embed document: {error}")))?
+            run_local_embedding(embedder.embed_document(content))?
         } else if manifest.profile.runtime_backend == EmbeddingRuntimeBackend::FastembedCandle {
             return Err(StorageError::InvalidEmbeddingProfile(format!(
                 "active profile '{}' requires an explicitly attached verified local runtime; supply its artifact directory for this process",
@@ -2446,5 +2462,45 @@ impl SqliteMemoryStore {
             return None;
         }
         Embedding::from_bytes(embedding_bytes).map(|embedding| embedding.vector)
+    }
+}
+
+#[cfg(all(test, feature = "embeddings", feature = "vector-search"))]
+mod local_runtime_tests {
+    use super::run_local_embedding;
+
+    async fn scheduled_vector() -> crate::embedder::EmbedderResult<Vec<f32>> {
+        tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+        Ok(vec![0.25, 0.75])
+    }
+
+    #[test]
+    fn embedding_works_without_an_outer_runtime() {
+        assert_eq!(
+            run_local_embedding(scheduled_vector()).unwrap(),
+            vec![0.25, 0.75]
+        );
+    }
+
+    #[tokio::test]
+    async fn embedding_works_inside_current_thread_runtime() {
+        assert_eq!(
+            run_local_embedding(scheduled_vector()).unwrap(),
+            vec![0.25, 0.75]
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn embedding_works_inside_mcp_worker_runtime() {
+        assert_eq!(
+            run_local_embedding(scheduled_vector()).unwrap(),
+            vec![0.25, 0.75]
+        );
+        let failure = run_local_embedding(async {
+            Err(crate::embedder::EmbedderError::EmbedFailed(
+                "probe failure".to_string(),
+            ))
+        });
+        assert!(failure.unwrap_err().to_string().contains("probe failure"));
     }
 }

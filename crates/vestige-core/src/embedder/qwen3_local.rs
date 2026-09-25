@@ -14,7 +14,9 @@ use fastembed::{Qwen3Config, Qwen3Model, Qwen3TextEmbedding};
 use serde::Deserialize;
 use tokenizers::{PaddingParams, PaddingStrategy, Tokenizer, TruncationParams};
 
-use crate::embedding::{EmbeddingProfile, EmbeddingRuntimeBackend, VerifiedLocalArtifact};
+use crate::embedding::{
+    EmbeddingDevice, EmbeddingProfile, EmbeddingRuntimeBackend, VerifiedLocalArtifact,
+};
 
 use super::{EmbedderError, EmbedderResult, EmbedderSend};
 
@@ -77,12 +79,28 @@ fn model_spec(profile: &EmbeddingProfile) -> EmbedderResult<QwenModelSpec> {
 }
 
 /// A Qwen3 embedder loaded from a verified, explicitly supplied local artifact
-/// set. CPU is selected deliberately; there is no hardware probe, automatic
-/// device selection, model fallback, or Hub lookup.
+/// set. CPU remains the default. Metal requires an explicit device selection;
+/// there is no automatic device fallback or Hub lookup.
 pub struct Qwen3LocalEmbedder {
     profile: EmbeddingProfile,
     runner: Mutex<Qwen3TextEmbedding>,
     model_hash: String,
+    device: EmbeddingDevice,
+}
+
+fn local_device(selection: &str) -> EmbedderResult<(Device, EmbeddingDevice)> {
+    match selection {
+        "cpu" => Ok((Device::Cpu, EmbeddingDevice::Cpu)),
+        #[cfg(feature = "metal")]
+        "metal" => Device::new_metal(0)
+            .map(|device| (device, EmbeddingDevice::Metal))
+            .map_err(|error| {
+                EmbedderError::Init(format!("requested Metal device unavailable: {error}"))
+            }),
+        _ => Err(EmbedderError::Init(format!(
+            "unsupported Qwen device '{selection}'; use cpu, or metal in a Metal-enabled build"
+        ))),
+    }
 }
 
 impl Qwen3LocalEmbedder {
@@ -136,7 +154,8 @@ impl Qwen3LocalEmbedder {
             )));
         }
 
-        let device = Device::Cpu;
+        let selection = std::env::var("VESTIGE_QWEN_DEVICE").unwrap_or_else(|_| "cpu".to_string());
+        let (device, runtime_device) = local_device(&selection)?;
         // SAFETY: every path has been canonicalized below the explicit artifact
         // root and hash-verified before memory mapping.
         let variables = unsafe {
@@ -144,12 +163,12 @@ impl Qwen3LocalEmbedder {
         }
         .map_err(|error| {
             EmbedderError::Init(format!(
-                "map Qwen weights: {error}; preflight this profile on an explicitly provisioned CPU device with sufficient available RAM (Qwen 4B is large). Vestige does not probe or select hardware automatically"
+                "map Qwen weights on {selection}: {error}; provide sufficient available memory for the selected profile (Qwen 4B is large)"
             ))
         })?;
         let model = Qwen3Model::new(config, variables).map_err(|error| {
             EmbedderError::Init(format!(
-                "load Qwen model: {error}; preflight the selected CPU device and model capacity manually. Vestige does not probe or select hardware automatically"
+                "load Qwen model on {selection}: {error}; check the selected device and model capacity"
             ))
         })?;
         let mut tokenizer = Tokenizer::from_file(tokenizer_path)
@@ -169,7 +188,12 @@ impl Qwen3LocalEmbedder {
             profile,
             runner: Mutex::new(Qwen3TextEmbedding::new(model, tokenizer)),
             model_hash,
+            device: runtime_device,
         })
+    }
+
+    pub fn runtime_device(&self) -> EmbeddingDevice {
+        self.device
     }
 
     fn project(&self, native: Vec<f32>) -> EmbedderResult<Vec<f32>> {
@@ -306,6 +330,15 @@ mod tests {
     use crate::embedding::BuiltinEmbeddingProfile;
 
     use super::*;
+
+    #[test]
+    fn explicit_device_selection_preserves_cpu_and_rejects_unknown_devices() {
+        assert_eq!(local_device("cpu").unwrap().1, EmbeddingDevice::Cpu);
+        assert!(local_device("automatic").is_err());
+        assert!(local_device("").is_err());
+        #[cfg(not(feature = "metal"))]
+        assert!(local_device("metal").is_err());
+    }
 
     #[test]
     fn qwen_4b_profiles_require_both_pinned_weight_shards() {
