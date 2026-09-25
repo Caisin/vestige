@@ -1,3 +1,4 @@
+import { zh } from '$lib/i18n';
 // Spatial Palace — the organ registry.
 //
 // The palace is the set of dashboard organs rendered as a navigable 3D
@@ -32,15 +33,15 @@ export interface OrganRegion {
  * Memory Cinema live inside Observatory/Graph and are not separate regions here.
  */
 export const ORGAN_REGIONS: OrganRegion[] = [
-	{ href: '/observatory', label: 'OBSERVATORY', family: 'system', center: true },
-	{ href: '/graph', label: 'GRAPH', family: 'memory' },
-	{ href: '/memories', label: 'MEMORIES', family: 'memory' },
-	{ href: '/timeline', label: 'TIMELINE', family: 'temporal' },
-	{ href: '/feed', label: 'FEED', family: 'signal' },
-	{ href: '/explore', label: 'EXPLORE', family: 'reasoning' },
-	{ href: '/reasoning', label: 'REASONING', family: 'reasoning' },
-	{ href: '/blackbox', label: 'BLACK BOX', family: 'signal' },
-	{ href: '/contradictions', label: 'CONTRADICTIONS', family: 'immune' }
+	{ href: '/observatory', label: zh("OBSERVATORY"), family: 'system', center: true },
+	{ href: '/graph', label: zh("GRAPH"), family: 'memory' },
+	{ href: '/memories', label: zh("MEMORIES"), family: 'memory' },
+	{ href: '/timeline', label: zh("TIMELINE"), family: 'temporal' },
+	{ href: '/feed', label: zh("FEED"), family: 'signal' },
+	{ href: '/explore', label: zh("EXPLORE"), family: 'reasoning' },
+	{ href: '/reasoning', label: zh("REASONING"), family: 'reasoning' },
+	{ href: '/blackbox', label: zh("BLACK BOX"), family: 'signal' },
+	{ href: '/contradictions', label: zh("CONTRADICTIONS"), family: 'immune' }
 ];
 
 /**
@@ -51,16 +52,16 @@ export const ORGAN_REGIONS: OrganRegion[] = [
  * documented and one edit away.
  */
 export const HIDDEN_ORGANS: OrganRegion[] = [
-	{ href: '/duplicates', label: 'DUPLICATES', family: 'memory' },
-	{ href: '/memory-prs', label: 'MEMORY PRS', family: 'immune' },
-	{ href: '/activation', label: 'ACTIVATION', family: 'signal' },
-	{ href: '/dreams', label: 'DREAMS', family: 'temporal' },
-	{ href: '/schedule', label: 'SCHEDULE', family: 'temporal' },
-	{ href: '/importance', label: 'IMPORTANCE', family: 'reasoning' },
-	{ href: '/patterns', label: 'PATTERNS', family: 'reasoning' },
-	{ href: '/intentions', label: 'INTENTIONS', family: 'temporal' },
-	{ href: '/stats', label: 'STATS', family: 'system' },
-	{ href: '/settings', label: 'SETTINGS', family: 'system' }
+	{ href: '/duplicates', label: zh("DUPLICATES"), family: 'memory' },
+	{ href: '/memory-prs', label: zh("MEMORY PRS"), family: 'immune' },
+	{ href: '/activation', label: zh("ACTIVATION"), family: 'signal' },
+	{ href: '/dreams', label: zh("DREAMS"), family: 'temporal' },
+	{ href: '/schedule', label: zh("SCHEDULE"), family: 'temporal' },
+	{ href: '/importance', label: zh("IMPORTANCE"), family: 'reasoning' },
+	{ href: '/patterns', label: zh("PATTERNS"), family: 'reasoning' },
+	{ href: '/intentions', label: zh("INTENTIONS"), family: 'temporal' },
+	{ href: '/stats', label: zh("STATS"), family: 'system' },
+	{ href: '/settings', label: zh("SETTINGS"), family: 'system' }
 ];
 
 /** Resolve a picked palace node id (an href) back to its organ region. */

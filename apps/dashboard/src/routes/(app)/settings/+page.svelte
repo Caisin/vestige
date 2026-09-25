@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onMount } from 'svelte';
 	import RouteStage, { type RouteFramePass } from '$lib/observatory/RouteStage.svelte';
 	import type { ObservatoryEngine } from '$lib/observatory/engine';
@@ -15,7 +16,7 @@
 	let consolidation = $state<ConsolidationResult | null>(null);
 	let dream = $state<DreamResult | null>(null);
 	let busy = $state<null | 'consolidate' | 'dream' | 'refresh'>(null);
-	let statusLine = $state('Ready to maintain the local memory system.');
+	let statusLine = $state(zh("Ready to maintain the local memory system."));
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 	let systemField: LivingFieldPass | null = null;
@@ -69,8 +70,8 @@
 			retention = nextRetention;
 			health = nextHealth;
 		} catch (cause) {
-			error = cause instanceof Error ? cause.message : 'Unable to load system state';
-			statusLine = 'System state could not be loaded.';
+			error = cause instanceof Error ? cause.message : zh("Unable to load system state");
+			statusLine = zh("System state could not be loaded.");
 		} finally {
 			loading = false;
 		}
@@ -78,80 +79,80 @@
 
 	async function runRefresh() {
 		busy = 'refresh';
-		statusLine = 'Refreshing live system vitals…';
-		try { await loadData(); if (!error) statusLine = 'Live system vitals refreshed.'; } finally { busy = null; }
+		statusLine = zh("Refreshing live system vitals…");
+		try { await loadData(); if (!error) statusLine = zh("Live system vitals refreshed."); } finally { busy = null; }
 	}
 
 	async function runConsolidate() {
 		busy = 'consolidate'; consolidation = null; dream = null;
-		statusLine = 'Consolidating memory: recalculating retention and maintenance state…';
+		statusLine = zh("Consolidating memory: recalculating retention and maintenance state…");
 		try {
 			consolidation = await api.consolidate();
 			await loadData();
-			statusLine = 'Consolidation complete. The receipt below is from this run.';
+			statusLine = zh("Consolidation complete. The receipt below is from this run.");
 		} catch (cause) {
-			error = cause instanceof Error ? cause.message : 'Consolidation failed';
-			statusLine = 'Consolidation did not complete.';
+			error = cause instanceof Error ? cause.message : zh("Consolidation failed");
+			statusLine = zh("Consolidation did not complete.");
 		} finally { busy = null; }
 	}
 
 	async function runDream() {
 		busy = 'dream'; dream = null; consolidation = null;
-		statusLine = 'Running a dream cycle: replaying memory and finding connections…';
+		statusLine = zh("Running a dream cycle: replaying memory and finding connections…");
 		try {
 			dream = await api.dream();
 			await loadData();
-			statusLine = 'Dream cycle complete. The insight below is from this run.';
+			statusLine = zh("Dream cycle complete. The insight below is from this run.");
 		} catch (cause) {
-			error = cause instanceof Error ? cause.message : 'Dream cycle failed';
-			statusLine = 'Dream cycle did not complete.';
+			error = cause instanceof Error ? cause.message : zh("Dream cycle failed");
+			statusLine = zh("Dream cycle did not complete.");
 		} finally { busy = null; }
 	}
 
 	function bandWidth(count: number) { return `${Math.max(4, Math.min(100, (count / Math.max(1, ...(retention?.distribution ?? []).map((bucket) => bucket.count))) * 100))}%`; }
 </script>
 
-<svelte:head><title>System Care · Vestige</title></svelte:head>
+<svelte:head><title>{zh("System Care · Vestige")}</title></svelte:head>
 
 <RouteStage organ="settings" seed={`settings-field:${stats?.totalMemories ?? 0}:${retention?.total ?? 0}`} scene={settingsScene} passes={createSettingsPasses} loading={false} {error} />
 
 <main class="system-shell">
 	<header class="system-head">
-		<div><p class="eyebrow">SYSTEM CARE</p><h1>Keep the memory system alive.</h1><p>These controls run real local maintenance. Their results are recorded below, never implied by animation.</p></div>
-		<div class:online={$isConnected} class="connection"><span></span>{$isConnected ? 'Live local connection' : 'Connecting locally'}</div>
+		<div><p class="eyebrow">{zh("SYSTEM CARE")}</p><h1>{zh("Keep the memory system alive.")}</h1><p>{zh("These controls run real local maintenance. Their results are recorded below, never implied by animation.")}</p></div>
+		<div class:online={$isConnected} class="connection"><span></span>{$isConnected ? zh("Live local connection") : zh("Connecting locally")}</div>
 	</header>
 
 	{#if loading}
-		<div class="glass-panel system-state">Loading live system state…</div>
+		<div class="glass-panel system-state">{zh("Loading live system state…")}</div>
 	{:else if error && !stats}
-		<div class="glass-panel system-state error">{error}<button type="button" onclick={runRefresh}>Try again</button></div>
+		<div class="glass-panel system-state error">{error}<button type="button" onclick={runRefresh}>{zh("Try again")}</button></div>
 	{:else}
-		<dl class="system-vitals" aria-label="Current system metrics">
-			<div><dt>Local memories</dt><dd>{stats?.totalMemories ?? 0}</dd></div>
-			<div><dt>Average retention</dt><dd>{Math.round((stats?.averageRetention ?? 0) * 100)}%</dd></div>
-			<div><dt>Embedding coverage</dt><dd>{Math.round(stats?.embeddingCoverage ?? 0)}%</dd></div>
-			<div><dt>Running version</dt><dd>v{health?.version ?? 'unknown'}</dd></div>
+		<dl class="system-vitals" aria-label={zh("Current system metrics")}>
+			<div><dt>{zh("Local memories")}</dt><dd>{stats?.totalMemories ?? 0}</dd></div>
+			<div><dt>{zh("Average retention")}</dt><dd>{Math.round((stats?.averageRetention ?? 0) * 100)}%</dd></div>
+			<div><dt>{zh("Embedding coverage")}</dt><dd>{Math.round(stats?.embeddingCoverage ?? 0)}%</dd></div>
+			<div><dt>{zh("Running version")}</dt><dd>v{health?.version ?? zh("unknown")}</dd></div>
 		</dl>
 
 		<section class="system-grid">
-			<figure class="glass-panel retention"><figcaption><span>RETENTION DISTRIBUTION</span><small>{retention?.total ?? 0} memories</small></figcaption>
+			<figure class="glass-panel retention"><figcaption><span>{zh("RETENTION DISTRIBUTION")}</span><small>{retention?.total ?? 0} {zh("memories")}</small></figcaption>
 				{#each retention?.distribution ?? [] as bucket}
 					<div class="retention-row"><span>{bucket.range}</span><div><i style={`width:${bandWidth(bucket.count)}`}></i></div><strong>{bucket.count}</strong></div>
 				{/each}
 			</figure>
 
-			<section class="glass-panel rituals" aria-label="Memory maintenance actions">
-				<p class="eyebrow">MAINTENANCE RITUALS</p><h2>Run with intent.</h2>
-				<button type="button" disabled={busy !== null} onclick={runConsolidate}><strong>{busy === 'consolidate' ? 'Consolidating…' : 'Consolidate memory'}</strong><span>Recalculate retention, decay, embeddings and duplicates.</span></button>
-				<button type="button" disabled={busy !== null} onclick={runDream}><strong>{busy === 'dream' ? 'Dreaming…' : 'Run dream cycle'}</strong><span>Replay local memories and discover durable connections.</span></button>
-				<button type="button" class="refresh" disabled={busy !== null} onclick={runRefresh}>{busy === 'refresh' ? 'Refreshing…' : 'Refresh live vitals'}</button>
+			<section class="glass-panel rituals" aria-label={zh("Memory maintenance actions")}>
+				<p class="eyebrow">{zh("MAINTENANCE RITUALS")}</p><h2>{zh("Run with intent.")}</h2>
+				<button type="button" disabled={busy !== null} onclick={runConsolidate}><strong>{busy === 'consolidate' ? zh("Consolidating…") : zh("Consolidate memory")}</strong><span>{zh("Recalculate retention, decay, embeddings and duplicates.")}</span></button>
+				<button type="button" disabled={busy !== null} onclick={runDream}><strong>{busy === 'dream' ? zh("Dreaming…") : zh("Run dream cycle")}</strong><span>{zh("Replay local memories and discover durable connections.")}</span></button>
+				<button type="button" class="refresh" disabled={busy !== null} onclick={runRefresh}>{busy === 'refresh' ? zh("Refreshing…") : zh("Refresh live vitals")}</button>
 			</section>
 		</section>
 	{/if}
 
-	<section class="glass-panel operation-receipt" aria-live="polite"><p class="eyebrow">OPERATION STATUS</p><output>{statusLine}</output>
-		{#if consolidation}<dl><div><dt>Processed</dt><dd>{consolidation.nodesProcessed}</dd></div><div><dt>Decayed</dt><dd>{consolidation.decayApplied}</dd></div><div><dt>Embeddings</dt><dd>{consolidation.embeddingsGenerated}</dd></div><div><dt>Merged</dt><dd>{consolidation.duplicatesMerged}</dd></div><div><dt>Duration</dt><dd>{consolidation.durationMs} ms</dd></div></dl>{/if}
-		{#if dream}<dl><div><dt>Replayed</dt><dd>{dream.memoriesReplayed}</dd></div><div><dt>Connections</dt><dd>{dream.connectionsPersisted}</dd></div><div><dt>Insights</dt><dd>{dream.insights.length}</dd></div></dl>{#if dream.insights[0]}<blockquote>{dream.insights[0].insight}</blockquote>{/if}{/if}
+	<section class="glass-panel operation-receipt" aria-live="polite"><p class="eyebrow">{zh("OPERATION STATUS")}</p><output>{statusLine}</output>
+		{#if consolidation}<dl><div><dt>{zh("Processed")}</dt><dd>{consolidation.nodesProcessed}</dd></div><div><dt>{zh("Decayed")}</dt><dd>{consolidation.decayApplied}</dd></div><div><dt>{zh("Embeddings")}</dt><dd>{consolidation.embeddingsGenerated}</dd></div><div><dt>{zh("Merged")}</dt><dd>{consolidation.duplicatesMerged}</dd></div><div><dt>{zh("Duration")}</dt><dd>{consolidation.durationMs} ms</dd></div></dl>{/if}
+		{#if dream}<dl><div><dt>{zh("Replayed")}</dt><dd>{dream.memoriesReplayed}</dd></div><div><dt>{zh("Connections")}</dt><dd>{dream.connectionsPersisted}</dd></div><div><dt>{zh("Insights")}</dt><dd>{dream.insights.length}</dd></div></dl>{#if dream.insights[0]}<blockquote>{dream.insights[0].insight}</blockquote>{/if}{/if}
 	</section>
 </main>
 

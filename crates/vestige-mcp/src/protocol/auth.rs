@@ -20,6 +20,9 @@ const MIN_TOKEN_LENGTH: usize = 32;
 
 /// Return the auth token file path inside the Vestige data directory.
 pub fn token_path() -> Result<PathBuf, Box<dyn std::error::Error>> {
+    if let Some(directory) = std::env::var_os("VESTIGE_DATA_DIR").filter(|value| !value.is_empty()) {
+        return Ok(vestige_core::Storage::db_path_for_data_dir(PathBuf::from(directory))?.with_file_name("auth_token"));
+    }
     let dirs = ProjectDirs::from("com", "vestige", "core")
         .ok_or("could not determine project directories")?;
     Ok(dirs.data_dir().join("auth_token"))

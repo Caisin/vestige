@@ -19,6 +19,7 @@
   Mobile: collapses to items 1, 2, 6 to save width.
 -->
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onMount } from 'svelte';
 	import {
 		memoryCount,
@@ -175,10 +176,10 @@
 <div
 	class="ambient-strip relative flex h-9 w-full items-center gap-0 overflow-hidden border-b border-synapse/15 bg-black/40 px-3 text-[11px] text-dim backdrop-blur-md"
 	class:ambient-flash={suppressionFlash}
-	aria-label="Ambient cognitive vitals"
+	aria-label={zh("Ambient cognitive vitals")}
 >
 	<!-- 1. Retention vitals — always visible -->
-	<div class="strip-item" title="Total memories and average retention strength">
+	<div class="strip-item" title={zh("Total memories and average retention strength")}>
 		<span class="relative inline-flex h-2 w-2 items-center justify-center">
 			<span
 				class="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
@@ -194,33 +195,33 @@
 			></span>
 		</span>
 		<span class="text-text/80 tabular-nums">{liveMemoryCount === null ? '—' : liveMemoryCount}</span>
-		<span class="text-muted">memories</span>
+		<span class="text-muted">{zh("memories")}</span>
 		<span class="text-muted/60">·</span>
 		<span class:text-recall={retentionKnown && retentionHealthy} class:text-warning={retentionKnown && !retentionHealthy}>
 			{retentionPct === null ? '—' : `${retentionPct}%`}
 		</span>
-		<span class="text-muted">avg retention</span>
+		<span class="text-muted">{zh("avg retention")}</span>
 	</div>
 
 	<div class="strip-divider" aria-hidden="true"></div>
 
 	<!-- 2. At-risk — always visible -->
-	<div class="strip-item" title="Memories with retention below 30%">
+	<div class="strip-item" title={zh("Memories with retention below 30%")}>
 		{#if atRiskCount !== null && atRiskCount > 0}
 			<span class="font-semibold tabular-nums text-decay">{atRiskCount}</span>
-			<span class="text-muted">at risk</span>
+			<span class="text-muted">{zh("at risk")}</span>
 		{:else if atRiskCount === 0}
 			<span class="text-muted tabular-nums">0</span>
-			<span class="text-muted">at risk</span>
+			<span class="text-muted">{zh("at risk")}</span>
 		{:else}
 			<span class="text-muted/60">—</span>
-			<span class="text-muted">at risk</span>
+			<span class="text-muted">{zh("at risk")}</span>
 		{/if}
 	</div>
 
 	<!-- 3. Active intentions — hidden on mobile -->
 	<div class="strip-divider hidden md:block" aria-hidden="true"></div>
-	<div class="strip-item hidden md:inline-flex" title="Active intentions (prospective memory)">
+	<div class="strip-item hidden md:inline-flex" title={zh("Active intentions (prospective memory)")}>
 		{#if intentionsCount !== null}
 			<span
 				class="inline-flex h-2 w-2 rounded-full"
@@ -236,26 +237,26 @@
 			>
 				{intentionsCount}
 			</span>
-			<span class="text-muted">intentions</span>
+			<span class="text-muted">{zh("intentions")}</span>
 		{:else}
-			<span class="text-muted/60">— intentions</span>
+			<span class="text-muted/60">{zh("— intentions")}</span>
 		{/if}
 	</div>
 
 	<!-- 4. Recent dream — hidden on mobile -->
 	<div class="strip-divider hidden md:block" aria-hidden="true"></div>
-	<div class="strip-item hidden md:inline-flex" title="Most recent Dream cycle completion">
+	<div class="strip-item hidden md:inline-flex" title={zh("Most recent Dream cycle completion")}>
 		{#if dreamState.recent && dreamState.recentMsAgo !== null}
 			<span class="text-dream/80">✦</span>
-			<span class="text-muted">Last dream:</span>
+			<span class="text-muted">{zh("Last dream:")}</span>
 			<span class="text-text/80">{formatAgo(dreamState.recentMsAgo)}</span>
 			{#if dreamState.insights !== null}
 				<span class="text-muted/60">·</span>
 				<span class="text-text/80 tabular-nums">{dreamState.insights}</span>
-				<span class="text-muted">insights</span>
+				<span class="text-muted">{zh("insights")}</span>
 			{/if}
 		{:else}
-			<span class="text-muted">No recent dream</span>
+			<span class="text-muted">{zh("No recent dream")}</span>
 		{/if}
 	</div>
 
@@ -263,9 +264,9 @@
 	<div class="strip-divider hidden md:block" aria-hidden="true"></div>
 	<div
 		class="strip-item hidden md:inline-flex"
-		title="Event throughput over the last 5 minutes (events per 30s)"
+		title={zh("Event throughput over the last 5 minutes (events per 30s)")}
 	>
-		<span class="text-muted">activity</span>
+		<span class="text-muted">{zh("activity")}</span>
 		<div class="flex h-4 items-end gap-[2px]" aria-hidden="true">
 			{#each sparkline as bar}
 				<div
@@ -280,21 +281,21 @@
 	<div class="strip-divider hidden lg:block" aria-hidden="true"></div>
 	<div
 		class="strip-item hidden lg:inline-flex"
-		title="Sanhedrin receipts, appeals, and fail-open events over the last 7 days"
+		title={zh("Sanhedrin receipts, appeals, and fail-open events over the last 7 days")}
 	>
-		<span class="text-muted">Sanhedrin 7d</span>
+		<span class="text-muted">{zh("Sanhedrin 7d")}</span>
 		{#if sanhedrinTelemetryError}
-			<span class="text-warning">telemetry unavailable</span>
+			<span class="text-warning">{zh("telemetry unavailable")}</span>
 		{:else}
 			<span class="tabular-nums text-decay">{sanhedrinTelemetry?.byVerdict?.VETO ?? '—'}</span>
-			<span class="text-muted">vetoes</span>
+			<span class="text-muted">{zh("vetoes")}</span>
 			<span class="text-muted/60">·</span>
 			<span class="tabular-nums text-synapse-glow">{sanhedrinTelemetry?.appeals ?? '—'}</span>
-			<span class="text-muted">appeals</span>
+			<span class="text-muted">{zh("appeals")}</span>
 			{#if sanhedrinTelemetry?.failOpen}
 				<span class="text-muted/60">·</span>
 				<span class="tabular-nums text-warning">{sanhedrinTelemetry.failOpen}</span>
-				<span class="text-muted">fail-open</span>
+				<span class="text-muted">{zh("fail-open")}</span>
 			{/if}
 		{/if}
 	</div>
@@ -302,14 +303,14 @@
 	<!-- 6. Now dreaming? — always visible when active -->
 	{#if dreamState.isDreaming}
 		<div class="strip-divider" aria-hidden="true"></div>
-		<div class="strip-item" title="A Dream cycle is currently in progress">
+		<div class="strip-item" title={zh("A Dream cycle is currently in progress")}>
 			<span class="relative inline-flex h-2 w-2 items-center justify-center">
 				<span
 					class="absolute inline-flex h-full w-full animate-ping rounded-full bg-dream opacity-75"
 				></span>
 				<span class="relative inline-flex h-2 w-2 rounded-full bg-dream"></span>
 			</span>
-			<span class="font-semibold tracking-wider text-dream-glow">DREAMING...</span>
+			<span class="font-semibold tracking-wider text-dream-glow">{zh("DREAMING...")}</span>
 		</div>
 	{/if}
 
@@ -318,11 +319,11 @@
 
 	<!-- 7. Sanhedrin watch — subtle right-aligned flash, hidden on mobile -->
 	{#if suppressionFlash}
-		<div class="strip-item hidden md:inline-flex" title="A memory was just suppressed (Sanhedrin veto)">
+		<div class="strip-item hidden md:inline-flex" title={zh("A memory was just suppressed (Sanhedrin veto)")}>
 			<span
 				class="inline-flex h-2 w-2 animate-pulse rounded-full bg-decay shadow-[0_0_10px_rgba(239,68,68,0.7)]"
 			></span>
-			<span class="font-medium text-decay">Veto triggered</span>
+			<span class="font-medium text-decay">{zh("Veto triggered")}</span>
 		</div>
 	{/if}
 </div>

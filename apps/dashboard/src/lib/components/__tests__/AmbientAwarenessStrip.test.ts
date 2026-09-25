@@ -413,27 +413,27 @@ describe('hasRecentSuppression', () => {
 // ─────────────────────────────────────────────────────────────────────────
 describe('formatAgo', () => {
 	it('formats seconds', () => {
-		expect(formatAgo(5_000)).toBe('5s ago');
-		expect(formatAgo(59_000)).toBe('59s ago');
-		expect(formatAgo(0)).toBe('0s ago');
+		expect(formatAgo(5_000)).toBe('5秒前');
+		expect(formatAgo(59_000)).toBe('59秒前');
+		expect(formatAgo(0)).toBe('0秒前');
 	});
 
 	it('formats minutes', () => {
-		expect(formatAgo(60_000)).toBe('1m ago');
-		expect(formatAgo(59 * 60_000)).toBe('59m ago');
+		expect(formatAgo(60_000)).toBe('1分钟前');
+		expect(formatAgo(59 * 60_000)).toBe('59分钟前');
 	});
 
 	it('formats hours', () => {
-		expect(formatAgo(60 * 60_000)).toBe('1h ago');
-		expect(formatAgo(23 * 60 * 60_000)).toBe('23h ago');
+		expect(formatAgo(60 * 60_000)).toBe('1小时前');
+		expect(formatAgo(23 * 60 * 60_000)).toBe('23小时前');
 	});
 
 	it('formats days', () => {
-		expect(formatAgo(24 * 60 * 60_000)).toBe('1d ago');
-		expect(formatAgo(7 * 24 * 60 * 60_000)).toBe('7d ago');
+		expect(formatAgo(24 * 60 * 60_000)).toBe('1天前');
+		expect(formatAgo(7 * 24 * 60 * 60_000)).toBe('7天前');
 	});
 
 	it('clamps negative input to 0', () => {
-		expect(formatAgo(-5_000)).toBe('0s ago');
+		expect(formatAgo(-5_000)).toBe('0秒前');
 	});
 });

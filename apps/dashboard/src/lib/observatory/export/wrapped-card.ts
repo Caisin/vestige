@@ -124,11 +124,11 @@ export async function renderWrappedCard(input: WrappedCardInput): Promise<Wrappe
 	ctx.fillText('STRUCTURE ONLY  ·  ZERO MEMORY TEXT', 72, 300);
 
 	const metrics: [string, string][] = [
-		['MEMORIES', shape.totalMemories.toLocaleString()],
-		['CONNECTIONS', shape.edgeCount.toLocaleString()],
-		['ACTIVE', bands.active.toLocaleString()],
-		['DORMANT', bands.dormant.toLocaleString()],
-		['SILENT', bands.silent.toLocaleString()],
+		['MEMORIES', shape.totalMemories.toLocaleString('zh-CN')],
+		['CONNECTIONS', shape.edgeCount.toLocaleString('zh-CN')],
+		['ACTIVE', bands.active.toLocaleString('zh-CN')],
+		['DORMANT', bands.dormant.toLocaleString('zh-CN')],
+		['SILENT', bands.silent.toLocaleString('zh-CN')],
 		['ARCHIVE', `${Math.max(0, archiveDays)}d`]
 	];
 	metrics.forEach(([label, value], i) => {

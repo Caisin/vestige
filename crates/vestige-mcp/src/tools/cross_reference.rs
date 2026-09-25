@@ -422,10 +422,7 @@ fn node_matches_reason_filters(
     {
         return Ok(false);
     }
-    if !node_matches_source(node, source) {
-        return Ok(false);
-    }
-    Ok(true)
+    Ok(node_matches_source(node, source))
 }
 
 // ============================================================================

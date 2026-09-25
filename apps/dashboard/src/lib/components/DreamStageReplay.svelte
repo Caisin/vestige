@@ -11,6 +11,7 @@
   Pure CSS transforms + SVG + animations. No Three.js.
 -->
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import type { DreamResult } from '$types';
 	import { clampStage } from './dream-helpers';
 
@@ -26,19 +27,19 @@
 			num: 1,
 			name: 'Replay',
 			color: '#22C7DE',
-			desc: 'Hippocampal replay: tagged memories surface for consolidation.'
+			desc: "Hippocampal replay: tagged memories surface for consolidation."
 		},
 		{
 			num: 2,
 			name: 'Cross-reference',
 			color: '#1BD6FF',
-			desc: 'Semantic proximity check — new edges discovered across memories.'
+			desc: "Semantic proximity check — new edges discovered across memories."
 		},
 		{
 			num: 3,
 			name: 'Strengthen',
 			color: '#29F2A9',
-			desc: 'Co-activated memories strengthen; FSRS stability grows.'
+			desc: "Co-activated memories strengthen; FSRS stability grows."
 		},
 		{
 			num: 4,
@@ -50,7 +51,7 @@
 			num: 5,
 			name: 'Transfer',
 			color: '#10b981',
-			desc: 'Episodic → semantic consolidation (hippocampus → cortex).'
+			desc: "Episodic → semantic consolidation (hippocampus → cortex)."
 		}
 	];
 
@@ -194,7 +195,7 @@
 			</div>
 		</div>
 		<div class="text-[10px] text-dim uppercase tracking-[0.15em] hidden sm:block">
-			Stage {current.num} / 5
+			{zh("Stage")} {current.num} / 5
 		</div>
 	</header>
 
@@ -207,12 +208,12 @@
 		<!-- Left/right labels for transfer stage -->
 		{#if stageIdx === 5}
 			<div class="transfer-label episodic">
-				<span class="label-tag">Episodic</span>
-				<span class="label-sub">hippocampus</span>
+				<span class="label-tag">{zh("Episodic")}</span>
+				<span class="label-sub">{zh("hippocampus")}</span>
 			</div>
 			<div class="transfer-label semantic">
-				<span class="label-tag">Semantic</span>
-				<span class="label-sub">cortex</span>
+				<span class="label-tag">{zh("Semantic")}</span>
+				<span class="label-sub">{zh("cortex")}</span>
 			</div>
 			<div class="divider-line"></div>
 		{/if}
@@ -282,16 +283,16 @@
 	<!-- Stage footer with stats -->
 	<footer class="flex flex-wrap gap-x-6 gap-y-1 px-5 py-3 border-t border-white/5 text-[11px] text-dim">
 		{#if stageIdx === 1}
-			<span>Replaying <b class="text-bright tabular-nums">{dreamResult?.memoriesReplayed ?? cardCount}</b> memories</span>
+			<span>{zh("Replaying")} <b class="text-bright tabular-nums">{dreamResult?.memoriesReplayed ?? cardCount}</b> {zh("memories")}</span>
 		{:else if stageIdx === 2}
-			<span>New connections found: <b class="text-bright tabular-nums">{dreamResult?.stats?.newConnectionsFound ?? connectionCount}</b></span>
+			<span>{zh("New connections found:")} <b class="text-bright tabular-nums">{dreamResult?.stats?.newConnectionsFound ?? connectionCount}</b></span>
 		{:else if stageIdx === 3}
-			<span>Strengthened: <b class="text-bright tabular-nums">{dreamResult?.stats?.memoriesStrengthened ?? strengthenedCount}</b></span>
+			<span>{zh("Strengthened:")} <b class="text-bright tabular-nums">{dreamResult?.stats?.memoriesStrengthened ?? strengthenedCount}</b></span>
 		{:else if stageIdx === 4}
-			<span>Compressed: <b class="text-bright tabular-nums">{dreamResult?.stats?.memoriesCompressed ?? prunedCount}</b></span>
+			<span>{zh("Compressed:")} <b class="text-bright tabular-nums">{dreamResult?.stats?.memoriesCompressed ?? prunedCount}</b></span>
 		{:else if stageIdx === 5}
-			<span>Connections persisted: <b class="text-bright tabular-nums">{dreamResult?.connectionsPersisted ?? 0}</b></span>
-			<span>Insights: <b class="text-bright tabular-nums">{dreamResult?.stats?.insightsGenerated ?? 0}</b></span>
+			<span>{zh("Connections persisted:")} <b class="text-bright tabular-nums">{dreamResult?.connectionsPersisted ?? 0}</b></span>
+			<span>{zh("Insights:")} <b class="text-bright tabular-nums">{dreamResult?.stats?.insightsGenerated ?? 0}</b></span>
 		{/if}
 	</footer>
 </div>

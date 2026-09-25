@@ -286,6 +286,7 @@ export class TextLayerPass implements FramePass {
 		const device = this.engine.gpuDevice;
 		if (!device || !this.engine.paramsBuffer || !this.atlas) return;
 		this.ensurePipeline(device);
+		this.atlas.ensureGlyphs(rawItems.map(item => item.text).join('\n'));
 		const items = this.portraitAdapt(rawItems);
 		const packed: number[] = [];
 		const runs: TextRunRect[] = [];

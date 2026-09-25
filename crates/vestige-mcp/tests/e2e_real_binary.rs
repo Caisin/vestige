@@ -869,12 +869,18 @@ fn tools_list_is_deterministic_across_restarts_and_carries_cache_hints() {
 
     // The expanded v3 catalog includes projection, the intention graph and
     // complete maintenance actions. Its integrated baseline is 52,988 bytes.
-    // Preserve a bounded full catalog and separately bound the common subset
-    // used by clients with v3 progressive discovery.
+    // Keep the original surface's ceiling. Writer Studio adds seven tools;
+    // budget its compact schemas separately instead of allowing legacy growth.
+    let catalog = a["tools"].as_array().unwrap();
+    let legacy: Vec<_> = catalog.iter().filter(|tool| !tool["name"].as_str().unwrap().starts_with("writer_")).collect();
+    let writer: Vec<_> = catalog.iter().filter(|tool| tool["name"].as_str().unwrap().starts_with("writer_")).collect();
+    assert_eq!(writer.len(), 7);
+    assert!(serde_json::to_string(&legacy).unwrap().len() <= 55_000, "legacy tool schemas exceeded their existing budget");
+    assert!(serde_json::to_string(&writer).unwrap().len() <= 14_000, "writer schemas exceeded their module budget");
     let bytes = serde_json::to_string(&a).unwrap().len();
     assert!(
-        bytes <= 55_000,
-        "tools/list is {bytes} bytes, over the 55,000 byte v3 ceiling; a schema or description grew"
+        bytes <= 69_000,
+        "tools/list is {bytes} bytes, over the 69,000 byte combined ceiling"
     );
 
     let common: Vec<_> = a["tools"]
@@ -2998,6 +3004,29 @@ fn smart_ingest_and_suppress_reject_calls_without_their_subject() {
 /// The guard: every tool the server advertises has at least two calls in this
 /// file. Adding a tool without driving it over stdio fails here, not in a
 /// user's client.
+#[test]
+fn writer_tools_round_trip_over_real_stdio_with_versions_and_evidence() {
+    let dir = data_dir(); let mut server = Server::spawn(dir.path()); server.handshake();
+    let role = server.call_tool_ok("writer_role", json!({"action":"create","name":"stdio screenplay fixture"}))["role"]["id"].clone();
+    assert!(role.is_string());
+    let source = server.call_tool_ok("writer_source", json!({"action":"attach_text","role_id":role,"title":"Synthetic script","content":"Mira hands over the recording even though it costs her the promotion."}))["source"]["id"].clone();
+    let segment = server.call_tool_ok("writer_source", json!({"action":"get","role_id":role,"source_id":source}))["segments"][0]["id"].clone();
+    let task = server.call_tool_ok("writer_task", json!({"action":"create","role_id":role,"kind":"extract"}))["task"]["id"].clone();
+    let lease = server.call_tool_ok("writer_task", json!({"action":"claim","task_id":task,"agent_id":"stdio-agent"}))["lease_token"].clone();
+    let completion = server.call_tool_ok("writer_task", json!({"action":"complete","task_id":task,"lease_token":lease,"result":{"summary":"A costly choice","rules":[{"id":"cost","category":"conflict","title":"Make the choice costly","instruction":"Give the protagonist a meaningful consequence for their decision.","evidence":[{"source_id":source,"segment_id":segment,"quote":"even though it costs her the promotion"}]}]}}));
+    assert_eq!(completion["task"]["result"]["output"]["candidate_version"], 1);
+    server.call_tool_ok("writer_role", json!({"action":"publish","role_id":role,"version":1,"expected_version":0}));
+    let project = server.call_tool_ok("writer_project", json!({"action":"create","role_id":role,"name":"Original pilot","format":"short_drama","brief":"A station clerk finds a letter from tomorrow."}))["project"]["id"].clone();
+    let stored = server.call_tool_ok("writer_project", json!({"action":"get","project_id":project})); assert_eq!(stored["project"]["role_version"],1);
+    let context = server.call_tool_ok("writer_context", json!({"action":"prepare","role_id":role,"project_id":project})); assert_eq!(context["rules"].as_array().unwrap().len(),1);
+    let bad = server.call_tool("writer_context", json!({"action":"prepare","role_id":role,"project_id":"missing-project"})); assert_eq!(bad["code"],"NOT_FOUND");
+    let draft = server.call_tool_ok("writer_draft", json!({"action":"save","project_id":project,"role_version":1,"kind":"scene","title":"Tomorrow","content":"Mira puts the letter down. The final train leaves without her."}))["draft"]["id"].clone();
+    assert_eq!(server.call_tool_ok("writer_draft", json!({"action":"get","draft_id":draft}))["draft"]["revision"],1);
+    server.call_tool_ok("writer_review", json!({"action":"save","draft_id":draft,"draft_revision":1,"summary":"Make the consequence concrete","findings":[{"severity":"warning","quote":"The final train leaves without her.","issue":"Her loss is not yet established.","suggestion":"Establish the appointment she will miss."}]}));
+    assert_eq!(server.call_tool_ok("writer_review", json!({"action":"list","draft_id":draft}))["reviews"].as_array().unwrap().len(),1);
+    server.shutdown();
+}
+
 #[test]
 fn every_advertised_tool_is_called_at_least_twice_in_this_suite() {
     let dir = data_dir();

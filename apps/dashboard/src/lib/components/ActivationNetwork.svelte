@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onMount, onDestroy } from 'svelte';
 	import {
 		activationColor,
@@ -269,7 +270,7 @@
 	{height}
 	viewBox="0 0 {width} {height}"
 	class="w-full h-full block"
-	aria-label="Spreading activation visualization"
+	aria-label={zh("Spreading activation visualization")}
 >
 	<defs>
 		<filter id="act-glow" x="-50%" y="-50%" width="200%" height="200%">

@@ -8,6 +8,7 @@
   Keep this file focused on rendering + glue.
 -->
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { NODE_TYPE_COLORS } from '$types';
 	import {
 		similarityBandColor,
@@ -74,7 +75,7 @@
 		try {
 			plan = await onPlan(memories.map((m) => m.id));
 		} catch (e) {
-			mergeError = e instanceof Error ? e.message : 'Could not plan the merge';
+			mergeError = e instanceof Error ? e.message : zh("Could not plan the merge");
 		} finally {
 			planning = false;
 		}
@@ -88,7 +89,7 @@
 			merged = await onApply(plan.planId);
 			onMerged?.(merged);
 		} catch (e) {
-			mergeError = e instanceof Error ? e.message : 'Could not apply the merge';
+			mergeError = e instanceof Error ? e.message : zh("Could not apply the merge");
 		} finally {
 			applying = false;
 		}
@@ -129,12 +130,12 @@
 						{(similarity * 100).toFixed(1)}%
 					</span>
 					<span class="text-xs text-dim">{similarityBandLabel(similarity)}</span>
-					<span class="text-xs text-muted">· {memories.length} memories</span>
+					<span class="text-xs text-muted">· {memories.length} {zh("memories")}</span>
 				</div>
 				<div
 					class="h-2 w-full overflow-hidden rounded-full bg-deep/60"
 					role="progressbar"
-					aria-label="Cosine similarity"
+					aria-label={zh("Cosine similarity")}
 					aria-valuenow={Math.round(similarity * 100)}
 					aria-valuemin="0"
 					aria-valuemax="100"
@@ -154,7 +155,7 @@
 				<span
 					class="flex-shrink-0 rounded-full border border-warning/50 bg-warning/10 px-3 py-1 text-xs font-medium text-warning"
 				>
-					REVIEW REQUIRED · NOT SAFE TO MERGE
+					{zh("REVIEW REQUIRED · NOT SAFE TO MERGE")}
 				</span>
 			{:else}
 				<!-- Analysis classification, NOT an actionable suggestion — merge is
@@ -166,7 +167,7 @@
 						? 'border-recall/40 bg-recall/10 text-recall'
 						: 'border-dream-glow/40 bg-dream/10 text-dream-glow'}"
 				>
-					Classification: {suggestedAction === 'merge' ? 'merge candidate' : 'review'}
+					{zh("Classification:")} {suggestedAction === 'merge' ? zh("merge candidate") : zh("review")}
 				</span>
 			{/if}
 		</div>
@@ -190,10 +191,10 @@
 					<div class="flex-1 min-w-0 space-y-1.5">
 						<!-- Type + tags + winner flag -->
 						<div class="flex flex-wrap items-center gap-1.5">
-							<span class="text-xs text-dim">{memory.nodeType}</span>
+							<span class="text-xs text-dim">{zh(String(memory.nodeType))}</span>
 							{#if memory.id === winner.id}
 								<span class="rounded bg-recall/15 px-1.5 py-0.5 text-[10px] font-medium text-recall">
-									WINNER
+									{zh("WINNER")}
 								</span>
 							{/if}
 							{#each safeTags(memory.tags, 4) as tag}
@@ -236,9 +237,7 @@
 				<div
 					class="rounded-xl border border-warning/20 bg-warning/5 p-3 text-xs text-dim"
 				>
-					+{hiddenCount} linked candidates — oversized similarity component. Members
-					chain through pairwise similarity; distant members may be unrelated. Raise
-					the threshold to split it.
+					+{hiddenCount} {zh("linked candidates — oversized similarity component. Members chain through pairwise similarity; distant members may be unrelated. Raise the threshold to split it.")}
 				</div>
 			{/if}
 		</div>
@@ -248,12 +247,12 @@
 		{#if plan && !merged}
 			<div class="rounded-xl border border-synapse/25 bg-synapse/5 p-3 text-xs">
 				<div class="font-mono text-[11px] uppercase tracking-[0.18em] text-synapse-glow">
-					Merge preview · nothing written yet
+					{zh("Merge preview · nothing written yet")}
 				</div>
 				<div class="mt-1 text-text">{mergePlanSummary(plan)}</div>
 				<div class="mt-1 text-muted">{plan.explanation}</div>
 				<div class="mt-2 max-h-24 overflow-hidden text-muted">
-					Result: {previewContent(plan.diff.resultContent, 240)}
+					{zh("Result:")} {previewContent(plan.diff.resultContent, 240)}
 				</div>
 				<div class="mt-3 flex flex-wrap items-center gap-2">
 					<button
@@ -262,7 +261,7 @@
 						disabled={applying}
 						class="rounded-lg bg-synapse/25 px-3 py-1.5 text-xs font-medium text-synapse-glow transition hover:bg-synapse/35 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-synapse/60"
 					>
-						{applying ? 'Applying…' : 'Apply merge'}
+						{applying ? zh("Applying…") : zh("Apply merge")}
 					</button>
 					<button
 						type="button"
@@ -270,15 +269,14 @@
 						disabled={applying}
 						class="rounded-lg bg-white/[0.04] px-3 py-1.5 text-xs text-dim transition hover:bg-white/[0.08] hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-synapse/60"
 					>
-						Cancel
+						{zh("Cancel")}
 					</button>
 				</div>
 			</div>
 		{/if}
 		{#if merged}
 			<div class="rounded-xl border border-consolidated/25 bg-consolidated/5 p-3 text-xs text-text">
-				Merged into {merged.survivorId.slice(0, 8)}. Reversible: run dedup undo with
-				operation id <span class="font-mono">{merged.operationId}</span>.
+				{zh("Merged into")} {merged.survivorId.slice(0, 8)}{zh(". Reversible: run dedup undo with operation id")} <span class="font-mono">{merged.operationId}</span>.
 			</div>
 		{/if}
 		{#if mergeError}
@@ -297,15 +295,15 @@
 				onclick={previewMerge}
 				disabled={!canMerge || planning || !!plan}
 				aria-disabled={!canMerge}
-				aria-label={oversized ? 'Merge is not safe for an oversized component' : 'Preview a reversible merge'}
+				aria-label={oversized ? zh("Merge is not safe for an oversized component") : zh("Preview a reversible merge")}
 				class={canMerge
 					? 'rounded-lg bg-synapse/20 px-3 py-1.5 text-xs font-medium text-synapse-glow transition hover:bg-synapse/30 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-synapse/60'
 					: 'cursor-not-allowed rounded-lg bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-muted/60'}
 				title={oversized
-					? 'Oversized similarity component: members chain through pairwise similarity, so a merge could fold unrelated memories together'
-					: 'Preview first; nothing is written until you apply'}
+					? zh("Oversized similarity component: members chain through pairwise similarity, so a merge could fold unrelated memories together")
+					: zh("Preview first; nothing is written until you apply")}
 			>
-				{oversized ? 'Merge unsafe here' : planning ? 'Planning…' : 'Preview merge'}
+				{oversized ? zh("Merge unsafe here") : planning ? zh("Planning…") : zh("Preview merge")}
 			</button>
 			<button
 				type="button"
@@ -313,15 +311,15 @@
 				aria-expanded={expanded}
 				class="rounded-lg bg-dream/20 px-3 py-1.5 text-xs font-medium text-dream-glow transition hover:bg-dream/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-dream-glow/60"
 			>
-				{expanded ? 'Collapse' : 'Review'}
+				{expanded ? zh("Collapse") : zh("Review")}
 			</button>
 			<button
 				type="button"
 				onclick={onDismiss}
-				aria-label="Dismiss cluster for this session"
+				aria-label={zh("Dismiss cluster for this session")}
 				class="ml-auto rounded-lg bg-white/[0.04] px-3 py-1.5 text-xs text-dim transition hover:bg-white/[0.08] hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-synapse/60"
 			>
-				Dismiss cluster
+				{zh("Dismiss cluster")}
 			</button>
 		</div>
 	</div>

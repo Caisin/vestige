@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onMount } from 'svelte';
 	import {
 		websocket,
@@ -279,7 +280,7 @@
 		items.push({
 			id: 'feed:title',
 			kind: 'feed-title',
-			text: 'LIVE FEED',
+			text: zh("LIVE FEED"),
 			x: -0.94,
 			y: 0.9,
 			size: 0.04,
@@ -307,7 +308,7 @@
 			items.push({
 				id: 'feed:empty-1',
 				kind: 'feed-empty',
-				text: connected ? 'WAITING FOR LIVE ACTIVITY' : 'STREAM OFFLINE',
+				text: connected ? zh("WAITING FOR LIVE ACTIVITY") : zh("STREAM OFFLINE"),
 				x: -0.7,
 				y: 0.12,
 				size: 0.03,
@@ -321,7 +322,7 @@
 				id: 'feed:empty-2',
 				kind: 'feed-empty',
 				text: connected
-					? 'Recalls, ingests and consolidations stream here as they happen.'
+					? zh("Recalls, ingests and consolidations stream here as they happen.")
 					: 'Reconnecting to the live event stream...',
 				x: -0.7,
 				y: 0.02,
@@ -370,14 +371,14 @@
 	function connectionLine(connected: boolean, reconnecting: boolean, count: number): string {
 		const state = reconnecting ? 'RECONNECTING' : connected ? 'CONNECTED' : 'OFFLINE';
 		const suffix = count > 0 ? `${count} EVENT${count === 1 ? '' : 'S'}` : 'LIVE';
-		return sanitizeAscii(`${state} - ${suffix}`);
+		return safeLabel(`${state} - ${suffix}`);
 	}
 
 	function statusItem(text: string, color: [number, number, number, number]): FeedTextItem {
 		return {
 			id: 'feed:connection-state',
 			kind: 'feed-state',
-			text: sanitizeAscii(text),
+			text: safeLabel(text),
 			x: -0.52,
 			y: 0.03,
 			size: 0.038,
@@ -395,14 +396,14 @@
 
 	function eventLine(event: VestigeEvent, key: string): string {
 		const summary = payloadSummary(event.data);
-		return sanitizeAscii(`${event.type} | ${key.slice(0, 24)} | ${summary}`.slice(0, 138));
+		return safeLabel(`${event.type} | ${key.slice(0, 24)} | ${summary}`.slice(0, 138));
 	}
 
 	// Portrait row: short enough that portraitAdapt can size-boost it to a readable
 	// height on a phone. Event type + a compact payload summary, no id column.
 	function eventLineShort(event: VestigeEvent): string {
 		const summary = payloadSummary(event.data);
-		return sanitizeAscii(`${event.type} - ${summary}`.slice(0, 46));
+		return safeLabel(`${event.type} - ${summary}`.slice(0, 46));
 	}
 
 	function payloadSummary(data: Record<string, unknown>): string {
@@ -426,7 +427,7 @@
 			d.timestamp ??
 			d.at ??
 			`${event.type}:${index}`;
-		return sanitizeAscii(String(raw));
+		return safeLabel(String(raw));
 	}
 
 	function eventEnergy(event: VestigeEvent): number {
@@ -479,13 +480,13 @@
 		return CYAN;
 	}
 
-	function sanitizeAscii(value: string): string {
+	function safeLabel(value: string): string {
 		return value
 			.replace(/[—–]/g, '-')
 			.replace(/[‘’]/g, "'")
 			.replace(/[“”]/g, '"')
 			.replace(/…/g, '...')
-			.replace(/[^\x20-\x7E]/g, '?');
+			.replace(/[\x00-\x1F\x7F]/g, ' ');
 	}
 
 	function clamp01(value: number): number {
@@ -514,33 +515,33 @@
 	// first-time visitor reads "Memory recalled" instead of raw `SearchPerformed`.
 	type Tone = 'cyan' | 'amber' | 'scarlet' | 'violet' | 'green';
 	const EVENT_META: Record<string, { label: string; tone: Tone }> = {
-		Connected: { label: 'Stream connected', tone: 'green' },
-		MemoryCreated: { label: 'Memory ingested', tone: 'green' },
-		MemoryUpdated: { label: 'Memory updated', tone: 'cyan' },
-		MemoryDeleted: { label: 'Memory deleted', tone: 'scarlet' },
-		MemoryPromoted: { label: 'Memory promoted', tone: 'green' },
-		MemoryDemoted: { label: 'Memory demoted', tone: 'amber' },
-		MemorySuppressed: { label: 'Memory suppressed', tone: 'violet' },
-		MemoryUnsuppressed: { label: 'Suppression reversed', tone: 'cyan' },
-		Rac1CascadeSwept: { label: 'Forgetting cascade swept', tone: 'violet' },
-		SearchPerformed: { label: 'Memory recalled', tone: 'cyan' },
-		DreamStarted: { label: 'Dream started', tone: 'amber' },
-		DreamProgress: { label: 'Dream in progress', tone: 'amber' },
-		DreamCompleted: { label: 'Dream completed', tone: 'green' },
-		ConsolidationStarted: { label: 'Consolidation started', tone: 'amber' },
-		ConsolidationCompleted: { label: 'Consolidation completed', tone: 'green' },
-		RetentionDecayed: { label: 'Retention decayed', tone: 'amber' },
-		ConnectionDiscovered: { label: 'Connection discovered', tone: 'cyan' },
-		ActivationSpread: { label: 'Activation spread', tone: 'cyan' },
-		ImportanceScored: { label: 'Importance scored', tone: 'cyan' },
-		DeepReferenceCompleted: { label: 'Deep reference completed', tone: 'green' },
-		BackfillFired: { label: 'Salience backfill fired', tone: 'violet' },
-		CausalReceipt: { label: 'Causal receipt written', tone: 'cyan' },
-		HookVerdictRecorded: { label: 'Hook verdict recorded', tone: 'scarlet' },
-		TraceEvent: { label: 'Agent trace event', tone: 'cyan' },
-		MemoryPrOpened: { label: 'Memory PR opened', tone: 'amber' },
-		MemoryPrDecided: { label: 'Memory PR decided', tone: 'green' },
-		Heartbeat: { label: 'Heartbeat', tone: 'green' }
+		Connected: { label: zh("Stream connected"), tone: 'green' },
+		MemoryCreated: { label: zh("Memory ingested"), tone: 'green' },
+		MemoryUpdated: { label: zh("Memory updated"), tone: 'cyan' },
+		MemoryDeleted: { label: zh("Memory deleted"), tone: 'scarlet' },
+		MemoryPromoted: { label: zh("Memory promoted"), tone: 'green' },
+		MemoryDemoted: { label: zh("Memory demoted"), tone: 'amber' },
+		MemorySuppressed: { label: zh("Memory suppressed"), tone: 'violet' },
+		MemoryUnsuppressed: { label: zh("Suppression reversed"), tone: 'cyan' },
+		Rac1CascadeSwept: { label: zh("Forgetting cascade swept"), tone: 'violet' },
+		SearchPerformed: { label: zh("Memory recalled"), tone: 'cyan' },
+		DreamStarted: { label: zh("Dream started"), tone: 'amber' },
+		DreamProgress: { label: zh("Dream in progress"), tone: 'amber' },
+		DreamCompleted: { label: zh("Dream completed"), tone: 'green' },
+		ConsolidationStarted: { label: zh("Consolidation started"), tone: 'amber' },
+		ConsolidationCompleted: { label: zh("Consolidation completed"), tone: 'green' },
+		RetentionDecayed: { label: zh("Retention decayed"), tone: 'amber' },
+		ConnectionDiscovered: { label: zh("Connection discovered"), tone: 'cyan' },
+		ActivationSpread: { label: zh("Activation spread"), tone: 'cyan' },
+		ImportanceScored: { label: zh("Importance scored"), tone: 'cyan' },
+		DeepReferenceCompleted: { label: zh("Deep reference completed"), tone: 'green' },
+		BackfillFired: { label: zh("Salience backfill fired"), tone: 'violet' },
+		CausalReceipt: { label: zh("Causal receipt written"), tone: 'cyan' },
+		HookVerdictRecorded: { label: zh("Hook verdict recorded"), tone: 'scarlet' },
+		TraceEvent: { label: zh("Agent trace event"), tone: 'cyan' },
+		MemoryPrOpened: { label: zh("Memory PR opened"), tone: 'amber' },
+		MemoryPrDecided: { label: zh("Memory PR decided"), tone: 'green' },
+		Heartbeat: { label: zh("Heartbeat"), tone: 'green' }
 	};
 
 	const TONE_DOT: Record<Tone, string> = {
@@ -564,7 +565,7 @@
 		const t = eventTime(event);
 		if (t === null) return 'live';
 		try {
-			return new Date(t).toLocaleTimeString(undefined, {
+			return new Date(t).toLocaleTimeString('zh-CN', {
 				hour: '2-digit',
 				minute: '2-digit',
 				second: '2-digit'
@@ -578,10 +579,10 @@
 	type Lens = 'all' | 'memory' | 'cognition' | 'lifecycle';
 	let lens = $state<Lens>('all');
 	const lensOptions: DropdownOption[] = [
-		{ value: 'all', label: 'All events', icon: 'feed' },
-		{ value: 'memory', label: 'Memory changes', icon: 'memories' },
-		{ value: 'cognition', label: 'Recall & reasoning', icon: 'reasoning' },
-		{ value: 'lifecycle', label: 'Dreams & upkeep', icon: 'dreams' }
+		{ value: 'all', label: zh("All events"), icon: 'feed' },
+		{ value: 'memory', label: zh("Memory changes"), icon: 'memories' },
+		{ value: 'cognition', label: zh("Recall & reasoning"), icon: 'reasoning' },
+		{ value: 'lifecycle', label: zh("Dreams & upkeep"), icon: 'dreams' }
 	];
 	const MEMORY_TYPES = new Set([
 		'MemoryCreated', 'MemoryUpdated', 'MemoryDeleted', 'MemoryPromoted',
@@ -661,7 +662,7 @@
 </script>
 
 <svelte:head>
-	<title>Live Feed · Vestige</title>
+	<title>{zh("Live Feed · Vestige")}</title>
 </svelte:head>
 
 <RouteStage
@@ -680,8 +681,8 @@
 	<div class="pointer-events-auto">
 		<PageHeader
 			icon="feed"
-			title="Live Feed"
-			subtitle="Real-time memory events as your agents read, write, and reconsider."
+			title={zh("Live Feed")}
+			subtitle={zh("Real-time memory events as your agents read, write, and reconsider.")}
 			accent="synapse"
 		>
 			<!-- Connection-status chip (real, from the websocket store) -->
@@ -692,7 +693,7 @@
 				<span class="ping-host inline-flex">
 					<span class="h-2 w-2 rounded-full" style="background: {TONE_DOT[statusTone]}"></span>
 				</span>
-				{statusLabel}
+				{zh(statusLabel)}
 			</span>
 		</PageHeader>
 	</div>
@@ -703,25 +704,25 @@
 			<div class="text-2xl text-bright font-bold tabular-nums">
 				<AnimatedNumber value={totalEvents} />
 			</div>
-			<div class="text-xs text-dim mt-1">recorded + live events</div>
+			<div class="text-xs text-dim mt-1">{zh("recorded + live events")}</div>
 		</div>
 		<div use:reveal={{ delay: 60, y: 12 }} class="p-4 glass rounded-xl lift">
 			<div class="text-2xl font-bold tabular-nums" style="color: #29F2A9">
 				<AnimatedNumber value={memoryEvents} />
 			</div>
-			<div class="text-xs text-dim mt-1">memory changes</div>
+			<div class="text-xs text-dim mt-1">{zh("memory changes")}</div>
 		</div>
 		<div use:reveal={{ delay: 120, y: 12 }} class="p-4 glass rounded-xl lift">
 			<div class="text-2xl text-bright font-bold tabular-nums">
 				<AnimatedNumber value={distinctTypes} />
 			</div>
-			<div class="text-xs text-dim mt-1">distinct event kinds</div>
+			<div class="text-xs text-dim mt-1">{zh("distinct event kinds")}</div>
 		</div>
 		<div use:reveal={{ delay: 180, y: 12 }} class="p-4 glass rounded-xl lift">
 			<div class="text-2xl text-bright font-bold tabular-nums">
 				{uptime}
 			</div>
-			<div class="text-xs text-dim mt-1">server uptime</div>
+			<div class="text-xs text-dim mt-1">{zh("server uptime")}</div>
 		</div>
 	</div>
 
@@ -730,27 +731,27 @@
 		<Dropdown
 			options={lensOptions}
 			value={lens}
-			label="Lens"
+			label={zh("Lens")}
 			icon="filter"
 			onChange={(v) => (lens = v as Lens)}
 		/>
 
 		{#if confirmingClear}
 			<div class="ml-auto flex items-center gap-2">
-				<span class="text-xs text-dim">Clear {liveEventCount} live buffered events?</span>
+				<span class="text-xs text-dim">{zh("Clear")} {liveEventCount} {zh("live buffered events?")}</span>
 				<button
 					type="button"
 					onclick={confirmClear}
 					class="rounded-lg bg-decay/20 px-3 py-2 text-xs font-medium text-decay transition hover:bg-decay/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-decay/60"
 				>
-					Confirm clear
+					{zh("Confirm clear")}
 				</button>
 				<button
 					type="button"
 					onclick={cancelClear}
 					class="rounded-lg border border-subtle/30 px-3 py-2 text-xs text-muted transition hover:text-text hover:border-synapse/30"
 				>
-					Cancel
+					{zh("Cancel")}
 				</button>
 			</div>
 		{:else}
@@ -758,13 +759,13 @@
 				type="button"
 				onclick={requestClear}
 				disabled={liveEventCount === 0}
-				title={liveEventCount === 0 ? 'No live events buffered — recorded history remains available' : 'Clear only the local live-event buffer; recorded history is not deleted'}
+				title={liveEventCount === 0 ? zh("No live events buffered — recorded history remains available") : zh("Clear only the local live-event buffer; recorded history is not deleted")}
 				class="ml-auto inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-medium transition lift
 					disabled:cursor-not-allowed disabled:opacity-40
 					border-subtle/30 text-dim hover:enabled:text-text hover:enabled:border-synapse/30 hover:enabled:bg-white/[0.03]"
 			>
 				<Icon name="close" size={13} />
-				Clear live buffer
+				{zh("Clear live buffer")}
 			</button>
 		{/if}
 	</div>
@@ -783,22 +784,22 @@
 						<Icon name="feed" size={26} draw />
 					</div>
 					{#if historyLoading}
-						<div class="text-sm font-medium text-bright">Recovering recorded activity…</div>
-						<div class="max-w-sm text-xs text-muted">Loading the durable cognitive changelog while the live stream stays connected.</div>
+						<div class="text-sm font-medium text-bright">{zh("Recovering recorded activity…")}</div>
+						<div class="max-w-sm text-xs text-muted">{zh("Loading the durable cognitive changelog while the live stream stays connected.")}</div>
 					{:else if $isConnected}
-						<div class="text-sm font-medium text-bright">Connected — waiting for agent activity</div>
+						<div class="text-sm font-medium text-bright">{zh("Connected — waiting for agent activity")}</div>
 						<div class="max-w-sm text-xs text-muted">
-							Every recall, ingest, promotion, and consolidation your agents perform will stream in here the moment it happens. Nothing has fired since this session opened.
+							{zh("Every recall, ingest, promotion, and consolidation your agents perform will stream in here the moment it happens. Nothing has fired since this session opened.")}
 						</div>
 					{:else if $isReconnecting}
-						<div class="text-sm font-medium text-bright">Reconnecting to the live stream…</div>
+						<div class="text-sm font-medium text-bright">{zh("Reconnecting to the live stream…")}</div>
 						<div class="max-w-sm text-xs text-muted">
-							The event socket dropped and is retrying with backoff. Events will resume automatically once it reconnects.
+							{zh("The event socket dropped and is retrying with backoff. Events will resume automatically once it reconnects.")}
 						</div>
 					{:else}
-						<div class="text-sm font-medium text-bright">Stream offline</div>
+						<div class="text-sm font-medium text-bright">{zh("Stream offline")}</div>
 						<div class="max-w-sm text-xs text-muted">
-							The MCP server's event socket isn't reachable. Start the Vestige server, then this feed will connect on its own.
+							{zh("The MCP server's event socket isn't reachable. Start the Vestige server, then this feed will connect on its own.")}
 						</div>
 					{/if}
 				</div>
@@ -807,13 +808,13 @@
 					<div class="text-dim opacity-50 breathe">
 						<Icon name="filter" size={40} strokeWidth={1.2} />
 					</div>
-					<p class="text-dim text-sm">No events match this lens.</p>
+					<p class="text-dim text-sm">{zh("No events match this lens.")}</p>
 					<button
 						type="button"
 						onclick={() => (lens = 'all')}
 						class="text-xs text-synapse-glow hover:underline"
 					>
-						Show all events
+						{zh("Show all events")}
 					</button>
 				</div>
 			{:else}
@@ -854,19 +855,19 @@
 							<span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background: {TONE_DOT[tone]}"></span>
 							<h2 class="text-sm font-semibold text-bright truncate">{eventLabel(selectedRow.event.type)}</h2>
 						</div>
-						<div class="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted">{selectedRow.event.type}</div>
+						<div class="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted">{zh(String(selectedRow.event.type))}</div>
 					</div>
 					<button
 						type="button"
 						onclick={() => (selectedEventKey = null)}
 						class="rounded-lg border border-subtle/30 px-2 py-1 text-[11px] text-muted transition hover:text-text hover:border-synapse/30"
 					>
-						Close
+						{zh("Close")}
 					</button>
 				</div>
 
 				<div class="flex items-center justify-between text-[11px]">
-					<span class="text-muted">Fired at</span>
+					<span class="text-muted">{zh("Fired at")}</span>
 					<span class="font-mono text-dim tabular-nums">{eventClock(selectedRow.event)}</span>
 				</div>
 
@@ -884,9 +885,9 @@
 				{/if}
 
 				<div class="space-y-1.5">
-					<div class="text-[10px] uppercase tracking-wider text-muted">Fields</div>
+					<div class="text-[10px] uppercase tracking-wider text-muted">{zh("Fields")}</div>
 					{#if eventEntries(selectedRow.event).length === 0}
-						<div class="text-[11px] text-muted">This event carries no payload fields.</div>
+						<div class="text-[11px] text-muted">{zh("This event carries no payload fields.")}</div>
 					{:else}
 						{#each eventEntries(selectedRow.event) as entry (entry.k)}
 							<div class="flex items-start gap-2 rounded-lg bg-white/[0.03] px-2.5 py-1.5">
@@ -902,14 +903,14 @@
 					<div class="text-dim opacity-50">
 						<Icon name="sparkle" size={30} strokeWidth={1.2} />
 					</div>
-					<div class="text-xs font-medium text-dim">Select an event</div>
+					<div class="text-xs font-medium text-dim">{zh("Select an event")}</div>
 					<p class="max-w-[220px] text-[11px] text-muted">
-						Click any row to inspect its full payload here. Selecting an event highlights it in the field behind — it never changes your data.
+						{zh("Click any row to inspect its full payload here. Selecting an event highlights it in the field behind — it never changes your data.")}
 					</p>
 					<div class="mt-2 w-full rounded-lg bg-white/[0.03] px-3 py-2 text-left">
-						<div class="text-[10px] uppercase tracking-wider text-muted">Socket</div>
+						<div class="text-[10px] uppercase tracking-wider text-muted">{zh("Socket")}</div>
 						<div class="mt-1 font-mono text-[11px] text-dim">
-							{$isConnected ? 'live' : 'offline'} · {feedEvents.length} events in this session
+							{$isConnected ? zh("live") : zh("offline")} · {feedEvents.length} {zh("events in this session")}
 						</div>
 					</div>
 				</div>

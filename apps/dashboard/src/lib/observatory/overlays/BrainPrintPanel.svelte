@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	/**
 	 * Brain print panel — structure-only signature of the live store.
 	 * Print id, trait chips, permalink. Zero memory text.
@@ -38,14 +39,14 @@
 		disabled={disabled || printing}
 		aria-busy={printing}
 	>
-		{printing ? 'Reading shape…' : print ? 'Recompute print' : 'Brain print'}
+		{printing ? zh("Reading shape…") : print ? zh("Recompute print") : zh("Brain print")}
 	</button>
 	{#if error}
 		<span class="obs-print-error" role="status">{error}</span>
 	{/if}
 	{#if activePrintId}
 		<div class="obs-print-card" aria-live="polite">
-			<span class="obs-print-kicker">structure only · zero memory text</span>
+			<span class="obs-print-kicker">{zh("structure only · zero memory text")}</span>
 			<code class="obs-print-id">{activePrintId}</code>
 			{#if traits.length}
 				<ul class="obs-traits">
@@ -55,7 +56,7 @@
 				</ul>
 			{/if}
 			<button class="obs-print-copy" type="button" onclick={oncopy}>
-				{copied ? 'Permalink copied' : 'Copy permalink'}
+				{copied ? zh("Permalink copied") : zh("Copy permalink")}
 			</button>
 		</div>
 	{/if}

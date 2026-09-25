@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	// ═══════════════════════════════════════════════════════════════════════
 	//  MEMORY RECEIPT CARD — the nutrition label for a retrieval.
 	// ───────────────────────────────────────────────────────────────────────
@@ -38,29 +39,29 @@
 	<div class="r-head">
 		<code class="r-id">{receipt.receipt_id}</code>
 		<span class="r-risk" style:color={riskColor[receipt.decay_risk]}>
-			decay: {receipt.decay_risk}
+			{zh("decay:")} {receipt.decay_risk}
 		</span>
 	</div>
 
 	<div class="r-metrics">
 		<div class="metric">
 			<span class="m-val">{receipt.retrieved.length}</span>
-			<span class="m-label">retrieved</span>
+			<span class="m-label">{zh("retrieved")}</span>
 		</div>
 		<div class="metric">
 			<span class="m-val">{receipt.suppressed.length}</span>
-			<span class="m-label">suppressed</span>
+			<span class="m-label">{zh("suppressed")}</span>
 		</div>
 		<div class="metric">
 			<span class="m-val">{(receipt.trust_floor * 100).toFixed(0)}%</span>
-			<span class="m-label">trust floor</span>
+			<span class="m-label">{zh("trust floor")}</span>
 		</div>
 	</div>
 
 	{#if !compact}
 		{#if receipt.activation_path.length}
 			<div class="r-section">
-				<span class="r-section-title">Activation path</span>
+				<span class="r-section-title">{zh("Activation path")}</span>
 				{#each receipt.activation_path as path (path)}
 					<div class="path">{path}</div>
 				{/each}
@@ -69,7 +70,7 @@
 
 		{#if receipt.retrieved.length}
 			<div class="r-section">
-				<span class="r-section-title">Retrieved</span>
+				<span class="r-section-title">{zh("Retrieved")}</span>
 				<div class="chips">
 					{#each receipt.retrieved as id (id)}
 						<code class="chip recall">{id.slice(0, 8)}</code>
@@ -80,7 +81,7 @@
 
 		{#if receipt.suppressed.length}
 			<div class="r-section">
-				<span class="r-section-title">Suppressed</span>
+				<span class="r-section-title">{zh("Suppressed")}</span>
 				<div class="chips">
 					{#each receipt.suppressed as s (s.id)}
 						<code class="chip suppress" title={s.reason}>
@@ -98,7 +99,7 @@
 		disabled={!receipt.retrieved.length && !receipt.suppressed.length}
 	>
 		<Icon name="sparkle" size={14} />
-		Open exact receipt in Observatory
+		{zh("Open exact receipt in Observatory")}
 	</button>
 </div>
 

@@ -1,3 +1,4 @@
+import { zh } from '$lib/i18n';
 /**
  * Cognitive Observatory â deterministic birth-plan CPU helpers (Moment B, Task B1).
  *
@@ -372,10 +373,10 @@ function buildEdgeSteps(
  */
 function buildTimeline(): TimelineBeat[] {
   return [
-    { label: 'latent trace condensing', startFrame: 60, endFrame: 239 },
-    { label: 'engram coalescence', startFrame: 240, endFrame: 329 },
-    { label: 'memory ignition', startFrame: 330, endFrame: 359 },
-    { label: 'associations engrave', startFrame: 360, endFrame: 509 },
-    { label: 'stabilization', startFrame: 510, endFrame: 659 },
+    { label: zh("latent trace condensing"), startFrame: 60, endFrame: 239 },
+    { label: zh("engram coalescence"), startFrame: 240, endFrame: 329 },
+    { label: zh("memory ignition"), startFrame: 330, endFrame: 359 },
+    { label: zh("associations engrave"), startFrame: 360, endFrame: 509 },
+    { label: zh("stabilization"), startFrame: 510, endFrame: 659 },
   ];
 }

@@ -16,6 +16,7 @@
 	compete with the node-type palette.
 -->
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import {
 		MEMORY_STATE_COLORS,
 		MEMORY_STATE_DESCRIPTIONS,
@@ -30,10 +31,10 @@
 <div
 	class="pointer-events-auto glass-subtle rounded-xl px-3 py-2.5 text-xs space-y-1.5 backdrop-blur-md border border-synapse/10"
 	role="group"
-	aria-label="Memory state colour legend"
+	aria-label={zh("Memory state colour legend")}
 >
 	<div class="text-[10px] uppercase tracking-wider text-muted font-semibold mb-1.5">
-		FSRS accessibility
+		{zh("FSRS accessibility")}
 	</div>
 	{#each STATES as state (state)}
 		<div class="flex items-center gap-2">
@@ -43,7 +44,7 @@
 					state
 				]}55;"
 			></span>
-			<span class="text-text capitalize">{state}</span>
+			<span class="text-text capitalize">{zh(String(state))}</span>
 			<span class="text-muted text-[10px] ml-auto">
 				{MEMORY_STATE_DESCRIPTIONS[state].match(/\(([^)]+)\)/)?.[1] ?? ''}
 			</span>

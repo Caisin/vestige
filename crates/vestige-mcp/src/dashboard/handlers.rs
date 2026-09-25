@@ -1370,6 +1370,7 @@ fn dashboard_stats_response(stats: &vestige_core::memory::MemoryStats) -> Value 
         "mismatchedEmbeddings": stats.nodes_with_mismatched_embeddings,
         "embeddingCoverage": embedding_coverage,
         "embeddingsCompiledIn": crate::embeddings_compiled_in(),
+        "writerApiVersion": vestige_core::writer::API_VERSION,
         "embeddingModel": stats.embedding_model,
         "activeEmbeddingModel": stats.active_embedding_model,
         "oldestMemory": stats.oldest_memory.map(|dt| dt.to_rfc3339()),
@@ -1572,6 +1573,7 @@ pub async fn health_check(State(state): State<AppState>) -> Result<Json<Value>, 
         "averageRetention": stats.average_retention,
         "version": env!("CARGO_PKG_VERSION"),
         "embeddingsCompiledIn": crate::embeddings_compiled_in(),
+        "writerApiVersion": vestige_core::writer::API_VERSION,
     })))
 }
 
@@ -1627,6 +1629,9 @@ pub async fn get_graph(
 
     // Determine center node
     let explicit_center = params.center_id.is_some() || params.query.is_some();
+    if !explicit_center && state.storage.get_stats().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?.total_nodes == 0 {
+        return Ok(Json(serde_json::json!({"nodes":[],"edges":[],"center_id":"","depth":depth,"nodeCount":0,"edgeCount":0})));
+    }
     let center_id = if let Some(ref id) = params.center_id {
         id.clone()
     } else if let Some(ref query) = params.query {
@@ -3652,6 +3657,16 @@ mod tests {
         assert_eq!(GraphSort::parse(Some("RECENT")), GraphSort::Recent);
         assert_eq!(GraphSort::parse(Some("Recent")), GraphSort::Recent);
         assert_eq!(GraphSort::parse(Some("garbage")), GraphSort::Recent);
+    }
+
+    #[tokio::test]
+    async fn empty_dashboard_graph_is_an_empty_collection_not_a_failed_request() {
+        let (_dir, storage) = seed_storage();
+        let state = AppState::new(storage, None);
+        let result = get_graph(State(state), Query(GraphParams { query: None, center_id: None, depth: None, max_nodes: None, sort: None })).await.unwrap().0;
+        assert_eq!(result["nodeCount"], 0);
+        assert_eq!(result["nodes"], serde_json::json!([]));
+        assert_eq!(result["edges"], serde_json::json!([]));
     }
 
     #[test]

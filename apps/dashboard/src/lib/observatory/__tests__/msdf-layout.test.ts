@@ -17,4 +17,12 @@ describe('MSDF text layout', () => {
 		const [question] = layoutText('?', atlas as MsdfAtlasJson);
 		expect(fallback).toEqual(question);
 	});
+	it('uses available Chinese glyphs and their full-width advance', () => {
+		const unicode = { ...atlas, glyphs: [...atlas.glyphs, { unicode: '剧'.codePointAt(0)!, advance: 1, planeBounds: { left: 0, right: 1, bottom: 0, top: 1 }, atlasBounds: { left: 0, right: 48, bottom: 0, top: 48 } }] } as MsdfAtlasJson;
+		const glyphs = layoutText('剧剧', unicode);
+		expect(glyphs).toHaveLength(2);
+		expect(glyphs[0].w).toBe(1);
+		expect(glyphs[1].x).toBe(1);
+		expect(glyphs[0]).not.toEqual(layoutText('?', unicode)[0]);
+	});
 });

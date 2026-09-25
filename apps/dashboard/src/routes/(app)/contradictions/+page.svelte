@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onMount } from 'svelte';
 	import ContradictionArcs, { type Contradiction } from '$components/ContradictionArcs.svelte';
 	import PageHeader from '$components/PageHeader.svelte';
@@ -62,8 +63,8 @@
 	});
 	const subtitle = $derived(
 		isPortrait
-			? 'Contradictory memories face off across a scarlet seam.'
-			: 'Contradictory memories face each other across a scarlet trust-weighted seam. Click a fracture for the receipt.'
+			? zh("Contradictory memories face off across a scarlet seam.")
+			: zh("Contradictory memories face each other across a scarlet trust-weighted seam. Click a fracture for the receipt.")
 	);
 
 	async function load() {
@@ -75,7 +76,7 @@
 			totalDetected = res.total;
 			memoriesAnalyzed = res.memoriesAnalyzed;
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to load contradictions';
+			error = e instanceof Error ? e.message : zh("Failed to load contradictions");
 			contradictions = [];
 			totalDetected = 0;
 			memoriesAnalyzed = 0;
@@ -102,7 +103,7 @@
 			selectedSynapsePair = { ...pair, resolved: true };
 			await load();
 		} catch (cause) {
-			suppressNotice = cause instanceof Error ? cause.message : 'Suppress failed';
+			suppressNotice = cause instanceof Error ? cause.message : zh("Suppress failed");
 		} finally {
 			suppressBusy = false;
 		}
@@ -196,13 +197,13 @@
 	// `filterOptions` writes into the same `filter` state, `topicOptions` into
 	// the same `topicFilter` state. ---
 	const filterOptions: DropdownOption[] = [
-		{ value: 'all', label: 'All contradictions', icon: 'contradictions' },
-		{ value: 'recent', label: 'Recent (last 7 days)', icon: 'timeline' },
-		{ value: 'high-trust', label: 'High trust (>60%)', icon: 'importance' },
-		{ value: 'topic', label: 'By topic', icon: 'filter' },
+		{ value: 'all', label: zh("All contradictions"), icon: 'contradictions' },
+		{ value: 'recent', label: zh("Recent (last 7 days)"), icon: 'timeline' },
+		{ value: 'high-trust', label: zh("High trust (>60%)"), icon: 'importance' },
+		{ value: 'topic', label: zh("By topic"), icon: 'filter' },
 	];
 	const topicOptions = $derived<DropdownOption[]>([
-		{ value: '', label: 'All topics' },
+		{ value: '', label: zh("All topics") },
 		...uniqueTopics.map((t) => ({
 			value: t,
 			label: t,
@@ -322,26 +323,26 @@
 	<!-- Header -->
 	<PageHeader
 		icon="contradictions"
-		title="Immune Synapse Arena"
+		title={zh("Immune Synapse Arena")}
 		{subtitle}
 		accent="warning"
 	>
 		<span class="text-dim text-sm tabular-nums inline-flex items-center gap-1.5">
-			<AnimatedNumber value={filtered.length} /> in view
+			<AnimatedNumber value={filtered.length} /> {zh("in view")}
 		</span>
 	</PageHeader>
 	</div>
 
 	{#if error}
 		<div class="glass-panel pointer-events-auto flex flex-col items-center gap-3 rounded-2xl p-10 text-center">
-			<div class="text-sm text-decay">Couldn't load contradictions</div>
+			<div class="text-sm text-decay">{zh("Couldn't load contradictions")}</div>
 			<div class="max-w-md text-xs text-muted">{error}</div>
 			<button
 				type="button"
 				onclick={load}
 				class="mt-2 rounded-lg bg-synapse/20 px-4 py-2 text-xs font-medium text-synapse-glow transition hover:bg-synapse/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-synapse/60"
 			>
-				Retry
+				{zh("Retry")}
 			</button>
 		</div>
 	{:else if loading}
@@ -362,10 +363,10 @@
 				<Icon name="sparkle" size={26} draw />
 			</div>
 			<div class="text-sm font-medium text-bright">
-				No contradictions found — your memory agrees with itself.
+				{zh("No contradictions found — your memory agrees with itself.")}
 			</div>
 			<div class="max-w-sm text-xs text-muted">
-				Pairs appear here when two trusted memories about the same topic make opposing claims.
+				{zh("Pairs appear here when two trusted memories about the same topic make opposing claims.")}
 			</div>
 		</div>
 	{:else}
@@ -376,20 +377,20 @@
 				<AnimatedNumber value={totalDetected} />
 			</div>
 			<div class="text-xs text-dim mt-1">
-				contradictions across {totalMemoriesInvolved.toLocaleString()} memories
+				{zh("contradictions across")} {totalMemoriesInvolved.toLocaleString('zh-CN')} {zh("memories")}
 			</div>
 		</div>
 		<div use:reveal={{ delay: 60, y: 12 }} class="p-4 glass rounded-xl lift">
 			<div class="text-2xl font-bold tabular-nums" style="color: #f59e0b">
 				<AnimatedNumber value={avgTrustDelta} decimals={2} />
 			</div>
-			<div class="text-xs text-dim mt-1">average trust delta</div>
+			<div class="text-xs text-dim mt-1">{zh("average trust delta")}</div>
 		</div>
 		<div use:reveal={{ delay: 120, y: 12 }} class="p-4 glass rounded-xl lift">
 			<div class="text-2xl text-bright font-bold tabular-nums">
 				<AnimatedNumber value={filtered.length} />
 			</div>
-			<div class="text-xs text-dim mt-1">visible in current filter</div>
+			<div class="text-xs text-dim mt-1">{zh("visible in current filter")}</div>
 		</div>
 		<div use:reveal={{ delay: 180, y: 12 }} class="p-4 glass rounded-xl lift">
 			<div class="flex items-center gap-2">
@@ -400,7 +401,7 @@
 					<AnimatedNumber value={filtered.filter((c) => c.similarity > 0.7).length} />
 				</div>
 			</div>
-			<div class="text-xs text-dim mt-1">strong conflicts</div>
+			<div class="text-xs text-dim mt-1">{zh("strong conflicts")}</div>
 		</div>
 	</div>
 
@@ -409,7 +410,7 @@
 		<Dropdown
 			options={filterOptions}
 			value={filter}
-			label="Lens"
+			label={zh("Lens")}
 			icon="filter"
 			onChange={onFilterChange}
 		/>
@@ -417,9 +418,9 @@
 			<Dropdown
 				options={topicOptions}
 				bind:value={topicFilter}
-				label="Topic"
+				label={zh("Topic")}
 				icon="contradictions"
-				placeholder="All topics"
+				placeholder={zh("All topics")}
 			/>
 		{/if}
 		{#if focusedPairIndex !== null}
@@ -431,7 +432,7 @@
 				class="ml-auto inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs border border-subtle/30 text-dim hover:text-text hover:border-synapse/30 hover:bg-white/[0.03] transition lift"
 			>
 				<Icon name="close" size={13} />
-				Clear focus
+				{zh("Clear focus")}
 			</button>
 		{/if}
 	</div>
@@ -447,7 +448,7 @@
 					<div class="text-dim opacity-50 breathe">
 						<Icon name="contradictions" size={44} strokeWidth={1.2} />
 					</div>
-					<p class="text-dim text-sm">No contradictions match this filter.</p>
+					<p class="text-dim text-sm">{zh("No contradictions match this filter.")}</p>
 				</div>
 			{:else}
 				<ContradictionArcs
@@ -463,12 +464,12 @@
 		<!-- Sidebar: pair list -->
 		<aside use:reveal={{ delay: 120, y: 16 }} class="glass rounded-2xl p-3 space-y-2 max-h-[620px] overflow-y-auto">
 			<div class="flex items-center justify-between px-1 pb-2 sticky top-0 bg-deep/60 backdrop-blur-sm z-10">
-				<span class="text-xs text-dim uppercase tracking-wider">Pairs</span>
+				<span class="text-xs text-dim uppercase tracking-wider">{zh("Pairs")}</span>
 				<span class="text-xs text-muted tabular-nums"><AnimatedNumber value={visibleList.length} /></span>
 			</div>
 
 			{#if visibleList.length === 0}
-				<div class="text-xs text-muted p-3">No pairs visible.</div>
+				<div class="text-xs text-muted p-3">{zh("No pairs visible.")}</div>
 			{/if}
 
 			{#each visibleList as entry, localIndex (entry.c.memory_a_id + '|' + entry.c.memory_b_id)}
@@ -491,7 +492,7 @@
 							{severityLabel(c.similarity)}
 						</span>
 						<span class="text-[10px] text-muted ml-auto">
-							{(c.similarity * 100).toFixed(0)}% sim · {c.date_diff_days}d
+							{(c.similarity * 100).toFixed(0)}{zh("% sim ·")} {c.date_diff_days}d
 						</span>
 					</div>
 					<div class="text-xs text-text font-medium mb-1 truncate">
@@ -516,7 +517,7 @@
 
 					{#if isFocused}
 						<div class="mt-3 pt-3 border-t border-subtle/20 space-y-2">
-							<div class="text-[10px] text-muted uppercase tracking-wider">Full memory A</div>
+							<div class="text-[10px] text-muted uppercase tracking-wider">{zh("Full memory A")}</div>
 							<div class="text-[11px] text-text">{c.memory_a_preview}</div>
 							{#if c.memory_a_tags && c.memory_a_tags.length > 0}
 								<div class="flex flex-wrap gap-1">
@@ -525,7 +526,7 @@
 									{/each}
 								</div>
 							{/if}
-							<div class="text-[10px] text-muted uppercase tracking-wider pt-1">Full memory B</div>
+							<div class="text-[10px] text-muted uppercase tracking-wider pt-1">{zh("Full memory B")}</div>
 							<div class="text-[11px] text-text">{c.memory_b_preview}</div>
 							{#if c.memory_b_tags && c.memory_b_tags.length > 0}
 								<div class="flex flex-wrap gap-1">
@@ -545,7 +546,7 @@
 		<section class="glass-panel pointer-events-auto rounded-2xl p-5 border-[#FF3B30]/35 shadow-[0_0_40px_rgba(255,59,48,0.12)]">
 			<div class="flex flex-wrap items-start justify-between gap-3 border-b border-[#FF3B30]/20 pb-3">
 				<div>
-					<div class="font-mono text-[10px] uppercase tracking-[0.22em] text-[#FF3B30]">Contradiction receipt</div>
+					<div class="font-mono text-[10px] uppercase tracking-[0.22em] text-[#FF3B30]">{zh("Contradiction receipt")}</div>
 					<h2 class="mt-1 text-lg font-semibold text-bright">{selectedSynapsePair.topic}</h2>
 				</div>
 				<button
@@ -558,14 +559,14 @@
 					}}
 					class="rounded-lg border border-subtle/30 px-3 py-1.5 text-xs text-muted transition hover:border-[#FF3B30]/40 hover:text-[#FF3B30]"
 				>
-					Close
+					{zh("Close")}
 				</button>
 			</div>
 
 			<div class="mt-4 grid gap-4 lg:grid-cols-2">
 				<div class="rounded-xl border border-[#F4F1D0]/18 bg-[#020307]/70 p-4">
 					<div class="mb-2 flex items-center justify-between gap-2">
-						<span class="font-mono text-[10px] uppercase tracking-wider text-[#F4F1D0]">Higher-trust membrane</span>
+						<span class="font-mono text-[10px] uppercase tracking-wider text-[#F4F1D0]">{zh("Higher-trust membrane")}</span>
 						<span class="font-mono text-xs text-[#F4F1D0]">{(selectedSynapsePair.stronger.trust * 100).toFixed(0)}%</span>
 					</div>
 					<div class="text-xs text-muted break-all">
@@ -578,7 +579,7 @@
 				</div>
 				<div class="rounded-xl border border-[#FF3B30]/24 bg-[#160407]/70 p-4">
 					<div class="mb-2 flex items-center justify-between gap-2">
-						<span class="font-mono text-[10px] uppercase tracking-wider text-[#FF3B30]">Opposing evidence</span>
+						<span class="font-mono text-[10px] uppercase tracking-wider text-[#FF3B30]">{zh("Opposing evidence")}</span>
 						<span class="font-mono text-xs text-[#FF3B30]">{(selectedSynapsePair.weaker.trust * 100).toFixed(0)}%</span>
 					</div>
 					<div class="text-xs text-muted break-all">
@@ -593,22 +594,22 @@
 
 			<div class="mt-4 grid gap-3 md:grid-cols-4">
 				<div class="rounded-xl bg-white/[0.03] p-3">
-					<div class="text-[10px] uppercase tracking-wider text-muted">topic overlap</div>
+					<div class="text-[10px] uppercase tracking-wider text-muted">{zh("topic overlap")}</div>
 					<div class="mt-1 font-mono text-lg text-[#FF3B30]">{(selectedSynapsePair.topic_overlap * 100).toFixed(0)}%</div>
 				</div>
 				<div class="rounded-xl bg-white/[0.03] p-3">
-					<div class="text-[10px] uppercase tracking-wider text-muted">trust delta</div>
+					<div class="text-[10px] uppercase tracking-wider text-muted">{zh("trust delta")}</div>
 					<div class="mt-1 font-mono text-lg text-[#F4F1D0]">{selectedSynapsePair.trust_delta.toFixed(2)}</div>
 				</div>
 				<div class="rounded-xl bg-white/[0.03] p-3">
-					<div class="text-[10px] uppercase tracking-wider text-muted">status</div>
+					<div class="text-[10px] uppercase tracking-wider text-muted">{zh("status")}</div>
 					<div class="mt-1 font-mono text-lg {selectedSynapsePair.resolved ? 'text-recall' : 'text-[#FF3B30]'}">
-						{selectedSynapsePair.resolved ? 'resolved' : 'unresolved'}
+						{selectedSynapsePair.resolved ? zh("resolved") : zh("unresolved")}
 					</div>
 				</div>
 				<div class="rounded-xl bg-white/[0.03] p-3">
-					<div class="text-[10px] uppercase tracking-wider text-muted">provenance</div>
-					<div class="mt-1 truncate font-mono text-xs text-dim" title={selectedSynapsePair.provenance.id}>{selectedSynapsePair.provenance.kind}:{selectedSynapsePair.provenance.id}</div>
+					<div class="text-[10px] uppercase tracking-wider text-muted">{zh("provenance")}</div>
+					<div class="mt-1 truncate font-mono text-xs text-dim" title={selectedSynapsePair.provenance.id}>{zh(String(selectedSynapsePair.provenance.kind))}:{selectedSynapsePair.provenance.id}</div>
 				</div>
 			</div>
 
@@ -623,15 +624,15 @@
 							: 'border-[#FF3B30]/40 text-[#FF3B30] hover:bg-[#FF3B30]/10'}"
 				>
 					{suppressBusy
-						? 'Suppressing…'
+						? zh("Suppressing…")
 						: selectedSynapsePair.resolved
-							? 'Weaker side already treated'
+							? zh("Weaker side already treated")
 							: suppressArmed
-								? 'Confirm suppress weaker side'
-								: 'Suppress weaker side'}
+								? zh("Confirm suppress weaker side")
+								: zh("Suppress weaker side")}
 				</button>
 				{#if suppressArmed && !selectedSynapsePair.resolved}
-					<span class="text-[11px] text-muted">This compounds active forgetting. Click again to confirm.</span>
+					<span class="text-[11px] text-muted">{zh("This compounds active forgetting. Click again to confirm.")}</span>
 				{/if}
 				{#if suppressNotice}
 					<span class="text-[11px] text-recall">{suppressNotice}</span>

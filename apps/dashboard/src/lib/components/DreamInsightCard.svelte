@@ -4,6 +4,7 @@
   Source memory IDs are clickable → navigate to /memories/[id].
 -->
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { base } from '$app/paths';
 	import type { DreamInsight } from '$types';
 	import {
@@ -55,11 +56,11 @@
 			class="text-[10px] uppercase tracking-[0.12em] font-semibold px-2 py-0.5 rounded-full"
 			style="background: {typeColor}22; color: {typeColor}; border: 1px solid {typeColor}55"
 		>
-			{insight.type ?? 'insight'}
+			{insight.type ?? zh("insight")}
 		</span>
 		{#if isHighNovelty}
 			<span class="text-[10px] text-warning font-semibold flex items-center gap-1">
-				<span class="sparkle">✦</span> novel
+				<span class="sparkle">✦</span> {zh("novel")}
 			</span>
 		{/if}
 	</div>
@@ -72,7 +73,7 @@
 	<!-- Novelty bar -->
 	<div class="space-y-1">
 		<div class="flex items-center justify-between text-[10px] text-dim uppercase tracking-wider">
-			<span>Novelty</span>
+			<span>{zh("Novelty")}</span>
 			<span class="tabular-nums text-text/80">{novelty.toFixed(2)}</span>
 		</div>
 		<div class="novelty-track">
@@ -85,7 +86,7 @@
 
 	<!-- Confidence -->
 	<div class="flex items-center justify-between text-[11px]">
-		<span class="text-dim">Confidence</span>
+		<span class="text-dim">{zh("Confidence")}</span>
 		<span
 			class="tabular-nums font-semibold"
 			style="color: {confidence > 0.7 ? '#10b981' : confidence > 0.4 ? '#f59e0b' : '#ef4444'}"
@@ -98,7 +99,7 @@
 	{#if firstSources.length > 0}
 		<div class="pt-2 border-t border-white/5 space-y-1.5">
 			<div class="text-[10px] text-dim uppercase tracking-wider">
-				Sources
+				{zh("Sources")}
 				{#if extraCount > 0}
 					<span class="text-muted">(+{extraCount})</span>
 				{/if}

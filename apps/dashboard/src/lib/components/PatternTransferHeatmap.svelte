@@ -12,6 +12,7 @@
   on small viewports so the matrix is still scannable on mobile.
 -->
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import {
 		buildTransferMatrix,
 		flattenNonZero,
@@ -104,7 +105,7 @@
 	<div class="hidden md:block">
 		<div class="mb-3 flex items-center justify-between">
 			<div class="text-xs text-dim">
-				Rows = origin project · Columns = destination project
+				{zh("Rows = origin project · Columns = destination project")}
 			</div>
 			<!-- Legend gradient -->
 			<div class="flex items-center gap-2">
@@ -189,18 +190,18 @@
 				<div class="mb-2 text-lg font-semibold text-bright">
 					{cell.count}
 					<span class="text-xs font-normal text-dim">
-						{cell.count === 1 ? 'pattern' : 'patterns'} transferred
+						{cell.count === 1 ? zh("pattern") : zh("patterns")} {zh("transferred")}
 					</span>
 				</div>
 				{#if cell.topNames.length > 0}
 					<div class="space-y-1 border-t border-synapse/10 pt-2">
-						<div class="text-[10px] uppercase tracking-wider text-muted">Top patterns</div>
+						<div class="text-[10px] uppercase tracking-wider text-muted">{zh("Top patterns")}</div>
 						{#each cell.topNames as name}
 							<div class="truncate text-text">· {name}</div>
 						{/each}
 					</div>
 				{:else}
-					<div class="text-muted">No transfers recorded</div>
+					<div class="text-muted">{zh("No transfers recorded")}</div>
 				{/if}
 			</div>
 		{/if}
@@ -209,11 +210,11 @@
 	<!-- Mobile: vertical list of non-zero transfers -->
 	<div class="space-y-2 md:hidden">
 		<div class="mb-2 text-xs text-dim">
-			{mobileList.length} transfer pair{mobileList.length === 1 ? '' : 's'} · tap to filter
+			{mobileList.length} {zh("transfer pair")} {zh("· tap to filter")}
 		</div>
 		{#if mobileList.length === 0}
 			<div class="rounded-lg bg-white/[0.02] p-4 text-center text-xs text-muted">
-				No cross-project transfers recorded yet.
+				{zh("No cross-project transfers recorded yet.")}
 			</div>
 		{:else}
 			{#each mobileList as row (row.from + '->' + row.to)}

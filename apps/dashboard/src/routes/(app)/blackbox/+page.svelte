@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	// ═══════════════════════════════════════════════════════════════════════
 	//  AGENT BLACK BOX — the flight recorder for agent cognition.
 	// ───────────────────────────────────────────────────────────────────────
@@ -201,10 +202,10 @@
 			});
 			backfillResult = result;
 			if (result.receiptId) {
-				rescueBanner = result.headline ?? 'Salience rescue receipt sealed';
+				rescueBanner = result.headline ?? zh("Salience rescue receipt sealed");
 			}
 		} catch (cause) {
-			backfillError = cause instanceof Error ? cause.message : 'Backfill failed';
+			backfillError = cause instanceof Error ? cause.message : zh("Backfill failed");
 		} finally {
 			backfillBusy = false;
 		}
@@ -243,7 +244,7 @@
 	$effect(() => {
 		const head = $eventFeed[0];
 		if (head && isBackfillPulse(head)) {
-			rescueBanner = 'Salience rescue fired';
+			rescueBanner = zh("Salience rescue fired");
 		}
 	});
 
@@ -315,7 +316,7 @@
 	passes={viewMode === 'volume' ? createVolumePasses : createRecorderPasses}
 	loading={loading}
 	error={error}
-	emptyLabel={viewMode === 'volume' ? 'NO RECEIPT SELECTED - WITNESS CHAMBER ARMED' : 'NO AGENT TRACE SELECTED - RECORDER ARMED'}
+	emptyLabel={viewMode === 'volume' ? zh("NO RECEIPT SELECTED - WITNESS CHAMBER ARMED") : zh("NO AGENT TRACE SELECTED - RECORDER ARMED")}
 	onpick={handleRoutePick}
 />
 {/key}
@@ -323,35 +324,35 @@
 <div class="blackbox-shell relative z-10 mx-auto max-w-6xl px-5 py-6">
 	<PageHeader
 		icon="blackbox"
-		title="Agent Black Box"
-		subtitle="Watch the agent think. Watch memory change. Watch the receipt prove why."
+		title={zh("Agent Black Box")}
+		subtitle={zh("Watch the agent think. Watch memory change. Watch the receipt prove why.")}
 		accent="synapse"
 	>
 		<button
 			class="mode-toggle"
 			class:on={viewMode === 'volume'}
 			onclick={() => setView(viewMode === 'volume' ? 'forensics' : 'volume')}
-			title="Toggle 3D witness volume vs DOM forensics"
+			title={zh("Toggle 3D witness volume vs DOM forensics")}
 		>
 			<Icon name="graph" size={14} />
-			{viewMode === 'volume' ? 'Forensics' : 'Witness volume'}
+			{viewMode === 'volume' ? zh("Forensics") : zh("Witness volume")}
 		</button>
 		<button
 			class="mode-toggle"
 			class:on={proofMode}
 			onclick={() => (proofMode = !proofMode)}
-			title="Proof Mode: a clean launch-footage view"
+			title={zh("Proof Mode: a clean launch-footage view")}
 		>
 			<Icon name="sparkle" size={14} />
-			Proof Mode
+			{zh("Proof Mode")}
 		</button>
 		<button class="export-btn" onclick={() => void runSalienceRescue()} disabled={backfillBusy}>
 			<Icon name="sparkle" size={14} />
-			{backfillBusy ? 'Rescuing…' : 'Run salience rescue (preview)'}
+			{backfillBusy ? zh("Rescuing…") : zh("Run salience rescue (preview)")}
 		</button>
 		<button class="export-btn" onclick={exportTrace} disabled={!selectedRunId}>
 			<Icon name="feed" size={14} />
-			Export .vestige-trace.json
+			{zh("Export .vestige-trace.json")}
 		</button>
 	</PageHeader>
 
@@ -361,27 +362,27 @@
 			<span class="spine-label">WebSocket</span>
 			<span class="spine-value" class:live={$isConnected}>
 				<span class="dot" class:live={$isConnected}></span>
-				{$isConnected ? 'Connected' : 'Offline'}
+				{$isConnected ? zh("Connected") : zh("Offline")}
 			</span>
 		</div>
 		<div class="spine-item">
-			<span class="spine-label">Live runId</span>
+			<span class="spine-label">{zh("Live runId")}</span>
 			<code class="spine-run">{$liveRunId ?? '—'}</code>
 		</div>
 		<div class="spine-item">
-			<span class="spine-label">Last event</span>
+			<span class="spine-label">{zh("Last event")}</span>
 			<span class="spine-value">
 				{#if $lastTraceEvent}
 					<span class="ev-chip" style:--c={eventColor(($lastTraceEvent.data?.event as TraceEvent)?.type)}>
-						{eventLabel(($lastTraceEvent.data?.event as TraceEvent)?.type)}
+						{zh(eventLabel(($lastTraceEvent.data?.event as TraceEvent)?.type))}
 					</span>
 				{:else}
-					<span class="text-dim">awaiting…</span>
+					<span class="text-dim">{zh("awaiting…")}</span>
 				{/if}
 			</span>
 		</div>
 		<div class="spine-item">
-			<span class="spine-label">Events seen</span>
+			<span class="spine-label">{zh("Events seen")}</span>
 			<span class="spine-value">
 				<AnimatedNumber value={$traceEvents.length} />
 			</span>
@@ -390,14 +391,14 @@
 
 	{#if rescueBanner || backfillResult || backfillError}
 		<div class="rescue-panel glass" use:reveal>
-			<div class="rescue-kicker">SALIENCE RESCUE · PREVIEW</div>
+			<div class="rescue-kicker">{zh("SALIENCE RESCUE · PREVIEW")}</div>
 			{#if rescueBanner}<p class="rescue-banner">{rescueBanner}</p>{/if}
 			{#if backfillError}<p class="rescue-error">{backfillError}</p>{/if}
 			{#if backfillResult}
-				<p>{backfillResult.headline ?? backfillResult.note ?? 'Preview complete. Nothing was promoted.'}</p>
+				<p>{backfillResult.headline ?? backfillResult.note ?? zh("Preview complete. Nothing was promoted.")}</p>
 				{#if backfillResult.failure}
 					<div class="rescue-failure">
-						<span>Failure</span>
+						<span>{zh("Failure")}</span>
 						<a href={osHref('/memories', { memory: backfillResult.failure.id })}>{backfillResult.failure.id}</a>
 						<small>{backfillResult.failure.content_preview}</small>
 					</div>
@@ -407,7 +408,7 @@
 						{#each backfillResult.causes.slice(0, 8) as cause (cause.memory_id)}
 							<li>
 								<a href={osHref('/memories', { memory: cause.memory_id })}>{cause.memory_id.slice(0, 8)}</a>
-								<span>score {cause.backfill_score.toFixed(2)}</span>
+								<span>{zh("score")} {cause.backfill_score.toFixed(2)}</span>
 								<small>{cause.content_preview}</small>
 							</li>
 						{/each}
@@ -415,10 +416,10 @@
 				{/if}
 				<div class="rescue-actions">
 					{#if backfillResult.receiptId || backfillResult.receipt}
-						<button type="button" onclick={openRescueReplay}>Replay in Observatory →</button>
+						<button type="button" onclick={openRescueReplay}>{zh("Replay in Observatory →")}</button>
 					{/if}
 					{#if backfillResult.runId}
-						<a href={osHref('/blackbox', { run: backfillResult.runId })}>Open rescue run</a>
+						<a href={osHref('/blackbox', { run: backfillResult.runId })}>{zh("Open rescue run")}</a>
 					{/if}
 				</div>
 			{/if}
@@ -427,7 +428,7 @@
 
 	{#if selectedImpulse}
 		<div class="selected-impulse glass" use:reveal>
-			<span class="selected-kicker">GPU pick</span>
+			<span class="selected-kicker">{zh("GPU pick")}</span>
 			<strong>{selectedImpulse.label}</strong>
 			<span>{selectedImpulse.summary}</span>
 			<code>{selectedImpulse.provenance.id}</code>
@@ -438,11 +439,10 @@
 		<div class="layout">
 			<!-- ░░ RUN PICKER ░░ -->
 			<aside class="runs glass" use:reveal>
-				<h2 class="panel-title">Runs</h2>
+				<h2 class="panel-title">{zh("Runs")}</h2>
 				{#if runs.length === 0}
 					<p class="empty">
-						No agent runs recorded yet. Make an MCP tool call — every call is
-						recorded here.
+						{zh("No agent runs recorded yet. Make an MCP tool call — every call is recorded here.")}
 					</p>
 				{:else}
 					<ul>
@@ -458,7 +458,7 @@
 										<span class="run-tool">{run.firstTool ?? '—'}</span>
 									</div>
 									<div class="run-stats">
-										<span title="events">{run.eventCount} ev</span>
+										<span title={zh("events")}>{run.eventCount} ev</span>
 										{#if run.retrievedCount}<span class="s-recall">↑{run.retrievedCount}</span>{/if}
 										{#if run.suppressedCount}<span class="s-suppress">⊘{run.suppressedCount}</span>{/if}
 										{#if run.writeCount}<span class="s-write">✎{run.writeCount}</span>{/if}
@@ -474,17 +474,17 @@
 			<!-- ░░ REPLAY ░░ -->
 			<section class="replay">
 				{#if loading}
-					<div class="glass center-msg">Loading trace…</div>
+					<div class="glass center-msg">{zh("Loading trace…")}</div>
 				{:else if error}
 					<div class="glass center-msg err">{error}</div>
 				{:else if !detail}
-					<div class="glass center-msg">Select a run to replay.</div>
+					<div class="glass center-msg">{zh("Select a run to replay.")}</div>
 				{:else}
 					<!-- Scrubber -->
 					<div class="scrubber glass" use:reveal>
 						<div class="scrub-head">
 							<span class="scrub-title">
-								Step <strong>{scrubIndex + 1}</strong> / {detail.events.length}
+								{zh("Step")} <strong>{scrubIndex + 1}</strong> / {detail.events.length}
 							</span>
 							{#if currentEvent}
 								<span class="scrub-time">+{relativeMs(currentEvent.at, startAt)}ms</span>
@@ -505,8 +505,8 @@
 									class:past={i <= scrubIndex}
 									style:--c={eventColor(ev.type)}
 									onclick={() => (scrubIndex = i)}
-									title={eventLabel(ev.type)}
-									aria-label={`Step ${i + 1}: ${eventLabel(ev.type)}`}
+									title={zh(eventLabel(ev.type))}
+									aria-label={`Step ${i + 1}: ${zh(eventLabel(ev.type))}`}
 								></button>
 							{/each}
 						</div>
@@ -517,7 +517,7 @@
 						<div class="event-detail glass" use:reveal style:--c={eventColor(currentEvent.type)}>
 							<div class="ed-head">
 								<span class="ed-glyph">{eventGlyph(currentEvent.type)}</span>
-								<span class="ed-label">{eventLabel(currentEvent.type)}</span>
+								<span class="ed-label">{zh(eventLabel(currentEvent.type))}</span>
 								<code class="ed-time">{formatAt(currentEvent.at)}</code>
 							</div>
 							<p class="ed-summary">{eventSummary(currentEvent)}</p>
@@ -535,8 +535,8 @@
 								</div>
 							{:else if currentEvent.type === 'contradiction.detected'}
 								<div class="contra">
-									<span class="winner">kept {currentEvent.winnerId?.slice(0, 8)}</span>
-									<span class="vs">vs</span>
+									<span class="winner">{zh("kept")} {currentEvent.winnerId?.slice(0, 8)}</span>
+									<span class="vs">{zh("vs")}</span>
 									{#each currentEvent.ids.filter((i) => i !== currentEvent.winnerId) as id (id)}
 										<span class="loser">{id.slice(0, 8)}</span>
 									{/each}
@@ -554,10 +554,10 @@
 					<!-- Pulse set: the memories touched so far -->
 					<div class="pulse glass" use:reveal>
 						<h3 class="panel-title">
-							Memory pulse <span class="text-dim">· touched this run</span>
+							{zh("Memory pulse")} <span class="text-dim">{zh("· touched this run")}</span>
 						</h3>
 						{#if pulsedIds.length === 0}
-							<p class="empty">No memories touched yet.</p>
+							<p class="empty">{zh("No memories touched yet.")}</p>
 						{:else}
 							<div class="pulse-grid">
 								{#each pulsedIds as id (id)}
@@ -569,28 +569,28 @@
 
 					<!-- Producer status — honest about what's live vs. off-by-default -->
 					<div class="producers glass" use:reveal>
-						<h3 class="panel-title">Event producers <span class="text-dim">· this run</span></h3>
+						<h3 class="panel-title">{zh("Event producers")} <span class="text-dim">{zh("· this run")}</span></h3>
 						<ul class="producer-list">
 							<li class="producer ok">
 								<span class="p-dot"></span> mcp.call · memory.write · memory.retrieve · memory.suppress
-								<span class="p-state">live</span>
+								<span class="p-state">{zh("live")}</span>
 							</li>
 							<li class="producer" class:ok={hasContradiction}>
 								<span class="p-dot"></span> contradiction.detected
 								<span class="p-state">
-									{hasContradiction ? 'fired this run' : 'no contradiction in this run'}
+									{hasContradiction ? zh("fired this run") : zh("no contradiction in this run")}
 								</span>
 							</li>
 							<li class="producer caveat" class:ok={hasDream}>
 								<span class="p-dot"></span> dream.patch
 								<span class="p-state">
-									{hasDream ? 'fired this run' : 'No dream run in this trace'}
+									{hasDream ? zh("fired this run") : zh("No dream run in this trace")}
 								</span>
 							</li>
 							<li class="producer caveat" class:ok={hasVeto}>
 								<span class="p-dot"></span> sanhedrin.veto
 								<span class="p-state">
-									{hasVeto ? 'fired this run' : 'No veto producer connected (optional Sanhedrin hook, off by default)'}
+									{hasVeto ? zh("fired this run") : zh("No veto producer connected (optional Sanhedrin hook, off by default)")}
 								</span>
 							</li>
 						</ul>
@@ -600,7 +600,7 @@
 					{#if receipts.length}
 						<div class="receipts-panel glass" use:reveal>
 							<h3 class="panel-title">
-								Receipts <span class="text-dim">· proof behind retrievals</span>
+								{zh("Receipts")} <span class="text-dim">{zh("· proof behind retrievals")}</span>
 							</h3>
 							<div class="receipts-grid">
 								{#each receipts.slice(0, 2) as r (r.receipt_id)}
@@ -612,7 +612,7 @@
 
 					<!-- Full event log -->
 					<div class="log glass" use:reveal>
-						<h3 class="panel-title">Event log</h3>
+						<h3 class="panel-title">{zh("Event log")}</h3>
 						<ol class="log-list">
 							{#each detail.events as ev, i (i)}
 								<li
@@ -623,7 +623,7 @@
 								>
 									<button class="log-btn" onclick={() => (scrubIndex = i)}>
 										<span class="log-glyph">{eventGlyph(ev.type)}</span>
-										<span class="log-label">{eventLabel(ev.type)}</span>
+										<span class="log-label">{zh(eventLabel(ev.type))}</span>
 										<span class="log-summary">{eventSummary(ev)}</span>
 										<span class="log-t">+{relativeMs(ev.at, startAt)}ms</span>
 									</button>
@@ -653,16 +653,16 @@
 				<div class="proof-event" style:--c={eventColor(ev?.type)}>
 					<span class="proof-glyph">{eventGlyph(ev?.type)}</span>
 					<div>
-						<div class="proof-ev-label">{eventLabel(ev?.type)}</div>
+						<div class="proof-ev-label">{zh(eventLabel(ev?.type))}</div>
 						<div class="proof-ev-sum">{eventSummary(ev)}</div>
 					</div>
 				</div>
 			{/if}
 			<div class="proof-counter">
 				<AnimatedNumber value={$traceEvents.length} />
-				<span class="proof-counter-label">trace events</span>
+				<span class="proof-counter-label">{zh("trace events")}</span>
 			</div>
-			<p class="proof-tagline">Watch the agent think. Watch memory change. Watch the receipt prove why.</p>
+			<p class="proof-tagline">{zh("Watch the agent think. Watch memory change. Watch the receipt prove why.")}</p>
 		</div>
 	{/if}
 </div>

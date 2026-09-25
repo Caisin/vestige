@@ -183,11 +183,11 @@ describe('toast store', () => {
 			);
 
 			const t = get(toasts)[0];
-			expect(t.title).toBe('Dream consolidated');
-			expect(t.body).toContain('Replayed 127 memories');
-			expect(t.body).toContain('43 new connections');
-			expect(t.body).toContain('5 insights');
-			expect(t.body).toContain('2.4s');
+			expect(t.title).toBe('梦境巩固完成');
+			expect(t.body).toContain('重放 127 条记忆');
+			expect(t.body).toContain('43 条新连接');
+			expect(t.body).toContain('5 条洞见');
+			expect(t.body).toContain('2.4 秒');
 		});
 
 		it('DreamCompleted → singular grammar when replayed === 1 and found === 1', async () => {
@@ -203,10 +203,10 @@ describe('toast store', () => {
 			);
 
 			const t = get(toasts)[0];
-			expect(t.body).toContain('Replayed 1 memory');
-			expect(t.body).toContain('1 new connection');
-			expect(t.body).not.toContain('1 new connections');
-			expect(t.body).toContain('1 insight');
+			expect(t.body).toContain('重放 1 条记忆');
+			expect(t.body).toContain('1 条新连接');
+			expect(t.body).not.toContain('1 条新连接s');
+			expect(t.body).toContain('1 条洞见');
 		});
 
 		it('ConsolidationCompleted → title + body with nodes/decay/embedded/duration', async () => {
@@ -222,11 +222,11 @@ describe('toast store', () => {
 			);
 
 			const t = get(toasts)[0];
-			expect(t.title).toBe('Consolidation swept');
-			expect(t.body).toContain('892 nodes');
-			expect(t.body).toContain('156 decayed');
-			expect(t.body).toContain('48 embedded');
-			expect(t.body).toContain('1.1s');
+			expect(t.title).toBe('巩固已处理');
+			expect(t.body).toContain('892 个节点');
+			expect(t.body).toContain('156 条已衰减');
+			expect(t.body).toContain('48 条已生成向量');
+			expect(t.body).toContain('1.1 秒');
 		});
 
 		it('ConnectionDiscovered → title + connection type + weight', async () => {
@@ -240,8 +240,8 @@ describe('toast store', () => {
 			);
 
 			const t = get(toasts)[0];
-			expect(t.title).toBe('Bridge discovered');
-			expect(t.body).toContain('semantic');
+			expect(t.title).toBe('发现桥接关系');
+			expect(t.body).toContain('语义记忆');
 			expect(t.body).toContain('0.87');
 		});
 
@@ -251,8 +251,8 @@ describe('toast store', () => {
 			emit(makeEvent('MemoryPromoted', { new_retention: 0.85 }));
 
 			const t = get(toasts)[0];
-			expect(t.title).toBe('Memory promoted');
-			expect(t.body).toBe('retention 85%');
+			expect(t.title).toBe('记忆已强化');
+			expect(t.body).toBe('保持度 85%');
 		});
 
 		it('MemoryDemoted → body includes retention %', async () => {
@@ -261,8 +261,8 @@ describe('toast store', () => {
 			emit(makeEvent('MemoryDemoted', { new_retention: 0.42 }));
 
 			const t = get(toasts)[0];
-			expect(t.title).toBe('Memory demoted');
-			expect(t.body).toBe('retention 42%');
+			expect(t.title).toBe('记忆已降低权重');
+			expect(t.body).toBe('保持度 42%');
 		});
 
 		it('MemorySuppressed (cascade=0) → suppression # only', async () => {
@@ -276,8 +276,8 @@ describe('toast store', () => {
 			);
 
 			const t = get(toasts)[0];
-			expect(t.title).toBe('Forgetting');
-			expect(t.body).toBe('suppression #3');
+			expect(t.title).toBe('正在遗忘');
+			expect(t.body).toBe('第 3 次抑制');
 			expect(t.body).not.toContain('Rac1');
 		});
 
@@ -292,9 +292,9 @@ describe('toast store', () => {
 			);
 
 			const t = get(toasts)[0];
-			expect(t.body).toContain('suppression #2');
-			expect(t.body).toContain('Rac1 cascade');
-			expect(t.body).toContain('~8 neighbors');
+			expect(t.body).toContain('第 2 次抑制');
+			expect(t.body).toContain('Rac1 级联');
+			expect(t.body).toContain('约影响 8 个相邻记忆');
 		});
 
 		it('MemoryUnsuppressed (remaining>0) → remaining count', async () => {
@@ -303,8 +303,8 @@ describe('toast store', () => {
 			emit(makeEvent('MemoryUnsuppressed', { remaining_count: 2 }));
 
 			const t = get(toasts)[0];
-			expect(t.title).toBe('Recovered');
-			expect(t.body).toContain('2 suppressions remain');
+			expect(t.title).toBe('已恢复');
+			expect(t.body).toContain('剩余 2 层抑制');
 		});
 
 		it('MemoryUnsuppressed (remaining=0) → "fully unsuppressed"', async () => {
@@ -313,7 +313,7 @@ describe('toast store', () => {
 			emit(makeEvent('MemoryUnsuppressed', { remaining_count: 0 }));
 
 			const t = get(toasts)[0];
-			expect(t.body).toBe('fully unsuppressed');
+			expect(t.body).toBe('已完全解除抑制');
 		});
 
 		it('Rac1CascadeSwept → seeds + neighbors affected', async () => {
@@ -327,10 +327,10 @@ describe('toast store', () => {
 			);
 
 			const t = get(toasts)[0];
-			expect(t.title).toBe('Rac1 cascade');
-			expect(t.body).toContain('3 seeds');
-			expect(t.body).toContain('14 dendritic spines');
-			expect(t.body).toContain('pruned');
+			expect(t.title).toBe('Rac1 级联');
+			expect(t.body).toContain('3 个起点');
+			expect(t.body).toContain('14 个树突棘');
+			expect(t.body).toContain('已修剪');
 		});
 
 		it('MemoryDeleted → body is id truncated to first 8 chars', async () => {
@@ -343,7 +343,7 @@ describe('toast store', () => {
 			);
 
 			const t = get(toasts)[0];
-			expect(t.title).toBe('Memory deleted');
+			expect(t.title).toBe('记忆已删除');
 			expect(t.body).toBe('deadbeef');
 		});
 

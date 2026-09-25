@@ -120,7 +120,7 @@ export function resolveShots(plan: DirectorPlan | null, path: CinemaPath): Resol
 			act: pick(raw?.act, ACTS, base.act),
 			tone: pick(raw?.tone, TONES, base.tone),
 			scoreCue: pick(raw?.scoreCue, SCORE_CUES, 'motif'),
-			why: typeof raw?.why === 'string' && raw.why.trim() ? raw.why : base.why || 'establishing shot',
+			why: typeof raw?.why === 'string' && raw.why.trim() ? raw.why : base.why || '建立场景的镜头',
 			viaEdgeKey: typeof raw?.viaEdgeKey === 'string' ? raw.viaEdgeKey : undefined,
 		};
 		resolved.push(shot);
@@ -164,42 +164,42 @@ export function planShotsDeterministic(path: CinemaPath, signals: GraphSignals):
 			act,
 			intensity: 0.6,
 			tension: 0.3,
-			why: 'a connected memory',
+			why: '一条相互关联的记忆',
 		};
 
 		if (isOrigin) {
-			shot = { ...shot, move: 'push_in', tone: 'curious', tension: 0.25, stormMode: 'anchor', why: 'opening on the focal memory' };
+			shot = { ...shot, move: 'push_in', tone: 'curious', tension: 0.25, stormMode: 'anchor', why: '从焦点记忆开始' };
 		}
 		// High-betweenness keystone → reverent low-angle slow orbit.
 		if (isPeak || (sig && sig.betweenness > 0.6)) {
-			shot = { ...shot, move: 'orbit', angle: 'low', stormMode: 'anchor', intensity: 0.75, tension: 0.45, tone: 'awe', why: 'low-angle orbit — the most load-bearing memory in the graph' };
+			shot = { ...shot, move: 'orbit', angle: 'low', stormMode: 'anchor', intensity: 0.75, tension: 0.45, tone: 'awe', why: '低角度环绕：图谱中最关键的连接记忆' };
 		}
 		// Contradiction → Dutch push-in, hard cut, crimson chaos, minor drop.
 		if (beat.kind === 'contradiction') {
-			shot = { ...shot, move: 'push_in', angle: 'eye', dutch: 0.28, cut: 'hard_cut', stormMode: 'contradiction', intensity: 1, tension: 0.95, tone: 'tense', scoreCue: 'minor_drop', viaEdgeKey: beat.viaEdge ? `${beat.viaEdge.source}->${beat.viaEdge.target}` : undefined, why: 'two memories in tension — a Dutch two-shot collision' };
+			shot = { ...shot, move: 'push_in', angle: 'eye', dutch: 0.28, cut: 'hard_cut', stormMode: 'contradiction', intensity: 1, tension: 0.95, tone: 'tense', scoreCue: 'minor_drop', viaEdgeKey: beat.viaEdge ? `${beat.viaEdge.source}->${beat.viaEdge.target}` : undefined, why: '两条记忆形成张力：倾斜构图突出冲突' };
 		}
 		// Surprise edge → gold/violet convergence, rising awe.
 		if (beat.kind === 'surprise') {
-			shot = { ...shot, move: 'orbit', stormMode: 'surprise', intensity: 0.85, tension: 0.6, tone: 'awe', scoreCue: 'motif', why: 'a surprising, distant-but-plausible connection' };
+			shot = { ...shot, move: 'orbit', stormMode: 'surprise', intensity: 0.85, tension: 0.6, tone: 'awe', scoreCue: 'motif', why: '距离较远却合理的意外连接' };
 		}
 		// Fading memory → drifting high angle.
 		if (sig && (sig.retention < 0.35 || sig.suppression > 0.5)) {
-			shot = { ...shot, angle: 'high', move: 'pull_back', tone: 'neutral', intensity: 0.4, why: 'a fading memory — high-angle drift' };
+			shot = { ...shot, angle: 'high', move: 'pull_back', tone: 'neutral', intensity: 0.4, why: '逐渐淡化的记忆：高角度缓缓移开' };
 		}
 		// Recent → the "now" beat.
 		if (beat.kind === 'recent') {
-			shot = { ...shot, move: 'push_in', tone: 'resolved', tension: 0.4, why: 'where the memory is now' };
+			shot = { ...shot, move: 'push_in', tone: 'resolved', tension: 0.4, why: '记忆的当前状态' };
 		}
 		// Finale → crane pull-back, major resolve.
 		if (isFinale) {
-			shot = { ...shot, move: 'crane', cut: 'fly', stormMode: 'anchor', tone: 'awe', tension: 0.5, scoreCue: 'major_resolve', why: 'crane pull-back over the whole cluster — resolution' };
+			shot = { ...shot, move: 'crane', cut: 'fly', stormMode: 'anchor', tone: 'awe', tension: 0.5, scoreCue: 'major_resolve', why: '升起并拉远，呈现整组记忆的收束' };
 		}
 		return shot;
 	});
 
 	const arc: EmotionalArc = path.beats.some((b) => b.kind === 'contradiction') ? 'man_in_hole' : 'rags_to_riches';
-	const originLabel = path.beats[0]?.node.label ?? 'a memory';
-	const logline = `A short film about ${originLabel} — ${n} shots through the graph${arc === 'man_in_hole' ? ', through a contradiction and out the other side' : ''}.`;
+		const originLabel = path.beats[0]?.node.label ?? '一条记忆';
+	const logline = `关于「${originLabel}」的记忆短片：用 ${n} 个镜头穿过图谱${arc === 'man_in_hole' ? '，经历矛盾并走向新的理解' : ''}。`;
 
 	return { source: 'deterministic', logline, arc, shots };
 }
@@ -209,6 +209,7 @@ export function planShotsDeterministic(path: CinemaPath, signals: GraphSignals):
 export function directorSystemPrompt(): string {
 	return [
 		'You are a film director shooting a short documentary about an AI\'s own memory graph.',
+		'Write user-visible loglines, explanations and narration in Simplified Chinese. Preserve original source quotations and all schema identifiers.',
 		'Output a DirectorPlan: a logline, an emotional arc, and one shot per beat.',
 		'Each shot MUST cite a real nodeId and a real "why" referencing a graph metric.',
 		'Grammar → meaning:',

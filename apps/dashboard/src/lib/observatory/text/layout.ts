@@ -47,8 +47,6 @@ export interface LayoutTextOptions {
 	lineHeight?: number;
 }
 
-const ASCII_MIN = 0x20;
-const ASCII_MAX = 0x7e;
 const FALLBACK_CODEPOINT = 0x3f; // '?'
 const DEFAULT_ADVANCE = 0.6;
 const DEFAULT_LINE_HEIGHT = 1.32;
@@ -58,38 +56,26 @@ function glyphMapFor(atlas: MsdfAtlasJson): Map<number, MsdfGlyph> {
 	return new Map(atlas.glyphs.map((glyph) => [glyph.unicode, glyph]));
 }
 
-function asciiFallback(char: string): string {
-	const codepoint = char.codePointAt(0) ?? FALLBACK_CODEPOINT;
-	if (codepoint >= ASCII_MIN && codepoint <= ASCII_MAX) {
-		return char;
-	}
-	return '?';
-}
-
-function truncateLine(line: string, maxChars: number | undefined): string {
-	if (maxChars === undefined || maxChars < 0) {
+function truncateLine(line: string, maxWidth: number | undefined, glyphs: Map<number, MsdfGlyph>, advance: number | undefined): string {
+	if (maxWidth === undefined || maxWidth < 0) {
 		return line;
 	}
-	if (maxChars === 0) {
+	if (maxWidth === 0) {
 		return '';
 	}
 
-	const chars = Array.from(line, asciiFallback);
-	if (chars.length <= maxChars) {
-		return chars.join('');
-	}
-	if (maxChars <= ELLIPSIS.length) {
-		return '.'.repeat(maxChars);
-	}
-	return `${chars.slice(0, maxChars - ELLIPSIS.length).join('')}${ELLIPSIS}`;
-}
-
-function preparedLines(text: string, maxChars: number | undefined): string[] {
-	return text.split('\n').map((line) => truncateLine(line, maxChars));
+	const chars = Array.from(line);
+	const width = (char: string) => advance ?? glyphs.get(char.codePointAt(0)!)?.advance ?? DEFAULT_ADVANCE;
+	if (chars.reduce((n, char) => n + width(char), 0) <= maxWidth) return line;
+	const dotsWidth = ELLIPSIS.length * (advance ?? DEFAULT_ADVANCE);
+	if (maxWidth <= dotsWidth) return '.'.repeat(Math.floor(maxWidth / (advance ?? DEFAULT_ADVANCE)));
+	let used = 0, result = '';
+	for (const char of chars) { const next = width(char); if (used + next + dotsWidth > maxWidth) break; used += next; result += char; }
+	return result + ELLIPSIS;
 }
 
 /**
- * Layout ASCII-only MSDF glyph instances for the checked-in JetBrains Mono atlas.
+ * Layout bundled Latin MSDF and dynamically rasterized Unicode SDF glyphs.
  *
  * Coordinates are baseline-relative with +Y up. Atlas UVs are packed with the required
  * V flip: atlas yOrigin is bottom, while GPU texture V is top-down. Newlines reset penX
@@ -101,18 +87,15 @@ export function layoutText(text: string, atlas: MsdfAtlasJson, options: LayoutTe
 	const fallback = glyphs.get(FALLBACK_CODEPOINT);
 	const atlasWidth = atlas.atlas.width;
 	const atlasHeight = atlas.atlas.height;
-	const advance = options.advance ?? DEFAULT_ADVANCE;
 	const lineHeight = options.lineHeight ?? atlas.metrics?.lineHeight ?? DEFAULT_LINE_HEIGHT;
-	const maxChars = options.maxWidthEm === undefined ? undefined : Math.max(0, Math.floor(options.maxWidthEm / advance));
 
 	const instances: GlyphInstance[] = [];
 	let penY = 0;
 
-	for (const line of preparedLines(text, maxChars)) {
+	for (const line of text.split('\n').map(line => truncateLine(line, options.maxWidthEm, glyphs, options.advance))) {
 		let penX = 0;
 		for (const rawChar of Array.from(line)) {
-			const char = asciiFallback(rawChar);
-			const codepoint = char.codePointAt(0) ?? FALLBACK_CODEPOINT;
+			const codepoint = rawChar.codePointAt(0) ?? FALLBACK_CODEPOINT;
 			const glyph = glyphs.get(codepoint) ?? fallback;
 
 			if (glyph?.planeBounds && glyph.atlasBounds) {
@@ -135,7 +118,7 @@ export function layoutText(text: string, atlas: MsdfAtlasJson, options: LayoutTe
 				});
 			}
 
-			penX += advance;
+			penX += options.advance ?? glyph?.advance ?? DEFAULT_ADVANCE;
 		}
 		penY -= lineHeight;
 	}

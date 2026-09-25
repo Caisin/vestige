@@ -65,6 +65,7 @@ struct Config {
     http_port: u16,
     http_enabled: bool,
     dashboard_enabled: bool,
+    daemon: bool,
 }
 
 fn data_dir_from_env() -> Option<PathBuf> {
@@ -85,6 +86,7 @@ fn parse_args() -> Config {
 
 fn parse_args_from(args: Vec<OsString>, env_data_dir: Option<PathBuf>) -> Config {
     let mut data_dir = env_data_dir;
+    let mut daemon = false;
     let mut http_port: u16 = std::env::var("VESTIGE_HTTP_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
@@ -115,6 +117,9 @@ fn parse_args_from(args: Vec<OsString>, env_data_dir: Option<PathBuf>) -> Config
                     "    --data-dir <PATH>       Custom data directory (overrides VESTIGE_DATA_DIR)"
                 );
                 println!("    --http                  Enable Streamable HTTP transport");
+                println!(
+                    "    --daemon                Run the complete service without stdin (enables HTTP)"
+                );
                 println!("    --no-http               Disable Streamable HTTP transport");
                 println!("    --http-port <PORT>      HTTP transport port (also enables HTTP)");
                 println!();
@@ -178,6 +183,10 @@ fn parse_args_from(args: Vec<OsString>, env_data_dir: Option<PathBuf>) -> Config
             "--http" => {
                 http_enabled = true;
             }
+            "--daemon" => {
+                daemon = true;
+                http_enabled = true;
+            }
             "--no-http" => {
                 http_enabled = false;
             }
@@ -224,6 +233,7 @@ fn parse_args_from(args: Vec<OsString>, env_data_dir: Option<PathBuf>) -> Config
         http_port,
         http_enabled,
         dashboard_enabled,
+        daemon,
     }
 }
 
@@ -279,8 +289,17 @@ fn prepare_storage_path(data_dir: Option<PathBuf>) -> io::Result<Option<PathBuf>
     Ok(Some(data_dir.join(DATABASE_FILE)))
 }
 
-#[tokio::main]
-async fn main() {
+fn main() {
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all().build().expect("initialize service runtime");
+    runtime.block_on(run());
+    // A first-run blocking model download must not hold stdio EOF or daemon
+    // shutdown indefinitely. Accepted tool calls have completed before run()
+    // returns; SQLite transactions remain atomic if background work is stopped.
+    runtime.shutdown_timeout(std::time::Duration::from_secs(2));
+}
+
+async fn run() {
     // Parse CLI arguments first (before logging init, so --help/--version work cleanly)
     let config = parse_args();
 
@@ -320,6 +339,30 @@ async fn main() {
             error!("Failed to initialize storage: {}", e);
             std::process::exit(1);
         }
+    };
+
+    // One full HTTP runtime per data directory. Keep the advisory lock alive
+    // through shutdown so desktop sidecars cannot duplicate a daemon's models
+    // and maintenance workers during concurrent startup.
+    let _service_lock = if config.http_enabled {
+        let path = storage.data_dir().join("http-service.lock");
+        let file = fs::OpenOptions::new()
+            .create(true)
+            .truncate(false)
+            .read(true)
+            .write(true)
+            .open(&path)
+            .unwrap_or_else(|error| {
+                error!(%error, "Cannot open service ownership lock");
+                std::process::exit(1);
+            });
+        file.try_lock().unwrap_or_else(|error| {
+            error!(%error, "A memory HTTP service already owns this data directory");
+            std::process::exit(1);
+        });
+        Some(file)
+    } else {
+        None
     };
 
     // Reattach an explicitly activated optional profile on every server start.
@@ -700,12 +743,28 @@ async fn main() {
     // Create MCP server with shared event channel for dashboard broadcasts
     let server = McpServer::new_with_events(storage, cognitive, event_tx);
 
-    info!("Starting MCP server on stdio...");
-
-    // Run the server
-    if let Err(e) = transport.run(server).await {
-        error!("Server error: {}", e);
-        std::process::exit(1);
+    if config.daemon {
+        info!("Complete daemon service running; stdin is not required");
+        #[cfg(unix)]
+        {
+            let mut terminate =
+                tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+                    .expect("register SIGTERM handler");
+            tokio::select! {
+                _ = tokio::signal::ctrl_c() => {},
+                _ = terminate.recv() => {},
+            }
+        }
+        #[cfg(not(unix))]
+        {
+            let _ = tokio::signal::ctrl_c().await;
+        }
+    } else {
+        info!("Starting MCP server on stdio...");
+        if let Err(e) = transport.run(server).await {
+            error!("Server error: {}", e);
+            std::process::exit(1);
+        }
     }
 
     info!("Vestige MCP Server shutting down");

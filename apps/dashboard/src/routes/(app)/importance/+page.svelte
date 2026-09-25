@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onDestroy, onMount } from 'svelte';
 	import PageHeader from '$components/PageHeader.svelte';
 	import Icon from '$components/Icon.svelte';
@@ -49,10 +50,10 @@
 	type Lens = 'all' | 'save' | 'skip' | 'urgent';
 	let lens = $state<Lens>('all');
 	const lensOptions: DropdownOption[] = [
-		{ value: 'all', label: 'All memories', icon: 'importance' },
-		{ value: 'save', label: 'Recommended: keep', icon: 'sparkle' },
-		{ value: 'skip', label: 'Recommended: skip', icon: 'filter' },
-		{ value: 'urgent', label: 'Urgent (FSRS due)', icon: 'schedule' }
+		{ value: 'all', label: zh("All memories"), icon: 'importance' },
+		{ value: 'save', label: zh("Recommended: keep"), icon: 'sparkle' },
+		{ value: 'skip', label: zh("Recommended: skip"), icon: 'filter' },
+		{ value: 'urgent', label: zh("Urgent (FSRS due)"), icon: 'schedule' }
 	];
 
 	function clamp01(value: number): number {
@@ -104,13 +105,13 @@
 				.sort((a, b) => b.score.composite - a.score.composite);
 
 			if (list.memories.length > 0 && records.length === 0) {
-				error = 'The importance model returned no scores for this memory window.';
+				error = zh("The importance model returned no scores for this memory window.");
 			}
 			fieldPass?.setCells(buildFieldCells());
 		} catch (err) {
 			records = [];
 			total = 0;
-			error = err instanceof Error ? err.message : 'Failed to score importance.';
+			error = err instanceof Error ? err.message : zh("Failed to score importance.");
 		} finally {
 			loading = false;
 			refreshing = false;
@@ -183,7 +184,7 @@
 		return '#10b981';
 	}
 	function needLabel(rec: ImportanceRecord): string {
-		if (rec.urgency == null) return 'no FSRS signal';
+		if (rec.urgency == null) return zh("no FSRS signal");
 		if (rec.predictedNeed === 'high' || rec.urgency >= 0.66) return 'urgent';
 		if (rec.predictedNeed === 'medium' || rec.urgency >= 0.33) return 'soon';
 		return 'stable';
@@ -216,7 +217,7 @@
 			);
 			fieldPass?.setCells(buildFieldCells());
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Promote failed.';
+			error = err instanceof Error ? err.message : zh("Promote failed.");
 		} finally {
 			promotingId = null;
 		}
@@ -296,7 +297,7 @@
 </script>
 
 <svelte:head>
-	<title>Importance & Salience · Vestige</title>
+	<title>{zh("Importance & Salience · Vestige")}</title>
 </svelte:head>
 
 <RouteStage
@@ -314,19 +315,19 @@
 	<div class="pointer-events-auto">
 		<PageHeader
 			icon="importance"
-			title="Importance & Salience"
-			subtitle="Which memories matter most right now, ranked by real FSRS urgency and salience."
+			title={zh("Importance & Salience")}
+			subtitle={zh("Which memories matter most right now, ranked by real FSRS urgency and salience.")}
 			accent="warning"
 		>
 			<button
 				type="button"
 				onclick={() => load()}
 				disabled={loading || refreshing}
-				title={loading || refreshing ? 'Scoring in progress…' : `Re-score the newest ${MEMORY_LIMIT} memories`}
+				title={loading || refreshing ? zh("Scoring in progress…") : `Re-score the newest ${MEMORY_LIMIT} memories`}
 				class="inline-flex items-center gap-1.5 rounded-lg bg-warning/15 px-3.5 py-2 text-xs font-medium text-warning transition hover:bg-warning/25 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-warning/60"
 			>
 				<Icon name="pulse" size={14} />
-				{refreshing ? 'Re-scoring…' : 'Refresh ranking'}
+				{refreshing ? zh("Re-scoring…") : zh("Refresh ranking")}
 			</button>
 		</PageHeader>
 	</div>
@@ -335,14 +336,14 @@
 		<div
 			class="glass-panel pointer-events-auto flex flex-col items-center gap-3 rounded-2xl p-10 text-center"
 		>
-			<div class="text-sm text-decay">Couldn't score importance</div>
+			<div class="text-sm text-decay">{zh("Couldn't score importance")}</div>
 			<div class="max-w-md text-xs text-muted">{error}</div>
 			<button
 				type="button"
 				onclick={() => load()}
 				class="mt-2 rounded-lg bg-warning/15 px-4 py-2 text-xs font-medium text-warning transition hover:bg-warning/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-warning/60"
 			>
-				Retry
+				{zh("Retry")}
 			</button>
 		</div>
 	{:else if loading}
@@ -361,10 +362,9 @@
 			>
 				<Icon name="importance" size={26} draw />
 			</div>
-			<div class="text-sm font-medium text-bright">No memories to rank yet.</div>
+			<div class="text-sm font-medium text-bright">{zh("No memories to rank yet.")}</div>
 			<div class="max-w-sm text-xs text-muted">
-				Salience ranking appears once your brain holds memories. Ingest a few via the MCP tools or
-				the CLI, then hit <span class="text-warning">Refresh ranking</span>.
+				{zh("Salience ranking appears once your brain holds memories. Ingest a few via the MCP tools or the CLI, then hit")} <span class="text-warning">{zh("Refresh ranking")}</span>.
 			</div>
 		</div>
 	{:else}
@@ -374,19 +374,19 @@
 				<div class="text-2xl text-bright font-bold tabular-nums">
 					<AnimatedNumber value={scoredCount} />
 				</div>
-				<div class="text-xs text-dim mt-1">newest {scoredCount.toLocaleString()} ranked of {total.toLocaleString()} total</div>
+				<div class="text-xs text-dim mt-1">{zh("newest")} {scoredCount.toLocaleString('zh-CN')} {zh("ranked of")} {total.toLocaleString('zh-CN')} {zh("total")}</div>
 			</div>
 			<div use:reveal={{ delay: 60, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="text-2xl font-bold tabular-nums" style="color: #10b981">
 					<AnimatedNumber value={keepCount} />
 				</div>
-				<div class="text-xs text-dim mt-1">model recommends keeping</div>
+				<div class="text-xs text-dim mt-1">{zh("model recommends keeping")}</div>
 			</div>
 			<div use:reveal={{ delay: 120, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="text-2xl font-bold tabular-nums" style="color: #f59e0b">
 					<AnimatedNumber value={Math.round(avgComposite * 100)} suffix="%" />
 				</div>
-				<div class="text-xs text-dim mt-1">average composite salience</div>
+				<div class="text-xs text-dim mt-1">{zh("average composite salience")}</div>
 			</div>
 			<div use:reveal={{ delay: 180, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="flex items-center gap-2">
@@ -397,7 +397,7 @@
 						<AnimatedNumber value={urgentCount} />
 					</div>
 				</div>
-				<div class="text-xs text-dim mt-1">urgent by FSRS need</div>
+				<div class="text-xs text-dim mt-1">{zh("urgent by FSRS need")}</div>
 			</div>
 		</div>
 
@@ -406,25 +406,24 @@
 			use:reveal={{ delay: 200, y: 10 }}
 			class="glass-subtle pointer-events-auto rounded-xl p-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-dim"
 		>
-			<span class="text-muted uppercase tracking-wider text-[10px]">Reading the columns</span>
-			<span><span class="text-bright font-medium">Composite</span> — blended 4-channel salience</span>
+			<span class="text-muted uppercase tracking-wider text-[10px]">{zh("Reading the columns")}</span>
+			<span><span class="text-bright font-medium">{zh("Composite")}</span> {zh("— blended 4-channel salience")}</span>
 			<span
-				><span class="text-bright font-medium">Retention</span> — FSRS recall probability now</span
+				><span class="text-bright font-medium">{zh("Retention")}</span> {zh("— FSRS recall probability now")}</span
 			>
-			<span><span class="text-bright font-medium">Urgency</span> — how soon it's needed / due</span>
+			<span><span class="text-bright font-medium">{zh("Urgency")}</span> {zh("— how soon it's needed / due")}</span>
 			<span
 				class="inline-flex items-center gap-1.5"
-				><span class="w-2 h-2 rounded-full" style="background:#10b981"></span>keep
-				<span class="w-2 h-2 rounded-full ml-2" style="background:#f59e0b"></span>skip — model
-				recommendation</span
+				><span class="w-2 h-2 rounded-full" style="background:#10b981"></span>{zh("keep")}
+				<span class="w-2 h-2 rounded-full ml-2" style="background:#f59e0b"></span>{zh("skip — model recommendation")}</span
 			>
 		</div>
 
 		<!-- Filter lens -->
 		<div class="flex flex-wrap items-end gap-3 enter pointer-events-auto">
-			<Dropdown options={lensOptions} value={lens} label="Lens" icon="filter" onChange={(v) => (lens = v as Lens)} />
+			<Dropdown options={lensOptions} value={lens} label={zh("Lens")} icon="filter" onChange={(v) => (lens = v as Lens)} />
 			<span class="text-dim text-xs tabular-nums ml-auto">
-				<AnimatedNumber value={filtered.length} /> in view
+				<AnimatedNumber value={filtered.length} /> {zh("in view")}
 			</span>
 		</div>
 
@@ -438,17 +437,17 @@
 				class="grid grid-cols-[2.2rem_1fr_5rem_5rem_6.5rem_5.5rem] gap-3 items-center px-4 py-2.5 border-b border-subtle/25 bg-white/[0.02] text-[10px] uppercase tracking-wider text-muted"
 			>
 				<span>#</span>
-				<span>Memory</span>
-				<span class="text-right">Composite</span>
-				<span class="text-right">Retention</span>
-				<span class="text-right">Urgency</span>
-				<span class="text-right">Action</span>
+				<span>{zh("Memory")}</span>
+				<span class="text-right">{zh("Composite")}</span>
+				<span class="text-right">{zh("Retention")}</span>
+				<span class="text-right">{zh("Urgency")}</span>
+				<span class="text-right">{zh("Action")}</span>
 			</div>
 
 			{#if filtered.length === 0}
 				<div class="flex flex-col items-center gap-2 p-10 text-center">
 					<Icon name="filter" size={28} strokeWidth={1.3} />
-					<p class="text-dim text-sm">No memories match this lens.</p>
+					<p class="text-dim text-sm">{zh("No memories match this lens.")}</p>
 				</div>
 			{:else}
 				<div class="max-h-[560px] overflow-y-auto divide-y divide-subtle/15">
@@ -474,7 +473,7 @@
 								<div class="truncate text-text">{snippet(rec.memory.content, 88)}</div>
 								<div class="flex items-center gap-2 mt-0.5 text-[10px] text-muted">
 									<span class="font-mono">{rec.memory.id.slice(0, 8)}</span>
-									<span>· {rec.memory.nodeType}</span>
+									<span>· {zh(String(rec.memory.nodeType))}</span>
 									<span
 										class="px-1.5 py-0.5 rounded"
 										style="background: {rec.score.recommendation === 'save'
@@ -483,7 +482,7 @@
 											? '#10b981'
 											: '#f59e0b'}"
 									>
-										{rec.score.recommendation === 'save' ? 'keep' : 'skip'}
+										{rec.score.recommendation === 'save' ? zh("keep") : zh("skip")}
 									</span>
 								</div>
 							</div>
@@ -503,7 +502,7 @@
 								disabled={promotingId === rec.memory.id}
 								class="justify-self-end inline-flex items-center gap-1 rounded-lg border border-warning/30 px-2.5 py-1.5 text-[11px] font-medium text-warning transition hover:bg-warning/15 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-warning/60"
 							>
-								{promotingId === rec.memory.id ? '…' : 'Promote'}
+								{promotingId === rec.memory.id ? '…' : zh("Promote")}
 							</button>
 						</div>
 					{/each}
@@ -520,7 +519,7 @@
 				<div class="flex flex-wrap items-start justify-between gap-3 border-b border-warning/20 pb-3">
 					<div class="min-w-0">
 						<div class="font-mono text-[10px] uppercase tracking-[0.22em] text-warning">
-							Salience receipt
+							{zh("Salience receipt")}
 						</div>
 						<div class="mt-1 font-mono text-xs text-muted">{selected.memory.id}</div>
 					</div>
@@ -532,14 +531,14 @@
 							class="inline-flex items-center gap-1.5 rounded-lg bg-warning/15 px-3 py-1.5 text-xs font-medium text-warning transition hover:bg-warning/25 disabled:opacity-50"
 						>
 							<Icon name="importance" size={13} />
-							{promotingId === selected.memory.id ? 'Promoting…' : 'Promote'}
+							{promotingId === selected.memory.id ? zh("Promoting…") : zh("Promote")}
 						</button>
 						<button
 							type="button"
 							onclick={() => (selectedId = null)}
 							class="rounded-lg border border-subtle/30 px-3 py-1.5 text-xs text-muted transition hover:border-warning/40 hover:text-warning"
 						>
-							Close
+							{zh("Close")}
 						</button>
 					</div>
 				</div>
@@ -574,15 +573,15 @@
 
 				<div class="mt-4 grid gap-3 md:grid-cols-4">
 					<div class="rounded-xl bg-white/[0.03] p-3">
-						<div class="text-[10px] uppercase tracking-wider text-muted">composite</div>
+						<div class="text-[10px] uppercase tracking-wider text-muted">{zh("composite")}</div>
 						<div class="mt-1 font-mono text-lg text-warning">{pct(selected.score.composite)}</div>
 					</div>
 					<div class="rounded-xl bg-white/[0.03] p-3">
-						<div class="text-[10px] uppercase tracking-wider text-muted">retention</div>
+						<div class="text-[10px] uppercase tracking-wider text-muted">{zh("retention")}</div>
 						<div class="mt-1 font-mono text-lg text-recall">{pct(selected.memory.retentionStrength)}</div>
 					</div>
 					<div class="rounded-xl bg-white/[0.03] p-3">
-						<div class="text-[10px] uppercase tracking-wider text-muted">FSRS urgency</div>
+						<div class="text-[10px] uppercase tracking-wider text-muted">{zh("FSRS urgency")}</div>
 						<div class="mt-1 font-mono text-lg" style="color: {needColor(selected)}">
 							{selected.urgency == null ? '—' : pct(selected.urgency)}
 						</div>
@@ -591,15 +590,15 @@
 						</div>
 					</div>
 					<div class="rounded-xl bg-white/[0.03] p-3">
-						<div class="text-[10px] uppercase tracking-wider text-muted">recommendation</div>
+						<div class="text-[10px] uppercase tracking-wider text-muted">{zh("recommendation")}</div>
 						<div
 							class="mt-1 font-mono text-lg"
 							style="color: {selected.score.recommendation === 'save' ? '#10b981' : '#f59e0b'}"
 						>
-							{selected.score.recommendation === 'save' ? 'keep' : 'skip'}
+							{selected.score.recommendation === 'save' ? zh("keep") : zh("skip")}
 						</div>
 						<div class="mt-0.5 text-[10px] text-muted">
-							top channel: {strongestChannel(selected.score)}
+							{zh("top channel:")} {strongestChannel(selected.score)}
 						</div>
 					</div>
 				</div>

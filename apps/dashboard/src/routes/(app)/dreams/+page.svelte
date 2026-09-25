@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onMount } from 'svelte';
 	import RouteStage, { type RouteFramePass, type RoutePick } from '$lib/observatory/RouteStage.svelte';
 	import type { ObservatoryEngine } from '$lib/observatory/engine';
@@ -106,14 +107,14 @@
 		const t = new Date(iso).getTime();
 		if (!Number.isFinite(t) || t <= 0) return '—';
 		const diff = Date.now() - t;
-		if (diff < 0) return 'just now';
+		if (diff < 0) return zh("just now");
 		const mins = Math.floor(diff / 60000);
-		if (mins < 1) return 'just now';
-		if (mins < 60) return `${mins}m ago`;
+		if (mins < 1) return zh("just now");
+		if (mins < 60) return `${mins}分钟前`;
 		const hrs = Math.floor(mins / 60);
-		if (hrs < 24) return `${hrs}h ago`;
+		if (hrs < 24) return `${hrs}小时前`;
 		const days = Math.floor(hrs / 24);
-		return `${days}d ago`;
+		return `${days}天前`;
 	}
 
 	const dreamScene = $derived.by<DreamScene>(() => normalizeDreamScene(dreamResult, selectedRecordId, loading));
@@ -233,13 +234,13 @@
 		return cells;
 	}
 
-	function sanitizeAscii(value: string): string {
+	function safeLabel(value: string): string {
 		return value
 			.replace(/[—–]/g, '-')
 			.replace(/[‘’]/g, "'")
 			.replace(/[“”]/g, '"')
 			.replace(/…/g, '...')
-			.replace(/[^\x20-\x7E]/g, '?');
+			.replace(/[\x00-\x1F\x7F]/g, ' ');
 	}
 
 	function clamp01(value: number): number {
@@ -252,7 +253,7 @@
 
 	function insightId(insight: DreamInsight, index: number): string {
 		const source = insight.sourceMemories?.[0] ?? `${insight.type}:${index}`;
-		return sanitizeAscii(`${source}:${index}`).slice(0, 96);
+		return safeLabel(`${source}:${index}`).slice(0, 96);
 	}
 
 	function normalizeDreamScene(
@@ -290,7 +291,7 @@
 			String(connectionsPersisted),
 			String(generated),
 			String(durationMs)
-		].map((part) => sanitizeAscii(part ?? ''));
+		].map((part) => safeLabel(part ?? ''));
 		const records: DreamRecord[] = [
 			{
 				id: 'dreams:cycle',
@@ -306,7 +307,7 @@
 			records.push({
 				id: 'dreams:message',
 				kind: 'dream-cycle',
-				text: sanitizeAscii(res.message),
+				text: safeLabel(res.message),
 				depth: clamp01(memoriesReplayed / 50),
 				weight: clamp01(generated / Math.max(1, memoriesReplayed)),
 				source: scalarSource('message', memoriesReplayed)
@@ -321,7 +322,7 @@
 			records.push({
 				id: `dreams:insight:${id}`,
 				kind: 'dream-insight',
-				text: `C ${Math.round(confidence * 100)} · N ${Math.round(strength * 100)} | ${sanitizeAscii(insight.insight ?? '')}`,
+				text: `C ${Math.round(confidence * 100)} · N ${Math.round(strength * 100)} | ${safeLabel(insight.insight ?? '')}`,
 				depth: confidence,
 				weight: strength,
 				source: { kind: 'memory', id: sourceMemory },
@@ -425,7 +426,7 @@
 </script>
 
 <svelte:head>
-	<title>Dream Consolidation · Vestige</title>
+	<title>{zh("Dream Consolidation · Vestige")}</title>
 </svelte:head>
 
 <RouteStage
@@ -444,8 +445,8 @@
 	<div class="pointer-events-auto">
 		<PageHeader
 			icon="dreams"
-			title="Dream Consolidation"
-			subtitle="Run a sleep cycle: Vestige replays and strengthens memories, surfacing new connections."
+			title={zh("Dream Consolidation")}
+			subtitle={zh("Run a sleep cycle: Vestige replays and strengthens memories, surfacing new connections.")}
 			accent="dream"
 		>
 			<button
@@ -455,14 +456,14 @@
 				class="inline-flex items-center gap-2 rounded-xl bg-dream/20 px-4 py-2.5 text-sm font-semibold text-dream-glow transition
 					hover:bg-dream/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-dream/60
 					disabled:cursor-not-allowed disabled:opacity-50"
-				title={dormantTotal === 0 ? 'No memories to replay yet — save some first' : 'Replay and strengthen memories'}
+				title={dormantTotal === 0 ? zh("No memories to replay yet — save some first") : zh("Replay and strengthen memories")}
 			>
 				{#if loading}
 					<span class="h-2 w-2 rounded-full bg-dream-glow animate-pulse"></span>
-					Dreaming…
+					{zh("Dreaming…")}
 				{:else}
 					<Icon name="dreams" size={16} />
-					Run Dream Cycle
+					{zh("Run Dream Cycle")}
 				{/if}
 			</button>
 		</PageHeader>
@@ -471,21 +472,21 @@
 	<!-- (3) disabled-reason, when the primary action can't run -->
 	{#if dormantTotal === 0 && !loading}
 		<div class="pointer-events-auto glass-subtle rounded-xl px-4 py-2.5 text-xs text-dim">
-			The dream cycle needs memories to replay. Save some memories first, then run a cycle.
+			{zh("The dream cycle needs memories to replay. Save some memories first, then run a cycle.")}
 		</div>
 	{/if}
 
 	<!-- (5) STATE GUIDANCE: error -->
 	{#if error}
 		<div class="glass-panel pointer-events-auto flex flex-col items-center gap-3 rounded-2xl p-10 text-center">
-			<div class="text-sm text-decay">The dream cycle failed</div>
+			<div class="text-sm text-decay">{zh("The dream cycle failed")}</div>
 			<div class="max-w-md text-xs text-muted">{error}</div>
 			<button
 				type="button"
 				onclick={runDream}
 				class="mt-2 rounded-lg bg-dream/20 px-4 py-2 text-xs font-medium text-dream-glow transition hover:bg-dream/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-dream/60"
 			>
-				Retry
+				{zh("Retry")}
 			</button>
 		</div>
 	{/if}
@@ -505,29 +506,29 @@
 				<div class="text-2xl text-bright font-bold tabular-nums">
 					<AnimatedNumber value={dormantTotal} />
 				</div>
-				<div class="text-xs text-dim mt-1">memories in the pool, waiting to be replayed</div>
+				<div class="text-xs text-dim mt-1">{zh("memories in the pool, waiting to be replayed")}</div>
 			</div>
 			<div use:reveal={{ delay: 60, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="text-2xl font-bold tabular-nums" style="color: #a855f7">
 					<AnimatedNumber value={totalCycles} />
 				</div>
-				<div class="text-xs text-dim mt-1">sleep cycles recorded</div>
+				<div class="text-xs text-dim mt-1">{zh("sleep cycles recorded")}</div>
 			</div>
 			<div use:reveal={{ delay: 120, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="text-2xl font-bold tabular-nums" style="color: #10b981">
 					<AnimatedNumber value={cumulativeConnections} />
 				</div>
-				<div class="text-xs text-dim mt-1">connections found across all cycles</div>
+				<div class="text-xs text-dim mt-1">{zh("connections found across all cycles")}</div>
 			</div>
 			<div use:reveal={{ delay: 180, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="text-2xl text-bright font-bold tabular-nums">
 					{#if lastCycle}
 						{timeAgo(lastCycle.timestamp)}
 					{:else}
-						never
+						{zh("never")}
 					{/if}
 				</div>
-				<div class="text-xs text-dim mt-1">last time the mind slept</div>
+				<div class="text-xs text-dim mt-1">{zh("last time the mind slept")}</div>
 			</div>
 		</div>
 	{:else}
@@ -537,25 +538,25 @@
 				<div class="text-2xl text-bright font-bold tabular-nums">
 					<AnimatedNumber value={Number(dreamScene.scalars.memoriesReplayed ?? 0)} />
 				</div>
-				<div class="text-xs text-dim mt-1">memories replayed</div>
+				<div class="text-xs text-dim mt-1">{zh("memories replayed")}</div>
 			</div>
 			<div use:reveal={{ delay: 60, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="text-2xl font-bold tabular-nums" style="color: #10b981">
 					<AnimatedNumber value={Number(dreamScene.scalars.newConnectionsFound ?? 0)} />
 				</div>
-				<div class="text-xs text-dim mt-1">new connections found</div>
+				<div class="text-xs text-dim mt-1">{zh("new connections found")}</div>
 			</div>
 			<div use:reveal={{ delay: 120, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="text-2xl font-bold tabular-nums" style="color: #a855f7">
 					<AnimatedNumber value={Number(dreamScene.scalars.insightsGenerated ?? 0)} />
 				</div>
-				<div class="text-xs text-dim mt-1">insights surfaced</div>
+				<div class="text-xs text-dim mt-1">{zh("insights surfaced")}</div>
 			</div>
 			<div use:reveal={{ delay: 180, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="text-2xl text-bright font-bold tabular-nums">
 					{fmtDuration(Number(dreamScene.scalars.durationMs ?? 0))}
 				</div>
-				<div class="text-xs text-dim mt-1">cycle duration</div>
+				<div class="text-xs text-dim mt-1">{zh("cycle duration")}</div>
 			</div>
 		</div>
 	{/if}
@@ -566,10 +567,9 @@
 			<div class="flex h-16 w-16 items-center justify-center rounded-2xl border border-dream/25 bg-dream/10 text-dream-glow breathe">
 				<Icon name="dreams" size={30} draw />
 			</div>
-			<div class="text-base font-semibold text-bright">The mind is asleep</div>
+			<div class="text-base font-semibold text-bright">{zh("The mind is asleep")}</div>
 			<p class="max-w-md text-sm text-muted">
-				A dream cycle replays your memories the way sleep consolidates them: it strengthens the ones
-				worth keeping and searches for new connections between them. Nothing runs until you start it.
+				{zh("A dream cycle replays your memories the way sleep consolidates them: it strengthens the ones worth keeping and searches for new connections between them. Nothing runs until you start it.")}
 			</p>
 			<button
 				type="button"
@@ -580,12 +580,11 @@
 					disabled:cursor-not-allowed disabled:opacity-50"
 			>
 				<Icon name="dreams" size={16} />
-				Run Dream Cycle
+				{zh("Run Dream Cycle")}
 			</button>
 			{#if !historyLoading && totalCycles > 0 && lastCycle}
 				<p class="text-xs text-dim">
-					Last cycle {timeAgo(lastCycle.timestamp)} replayed {lastCycle.memoriesReplayed.toLocaleString()} memories
-					and found {lastCycle.connectionsFound.toLocaleString()} connections.
+					{zh("Last cycle")} {timeAgo(lastCycle.timestamp)} {zh("replayed")} {lastCycle.memoriesReplayed.toLocaleString('zh-CN')} {zh("memories and found")} {lastCycle.connectionsFound.toLocaleString('zh-CN')} {zh("connections.")}
 				</p>
 			{/if}
 		</div>
@@ -597,9 +596,9 @@
 			<div class="flex h-14 w-14 items-center justify-center rounded-2xl border border-dream/25 bg-dream/10 text-dream-glow">
 				<span class="h-3 w-3 rounded-full bg-dream-glow animate-ping"></span>
 			</div>
-			<div class="text-sm font-medium text-bright">Consolidating memory…</div>
+			<div class="text-sm font-medium text-bright">{zh("Consolidating memory…")}</div>
 			<p class="max-w-sm text-xs text-muted">
-				Replaying the memory pool, strengthening the strong, and searching for new connections.
+				{zh("Replaying the memory pool, strengthening the strong, and searching for new connections.")}
 			</p>
 		</div>
 	{/if}
@@ -611,13 +610,13 @@
 			<section use:reveal={{ delay: 60, y: 16 }} class="glass-panel rounded-2xl p-5">
 				<div class="flex items-center justify-between border-b border-subtle/20 pb-3">
 					<div>
-						<div class="font-mono text-[10px] uppercase tracking-[0.2em] text-dream-glow">Dream receipt</div>
+						<div class="font-mono text-[10px] uppercase tracking-[0.2em] text-dream-glow">{zh("Dream receipt")}</div>
 						<h2 class="mt-1 text-lg font-semibold text-bright">
-							{insights.length > 0 ? 'New connections surfaced' : 'Cycle complete'}
+							{insights.length > 0 ? zh("New connections surfaced") : zh("Cycle complete")}
 						</h2>
 					</div>
 					<span class="text-xs text-dim tabular-nums">
-						<AnimatedNumber value={insights.length} /> insight{insights.length === 1 ? '' : 's'}
+						<AnimatedNumber value={insights.length} /> {zh("insight")}
 					</span>
 				</div>
 
@@ -625,8 +624,7 @@
 					<div class="flex flex-col items-center gap-2 py-8 text-center">
 						<div class="text-dream-glow opacity-60"><Icon name="sparkle" size={30} draw /></div>
 						<p class="text-sm text-muted">
-							This cycle replayed {Number(dreamScene.scalars.memoriesReplayed ?? 0).toLocaleString()} memories
-							but surfaced no new connections. Memories were still strengthened — run again after saving more.
+							{zh("This cycle replayed")} {Number(dreamScene.scalars.memoriesReplayed ?? 0).toLocaleString('zh-CN')} {zh("memories but surfaced no new connections. Memories were still strengthened — run again after saving more.")}
 						</p>
 					</div>
 				{:else}
@@ -644,9 +642,9 @@
 											: 'border-subtle/20 hover:border-dream/30 hover:bg-white/[0.02]'}"
 								>
 									<div class="flex items-center gap-2 mb-1.5">
-										<span class="text-[10px] uppercase tracking-wider text-dream-glow">{ins?.type ?? 'connection'}</span>
+										<span class="text-[10px] uppercase tracking-wider text-dream-glow">{ins?.type ?? zh("connection")}</span>
 										<span class="ml-auto text-[10px] text-muted tabular-nums">
-											confidence {Math.round(clamp01(ins?.confidence ?? 0) * 100)}% · novelty {Math.round(clamp01(ins?.noveltyScore ?? 0) * 100)}%
+											{zh("confidence")} {Math.round(clamp01(ins?.confidence ?? 0) * 100)}{zh("% · novelty")} {Math.round(clamp01(ins?.noveltyScore ?? 0) * 100)}%
 										</span>
 									</div>
 									<p class="text-sm text-text">{ins?.insight ?? record.text}</p>
@@ -659,22 +657,22 @@
 
 			<!-- (6) INTERPRETATION: selection detail panel — "what you're seeing". -->
 			<aside use:reveal={{ delay: 120, y: 16 }} class="glass rounded-2xl p-5 space-y-3 h-max">
-				<div class="font-mono text-[10px] uppercase tracking-[0.2em] text-dim">What you're seeing</div>
+				<div class="font-mono text-[10px] uppercase tracking-[0.2em] text-dim">{zh("What you're seeing")}</div>
 				{#if selectedInsight}
-					<h3 class="text-base font-semibold text-bright">{selectedInsight.type} connection</h3>
+					<h3 class="text-base font-semibold text-bright">{zh(String(selectedInsight.type))} {zh("connection")}</h3>
 					<p class="text-sm text-text">{selectedInsight.insight}</p>
 					<div class="grid grid-cols-2 gap-2 pt-2">
 						<div class="rounded-xl bg-white/[0.03] p-3">
-							<div class="text-[10px] uppercase tracking-wider text-muted">confidence</div>
+							<div class="text-[10px] uppercase tracking-wider text-muted">{zh("confidence")}</div>
 							<div class="mt-1 font-mono text-lg text-dream-glow">{Math.round(clamp01(selectedInsight.confidence) * 100)}%</div>
 						</div>
 						<div class="rounded-xl bg-white/[0.03] p-3">
-							<div class="text-[10px] uppercase tracking-wider text-muted">novelty</div>
+							<div class="text-[10px] uppercase tracking-wider text-muted">{zh("novelty")}</div>
 							<div class="mt-1 font-mono text-lg" style="color: #22d3ee">{Math.round(clamp01(selectedInsight.noveltyScore) * 100)}%</div>
 						</div>
 					</div>
 					<div class="rounded-xl bg-white/[0.03] p-3">
-						<div class="text-[10px] uppercase tracking-wider text-muted">source memories</div>
+						<div class="text-[10px] uppercase tracking-wider text-muted">{zh("source memories")}</div>
 						<div class="mt-1 font-mono text-lg text-bright tabular-nums">{selectedInsight.sourceMemories?.length ?? 0}</div>
 						{#if selectedInsight.sourceMemories?.length}
 							<div class="mt-2 flex flex-col gap-1">
@@ -686,18 +684,16 @@
 					</div>
 				{:else}
 					<p class="text-sm text-muted">
-						This cycle strengthened {Number(dreamScene.scalars.memoriesStrengthened ?? 0).toLocaleString()} memories
-						and searched for links between them. Select an insight to see the connection Vestige found and how
-						confident it is.
+						{zh("This cycle strengthened")} {Number(dreamScene.scalars.memoriesStrengthened ?? 0).toLocaleString('zh-CN')} {zh("memories and searched for links between them. Select an insight to see the connection Vestige found and how confident it is.")}
 					</p>
 					<div class="grid grid-cols-2 gap-2 pt-1">
 						<div class="rounded-xl bg-white/[0.03] p-3">
-							<div class="text-[10px] uppercase tracking-wider text-muted">strengthened</div>
-							<div class="mt-1 font-mono text-lg text-recall">{Number(dreamScene.scalars.memoriesStrengthened ?? 0).toLocaleString()}</div>
+							<div class="text-[10px] uppercase tracking-wider text-muted">{zh("strengthened")}</div>
+							<div class="mt-1 font-mono text-lg text-recall">{Number(dreamScene.scalars.memoriesStrengthened ?? 0).toLocaleString('zh-CN')}</div>
 						</div>
 						<div class="rounded-xl bg-white/[0.03] p-3">
-							<div class="text-[10px] uppercase tracking-wider text-muted">compressed</div>
-							<div class="mt-1 font-mono text-lg text-dim">{Number(dreamScene.scalars.memoriesCompressed ?? 0).toLocaleString()}</div>
+							<div class="text-[10px] uppercase tracking-wider text-muted">{zh("compressed")}</div>
+							<div class="mt-1 font-mono text-lg text-dim">{Number(dreamScene.scalars.memoriesCompressed ?? 0).toLocaleString('zh-CN')}</div>
 						</div>
 					</div>
 				{/if}
@@ -709,7 +705,7 @@
 						hover:bg-dream/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-dream/60 disabled:opacity-50"
 				>
 					<Icon name="dreams" size={15} />
-					Dream Again
+					{zh("Dream Again")}
 				</button>
 			</aside>
 		</div>

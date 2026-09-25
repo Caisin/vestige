@@ -1,3 +1,4 @@
+import { zh } from '$lib/i18n';
 /**
  * reasoning-helpers — Pure logic for the Reasoning Theater UI.
  *
@@ -33,10 +34,10 @@ export interface RoleMeta {
 }
 
 export const ROLE_META: Record<EvidenceRole, RoleMeta> = {
-	primary: { label: 'Primary', accent: 'synapse', icon: '◈' },
-	supporting: { label: 'Supporting', accent: 'recall', icon: '◇' },
-	contradicting: { label: 'Contradicting', accent: 'decay', icon: '⚠' },
-	superseded: { label: 'Superseded', accent: 'muted', icon: '⊘' },
+	primary: { label: zh("Primary"), accent: 'synapse', icon: '◈' },
+	supporting: { label: zh("Supporting"), accent: 'recall', icon: '◇' },
+	contradicting: { label: zh("Contradicting"), accent: 'decay', icon: '⚠' },
+	superseded: { label: zh("Superseded"), accent: 'muted', icon: '⊘' },
 };
 
 /** Look up role metadata with a defensive fallback. */
@@ -63,29 +64,29 @@ export interface IntentHint {
 
 export const INTENT_HINTS: Record<IntentKey, IntentHint> = {
 	FactCheck: {
-		label: 'FactCheck',
+		label: zh("FactCheck"),
 		icon: '◆',
-		description: 'Direct verification of a single claim.',
+		description: zh("Direct verification of a single claim."),
 	},
 	Timeline: {
-		label: 'Timeline',
+		label: zh("Timeline"),
 		icon: '↗',
-		description: 'Ordered evolution of a fact over time.',
+		description: zh("Ordered evolution of a fact over time."),
 	},
 	RootCause: {
-		label: 'RootCause',
+		label: zh("RootCause"),
 		icon: '⚡',
-		description: 'Why did this happen — causal chain.',
+		description: zh("Why did this happen — causal chain."),
 	},
 	Comparison: {
-		label: 'Comparison',
+		label: zh("Comparison"),
 		icon: '⬡',
-		description: 'Contrasting two or more options side-by-side.',
+		description: zh("Contrasting two or more options side-by-side."),
 	},
 	Synthesis: {
-		label: 'Synthesis',
+		label: zh("Synthesis"),
 		icon: '❖',
-		description: 'Cross-memory composition into a new insight.',
+		description: zh("Cross-memory composition into a new insight."),
 	},
 };
 
@@ -182,7 +183,7 @@ export function nodeTypeColor(nodeType?: string | null): string {
  */
 export function formatDate(
 	iso: string | null | undefined,
-	locale?: string,
+	locale: string = 'zh-CN',
 ): string {
 	if (iso == null) return '—';
 	if (typeof iso !== 'string' || iso.trim() === '') return '—';
@@ -202,7 +203,7 @@ export function formatDate(
 /** Compact month/day formatter for the evolution timeline. */
 export function formatShortDate(
 	iso: string | null | undefined,
-	locale?: string,
+	locale: string = 'zh-CN',
 ): string {
 	if (iso == null) return '—';
 	if (typeof iso !== 'string' || iso.trim() === '') return '—';

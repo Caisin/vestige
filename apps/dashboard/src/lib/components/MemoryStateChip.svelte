@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { getMemoryState, MEMORY_STATE_COLORS, type MemoryState } from '$lib/memory-state';
 
 	interface Props {
@@ -15,10 +16,10 @@
 	class="state-chip"
 	class:compact
 	style="--chip:{color}"
-	title="Retention-derived accessibility (until the backend exposes the true field)"
+	title={zh("Retention-derived accessibility (until the backend exposes the true field)")}
 >
 	<span class="dot" aria-hidden="true"></span>
-	{state}
+	{zh(String(state))}
 </span>
 
 <style>

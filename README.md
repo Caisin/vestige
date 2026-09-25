@@ -4,6 +4,10 @@
 
 # Vestige
 
+本分支提供 **中文编剧工作台与 Tauri 桌面端**：上传剧本、提炼带原文证据的编剧规则、通过对话调整角色，并让外部 Agent 通过 MCP 完成原创写作与审稿。生成由 Agent 执行，素材、规则版本和草稿保存在本地。
+
+[编剧工作台使用说明](docs/WRITER-STUDIO.md) · [设计文档](docs/design/WRITER-STUDIO.md) · [设计自评](docs/design/WRITER-STUDIO-REVIEW.md)
+
 **Cognitive Deterministic Memory Transaction-Security OS for Agentic AI.**
 
 Your agent can think anything. Vestige decides what it is allowed to do.

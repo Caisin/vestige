@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	/**
 	 * ContradictionArcs — 2D cosmic constellation of conflicting memories.
 	 *
@@ -197,7 +198,7 @@
 		viewBox="0 0 {width} {height}"
 		class="w-full h-full"
 		role="img"
-		aria-label="Contradiction constellation map — click an arc to focus, click background to deselect"
+		aria-label={zh("Contradiction constellation map — click an arc to focus, click background to deselect")}
 		onmousemove={onMove}
 		onmouseleave={() => { hoverNode = null; hoverArc = null; }}
 		onclick={handleBgClick}
@@ -360,13 +361,13 @@
 		<g transform="translate(16, 16)" pointer-events="none">
 			<rect x="0" y="0" width="170" height="66" rx="8"
 				fill="#0a0a1a" fill-opacity="0.6" stroke="#6366f1" stroke-opacity="0.12" />
-			<text x="10" y="16" fill="#7a7aaa" font-size="10" font-family="var(--font-mono, monospace)">SEVERITY</text>
+			<text x="10" y="16" fill="#7a7aaa" font-size="10" font-family="var(--font-mono, monospace)">{zh("SEVERITY")}</text>
 			<circle cx="16" cy="30" r="4" fill="#ef4444" />
-			<text x="26" y="33" fill="#e0e0ff" font-size="10" font-family="var(--font-mono, monospace)">strong (&gt;0.7)</text>
+			<text x="26" y="33" fill="#e0e0ff" font-size="10" font-family="var(--font-mono, monospace)">{zh("strong (>0.7)")}</text>
 			<circle cx="16" cy="44" r="4" fill="#f59e0b" />
-			<text x="26" y="47" fill="#e0e0ff" font-size="10" font-family="var(--font-mono, monospace)">moderate (0.5-0.7)</text>
+			<text x="26" y="47" fill="#e0e0ff" font-size="10" font-family="var(--font-mono, monospace)">{zh("moderate (0.5-0.7)")}</text>
 			<circle cx="16" cy="58" r="4" fill="#fde047" />
-			<text x="26" y="61" fill="#e0e0ff" font-size="10" font-family="var(--font-mono, monospace)">mild (0.3-0.5)</text>
+			<text x="26" y="61" fill="#e0e0ff" font-size="10" font-family="var(--font-mono, monospace)">{zh("mild (0.3-0.5)")}</text>
 		</g>
 	</svg>
 
@@ -378,12 +379,12 @@
 		>
 			<div class="flex items-center gap-2 mb-1">
 				<div class="w-2 h-2 rounded-full" style="background: {nodeColor(hoverNode.type)}"></div>
-				<span class="text-bright font-semibold">{hoverNode.type ?? 'memory'}</span>
-				<span class="text-muted ml-auto">trust {(hoverNode.trust * 100).toFixed(0)}%</span>
+				<span class="text-bright font-semibold">{hoverNode.type ?? zh("memory")}</span>
+				<span class="text-muted ml-auto">{zh("trust")} {(hoverNode.trust * 100).toFixed(0)}%</span>
 			</div>
 			<div class="text-text mb-1">{hoverNode.preview}</div>
 			{#if hoverNode.created}
-				<div class="text-muted text-[10px]">created {hoverNode.created}</div>
+				<div class="text-muted text-[10px]">{zh("created")} {hoverNode.created}</div>
 			{/if}
 			{#if hoverNode.tags && hoverNode.tags.length > 0}
 				<div class="text-muted text-[10px] mt-1">
@@ -398,11 +399,11 @@
 		>
 			<div class="flex items-center gap-2 mb-1">
 				<div class="w-2 h-2 rounded-full" style="background: {hoverArc.color}"></div>
-				<span class="text-bright font-semibold">{hoverArc.severity} conflict</span>
+				<span class="text-bright font-semibold">{hoverArc.severity} {zh("conflict")}</span>
 			</div>
-			<div class="text-dim">topic: <span class="text-text">{hoverArc.topic}</span></div>
+			<div class="text-dim">{zh("topic:")} <span class="text-text">{hoverArc.topic}</span></div>
 			<div class="text-muted text-[10px] mt-1">
-				similarity {(hoverArc.similarity * 100).toFixed(0)}% · {hoverArc.dateDiff}d apart
+				{zh("similarity")} {(hoverArc.similarity * 100).toFixed(0)}% · {hoverArc.dateDiff}{zh("d apart")}
 			</div>
 		</div>
 	{/if}

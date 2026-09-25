@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import '../app.css';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
@@ -65,6 +66,7 @@
 		const teardownTheme = initTheme();
 
 		function onKeyDown(e: KeyboardEvent) {
+            if (e.isComposing || document.querySelector('dialog[open]')) return;
 			// While a full-screen takeover (Memory Cinema, a demo) owns the keyboard,
 			// the OS shell must NOT react to ⌘K/Escape — otherwise ⌘K opens the
 			// palette behind the takeover and steals Escape so it can't be closed.
@@ -84,7 +86,7 @@
 				showCommandPalette = false;
 				return;
 			}
-			if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+			if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement || (e.target instanceof HTMLElement && e.target.isContentEditable)) return;
 			// Single-key navigation shortcuts — derived from the canonical registry
 			// so there is ONE source of truth (no drift between dock/palette/keys).
 			const target = SHORTCUT_MAP[e.key.toLowerCase()];
@@ -212,7 +214,7 @@
 <!-- Organs always render FULL-BLEED (they own the viewport as fixed-inset
      WebGPU canvases). The OS shell floats OVER them, so it never fights the
      canvas layout the way the old flex-sidebar did. -->
-<div data-app-root class="contents">
+<div data-app-root data-shell={showShell} class="contents">
 	{@render children()}
 </div>
 
@@ -233,13 +235,13 @@
 	     Every route can reach every organ + ⌘K. No canvas page is an island. -->
 	<nav
 		class="os-dock hidden md:flex"
-		aria-label="VestigeOS navigation"
+		aria-label={zh("VestigeOS navigation")}
 	>
 		<a
 			href="{base}{HOME_ROUTE}"
 			class="os-dock-logo"
-			title="Palace — home"
-			aria-label="Palace, VestigeOS home"
+			title={zh("Palace — home")}
+			aria-label={zh("Palace, VestigeOS home")}
 		>
 			<Icon name="logo" size={18} strokeWidth={1.8} />
 		</a>
@@ -263,25 +265,25 @@
 			<button
 				class="os-dock-link os-dock-command"
 				onclick={() => { showCommandPalette = true; cmdQuery = ''; requestAnimationFrame(() => cmdInput?.focus()); }}
-				title="Command palette (⌘K) — jump to any organ"
+				title={zh("Command palette (⌘K) — jump to any organ")}
 			>
 				<span class="os-dock-icon"><Icon name="command" size={20} /></span>
-				<span class="os-dock-label">Command</span>
+				<span class="os-dock-label">{zh("Command")}</span>
 				<span class="os-dock-key">⌘K</span>
 			</button>
 		</div>
 
 		<div class="os-dock-footer">
-			<div class="os-dock-status" title={$isConnected ? 'Live' : 'Offline'}>
+			<div class="os-dock-status" title={$isConnected ? zh("Live") : zh("Offline")}>
 				<span class="os-dot {$isConnected ? 'os-dot-live' : 'os-dot-off'}"></span>
-				<span class="os-dock-label os-dock-status-text">{$isConnected ? 'Live' : 'Offline'}</span>
+				<span class="os-dock-label os-dock-status-text">{$isConnected ? zh("Live") : zh("Offline")}</span>
 			</div>
 			<div class="os-dock-theme"><ThemeToggle /></div>
 		</div>
 	</nav>
 
 	<!-- ── Mobile bottom bar (primary organs + More→palette) ──────────────── -->
-	<nav class="os-mobilebar md:hidden safe-bottom" aria-label="VestigeOS navigation">
+	<nav class="os-mobilebar md:hidden safe-bottom" aria-label={zh("VestigeOS navigation")}>
 		{#each DOCK_ROUTES.slice(0, 5) as item}
 			{@const active = isActive(item.href, $page.url.pathname)}
 			<a
@@ -296,10 +298,10 @@
 		<button
 			class="os-mobile-link"
 			onclick={() => { showCommandPalette = true; cmdQuery = ''; requestAnimationFrame(() => cmdInput?.focus()); }}
-			aria-label="More organs"
+			aria-label={zh("More organs")}
 		>
 			<Icon name="command" size={20} />
-			<span class="os-mobile-label">More</span>
+			<span class="os-mobile-label">{zh("More")}</span>
 		</button>
 	</nav>
 
@@ -319,7 +321,7 @@
 			class="w-full max-w-xl glass-panel rounded-xl shadow-2xl shadow-synapse/10 overflow-hidden"
 			role="dialog"
 			aria-modal="true"
-			aria-label="Command palette — jump to any organ"
+			aria-label={zh("Command palette — jump to any organ")}
 			use:paletteDialog
 		>
 			<div class="flex items-center gap-3 px-4 py-3 border-b border-synapse/10">
@@ -328,7 +330,7 @@
 					bind:this={cmdInput}
 					bind:value={cmdQuery}
 					type="text"
-					placeholder="Jump to any organ…"
+					placeholder={zh("Jump to any organ…")}
 					class="flex-1 bg-transparent text-text text-sm placeholder:text-muted focus:outline-none"
 					onkeydown={(e) => {
 						if (e.key === 'Enter' && paletteFlat.length > 0) cmdNavigate(paletteFlat[0].href);
@@ -338,7 +340,7 @@
 			</div>
 			<div class="max-h-[60vh] overflow-y-auto py-1">
 				{#each paletteGroups as grp}
-					<div class="px-4 pt-3 pb-1 text-[10px] uppercase tracking-[0.16em] text-muted/70 font-mono">{grp.group}</div>
+					<div class="px-4 pt-3 pb-1 text-[10px] uppercase tracking-[0.16em] text-muted/70 font-mono">{zh(grp.group)}</div>
 					{#each grp.routes as item}
 						<button
 							onclick={() => cmdNavigate(item.href)}
@@ -354,7 +356,7 @@
 					{/each}
 				{/each}
 				{#if paletteFlat.length === 0}
-					<div class="px-4 py-6 text-center text-sm text-muted">No matches</div>
+					<div class="px-4 py-6 text-center text-sm text-muted">{zh("No matches")}</div>
 				{/if}
 			</div>
 		</div>
@@ -370,6 +372,21 @@
 	   Overlays the full-bleed canvas at the left edge. Collapsed to icons by
 	   default; expands to labels on hover so it never steals canvas real
 	   estate but stays one glance away. */
+	[data-app-root] {
+		--os-content-left: 0px;
+		--os-content-bottom: 0px;
+	}
+	@media (min-width: 768px) {
+		[data-app-root][data-shell='true'] {
+			/* Dock's left edge + expanded width + a clear gap. */
+			--os-content-left: 15.25rem;
+		}
+	}
+	@media (max-width: 767px) {
+		[data-app-root][data-shell='true'] {
+			--os-content-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+		}
+	}
 	.os-dock {
 		position: fixed;
 		top: 50%;

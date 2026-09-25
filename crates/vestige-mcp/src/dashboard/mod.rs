@@ -10,6 +10,7 @@ pub mod handlers;
 pub mod state;
 pub mod static_files;
 pub mod websocket;
+pub mod writer;
 
 use axum::Router;
 use axum::routing::{delete, get, post};
@@ -257,6 +258,7 @@ fn build_router_inner(state: AppState, port: u16) -> (Router, AppState) {
             "/api/memory-prs/{id}/{action}",
             post(handlers::act_on_memory_pr),
         )
+        .merge(writer::routes())
         .layer(
             ServiceBuilder::new()
                 .concurrency_limit(50)

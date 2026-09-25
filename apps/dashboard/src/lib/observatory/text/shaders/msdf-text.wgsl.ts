@@ -104,7 +104,7 @@ fn fs_text(in: VSOut) -> @location(0) vec4f {
 	let depth = clamp(in.info.w, 0.0, 1.0);
 	let weight = clamp(in.weight, 0.0, 1.0);
 	var uv = in.uv;
-	uv = uv + vec2f(sin(uv.y * 40.0 + params.time * 3.0), cos(uv.x * 40.0 + params.time * 3.0)) * (cursor_w * 0.007);
+	uv = uv + vec2f(sin(uv.y * 40.0 + params.time * 3.0), cos(uv.x * 40.0 + params.time * 3.0)) * (cursor_w * 3.584 / atlas_px.x);
 	let msdf = textureSample(atlas_tex, atlas_sampler, uv).rgb;
 	let dist = median3(msdf);
 	let uv_width = max(fwidth(uv), vec2f(1.0 / max(atlas_px.x, 1.0), 1.0 / max(atlas_px.y, 1.0)));

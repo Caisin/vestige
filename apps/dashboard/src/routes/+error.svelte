@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { page } from '$app/stores';
 	import { base } from '$app/paths';
 
@@ -7,21 +8,21 @@
 </script>
 
 <svelte:head>
-	<title>{missing ? 'Organ not found' : 'Dashboard error'} · Vestige</title>
+	<title>{missing ? zh("Organ not found") : zh("Dashboard error")} · Vestige</title>
 </svelte:head>
 
 <main class="void">
-	<p class="kicker">{missing ? '404 · EMPTY FIELD' : `ERROR ${$page.status}`}</p>
-	<h1>{missing ? 'This organ is not in the cortex.' : 'The instrument failed to boot.'}</h1>
+	<p class="kicker">{missing ? zh("404 · EMPTY FIELD") : `ERROR ${$page.status}`}</p>
+	<h1>{missing ? zh("This organ is not in the cortex.") : zh("The instrument failed to boot.")}</h1>
 	<p>
 		{message ||
 			(missing
-				? 'The route you opened is not a Vestige organ. The field is still live — pick a real one.'
-				: 'A dashboard surface threw. Your memories were not touched.')}
+				? zh("The route you opened is not a Vestige organ. The field is still live — pick a real one.")
+				: zh("A dashboard surface threw. Your memories were not touched."))}
 	</p>
 	<nav>
-		<a href="{base}/observatory">Open Observatory</a>
-		<a href="{base}/memories">Open memory library</a>
+		<a href="{base}/observatory">{zh("Open Observatory")}</a>
+		<a href="{base}/memories">{zh("Open memory library")}</a>
 	</nav>
 </main>
 

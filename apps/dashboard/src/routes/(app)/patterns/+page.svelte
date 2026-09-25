@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onMount } from 'svelte';
 	import RouteStage, { type RouteFramePass, type RoutePick } from '$lib/observatory/RouteStage.svelte';
 	import PageHeader from '$components/PageHeader.svelte';
@@ -106,7 +107,7 @@
 		return Array.from(set).sort();
 	});
 	const categoryOptions = $derived<DropdownOption[]>([
-		{ value: '', label: 'All themes', icon: 'patterns' },
+		{ value: '', label: zh("All themes"), icon: 'patterns' },
 		...presentCategories.map((c) => ({
 			value: c,
 			label: prettyCategory(c),
@@ -299,7 +300,7 @@
 	}
 
 	function patternLine(pattern: CrossProjectPattern): string {
-		return sanitizeAscii(
+		return safeLabel(
 			[
 				pattern.name,
 				pattern.origin_project,
@@ -313,7 +314,7 @@
 	}
 
 	function patternKey(pattern: CrossProjectPattern): string {
-		return sanitizeAscii(
+		return safeLabel(
 			[pattern.name, pattern.origin_project, pattern.category, pattern.last_used].join(':')
 		).slice(0, 180);
 	}
@@ -330,16 +331,16 @@
 	function formatDate(iso: string): string {
 		const t = Date.parse(iso);
 		if (Number.isNaN(t)) return iso;
-		return new Date(t).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+		return new Date(t).toLocaleDateString('zh-CN', { year: 'numeric', month: 'short', day: 'numeric' });
 	}
 
-	function sanitizeAscii(value: string): string {
+	function safeLabel(value: string): string {
 		return value
 			.replace(/[—–]/g, '-')
 			.replace(/[‘’]/g, "'")
 			.replace(/[“”]/g, '"')
 			.replace(/…/g, '...')
-			.replace(/[^\x20-\x7E]/g, '?');
+			.replace(/[\x00-\x1F\x7F]/g, ' ');
 	}
 
 	function viewportAspect(engine: ObservatoryEngine): number {
@@ -362,7 +363,7 @@
 </script>
 
 <svelte:head>
-	<title>Patterns · Vestige</title>
+	<title>{zh("Patterns · Vestige")}</title>
 </svelte:head>
 
 <RouteStage
@@ -387,12 +388,12 @@
 	<div class="pointer-events-auto">
 		<PageHeader
 			icon="patterns"
-			title="Cross-Project Patterns"
-			subtitle="Recurring structures Vestige detects across your projects and topics."
+			title={zh("Cross-Project Patterns")}
+			subtitle={zh("Recurring structures Vestige detects across your projects and topics.")}
 			accent="recall"
 		>
 			<span class="text-dim text-sm tabular-nums inline-flex items-center gap-1.5">
-				<AnimatedNumber value={visiblePatterns.length} /> in view
+				<AnimatedNumber value={visiblePatterns.length} /> {zh("in view")}
 			</span>
 			<!-- (3) PRIMARY ACTION -->
 			<button
@@ -400,10 +401,10 @@
 				onclick={loadPatterns}
 				disabled={loading}
 				class="inline-flex items-center gap-1.5 rounded-xl border border-recall/30 bg-recall/10 px-3 py-2 text-xs font-medium text-recall transition hover:bg-recall/20 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-recall/60 lift"
-				title={loading ? 'Re-scanning your projects…' : 'Re-scan projects for transferred patterns'}
+				title={loading ? zh("Re-scanning your projects…") : zh("Re-scan projects for transferred patterns")}
 			>
 				<Icon name="patterns" size={13} />
-				{loading ? 'Scanning…' : 'Re-scan patterns'}
+				{loading ? zh("Scanning…") : zh("Re-scan patterns")}
 			</button>
 		</PageHeader>
 	</div>
@@ -411,14 +412,14 @@
 	{#if error}
 		<!-- (5) STATE GUIDANCE — error -->
 		<div class="glass-panel pointer-events-auto flex flex-col items-center gap-3 rounded-2xl p-10 text-center">
-			<div class="text-sm text-decay">Couldn't load cross-project patterns</div>
+			<div class="text-sm text-decay">{zh("Couldn't load cross-project patterns")}</div>
 			<div class="max-w-md text-xs text-muted">{error}</div>
 			<button
 				type="button"
 				onclick={loadPatterns}
 				class="mt-2 rounded-lg bg-recall/20 px-4 py-2 text-xs font-medium text-recall transition hover:bg-recall/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-recall/60"
 			>
-				Retry
+				{zh("Retry")}
 			</button>
 		</div>
 	{:else if loading}
@@ -438,15 +439,13 @@
 			<div class="flex h-14 w-14 items-center justify-center rounded-2xl border border-recall/25 bg-recall/10 text-recall">
 				<Icon name="patterns" size={26} draw />
 			</div>
-			<div class="text-sm font-medium text-bright">No cross-project patterns standing today.</div>
+			<div class="text-sm font-medium text-bright">{zh("No cross-project patterns standing today.")}</div>
 			<div class="max-w-md text-xs text-muted">
-				A pattern appears here once a solved approach in one project — an error-handling
-				shape, a testing strategy, an architecture — shows up again in another. Keep working
-				across projects, then hit <span class="text-recall">Re-scan patterns</span> to mine them.
+				{zh("A pattern appears here once a solved approach in one project — an error-handling shape, a testing strategy, an architecture — shows up again in another. Keep working across projects, then hit")} <span class="text-recall">{zh("Re-scan patterns")}</span> {zh("to mine them.")}
 			</div>
 			{#if projectCount > 0}
 				<div class="mt-1 text-[11px] text-dim tabular-nums">
-					Watching <AnimatedNumber value={projectCount} /> {projectCount === 1 ? 'project' : 'projects'} · none have shared a structure yet
+					{zh("Watching")} <AnimatedNumber value={projectCount} /> {projectCount === 1 ? zh("project") : zh("projects")} {zh("· none have shared a structure yet")}
 				</div>
 			{/if}
 		</div>
@@ -457,19 +456,19 @@
 				<div class="text-2xl text-bright font-bold tabular-nums">
 					<AnimatedNumber value={patternCount} />
 				</div>
-				<div class="text-xs text-dim mt-1">patterns detected</div>
+				<div class="text-xs text-dim mt-1">{zh("patterns detected")}</div>
 			</div>
 			<div use:reveal={{ delay: 60, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="text-2xl text-bright font-bold tabular-nums">
 					<AnimatedNumber value={projectCount} />
 				</div>
-				<div class="text-xs text-dim mt-1">projects linked</div>
+				<div class="text-xs text-dim mt-1">{zh("projects linked")}</div>
 			</div>
 			<div use:reveal={{ delay: 120, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="text-2xl font-bold tabular-nums" style="color: #22C7DE">
 					<AnimatedNumber value={totalTransfers} />
 				</div>
-				<div class="text-xs text-dim mt-1">total transfers</div>
+				<div class="text-xs text-dim mt-1">{zh("total transfers")}</div>
 			</div>
 			<div use:reveal={{ delay: 180, y: 12 }} class="p-4 glass rounded-xl lift">
 				{#if strongestTheme}
@@ -477,11 +476,11 @@
 						{prettyCategory(strongestTheme.category)}
 					</div>
 					<div class="text-xs text-dim mt-1 tabular-nums">
-						strongest theme · {strongestTheme.transfers} transfers
+						{zh("strongest theme ·")} {strongestTheme.transfers} {zh("transfers")}
 					</div>
 				{:else}
 					<div class="text-lg font-bold text-muted">—</div>
-					<div class="text-xs text-dim mt-1">strongest theme</div>
+					<div class="text-xs text-dim mt-1">{zh("strongest theme")}</div>
 				{/if}
 			</div>
 		</div>
@@ -491,7 +490,7 @@
 			<Dropdown
 				options={categoryOptions}
 				value={selectedCategory ?? ''}
-				label="Theme"
+				label={zh("Theme")}
 				icon="filter"
 				onChange={onCategoryChange}
 			/>
@@ -504,7 +503,7 @@
 					class="ml-auto inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs border border-subtle/30 text-dim hover:text-text hover:border-recall/30 hover:bg-white/[0.03] transition lift"
 				>
 					<Icon name="close" size={13} />
-					Clear theme
+					{zh("Clear theme")}
 				</button>
 			{/if}
 		</div>
@@ -516,7 +515,7 @@
 				{#if visiblePatterns.length === 0}
 					<div class="glass-panel flex flex-col items-center gap-2 rounded-2xl p-10 text-center">
 						<div class="text-dim opacity-60 breathe"><Icon name="patterns" size={40} strokeWidth={1.2} /></div>
-						<p class="text-dim text-sm">No patterns in the <span class="text-recall">{selectedCategory ? prettyCategory(selectedCategory) : ''}</span> theme.</p>
+						<p class="text-dim text-sm">{zh("No patterns in the")} <span class="text-recall">{selectedCategory ? prettyCategory(selectedCategory) : ''}</span> {zh("theme.")}</p>
 					</div>
 				{:else}
 					<div class="grid grid-cols-1 xl:grid-cols-2 gap-3">
@@ -543,7 +542,7 @@
 								<div class="flex flex-wrap items-center gap-1.5 text-[11px] text-dim">
 									<span class="px-1.5 py-0.5 rounded bg-white/[0.05] text-muted">{pattern.origin_project}</span>
 									<Icon name="explore" size={11} />
-									<span class="truncate">{pattern.transferred_to.join(', ') || 'unshared'}</span>
+									<span class="truncate">{pattern.transferred_to.join(', ') || zh("unshared")}</span>
 								</div>
 							</button>
 						{/each}
@@ -567,34 +566,34 @@
 							onclick={() => (selectedPattern = null)}
 							class="shrink-0 rounded-lg border border-subtle/30 px-2.5 py-1 text-xs text-muted transition hover:border-recall/40 hover:text-recall"
 						>
-							Close
+							{zh("Close")}
 						</button>
 					</div>
 
 					<p class="mt-3 text-xs text-dim leading-relaxed">
-						This pattern was first solved in
+						{zh("This pattern was first solved in")}
 						<span class="text-text font-medium">{p.origin_project}</span>
-						and Vestige later matched it in
-						<span class="text-text font-medium">{p.transferred_to.join(', ') || '— no other project yet'}</span>.
+						{zh("and Vestige later matched it in")}
+						<span class="text-text font-medium">{p.transferred_to.join(', ') || zh("— no other project yet")}</span>.
 					</p>
 
 					<div class="mt-4 grid grid-cols-2 gap-2">
 						<div class="rounded-xl bg-white/[0.03] p-3">
-							<div class="text-[10px] uppercase tracking-wider text-muted">transfers</div>
+							<div class="text-[10px] uppercase tracking-wider text-muted">{zh("transfers")}</div>
 							<div class="mt-1 font-mono text-lg text-bright tabular-nums">{p.transfer_count}</div>
 						</div>
 						<div class="rounded-xl bg-white/[0.03] p-3">
-							<div class="text-[10px] uppercase tracking-wider text-muted">confidence</div>
+							<div class="text-[10px] uppercase tracking-wider text-muted">{zh("confidence")}</div>
 							<div class="mt-1 font-mono text-lg tabular-nums" style="color: {categoryAccent(p.category)}">
 								{Math.round(clamp01(p.confidence) * 100)}%
 							</div>
 						</div>
 						<div class="rounded-xl bg-white/[0.03] p-3">
-							<div class="text-[10px] uppercase tracking-wider text-muted">reached</div>
+							<div class="text-[10px] uppercase tracking-wider text-muted">{zh("reached")}</div>
 							<div class="mt-1 font-mono text-lg text-bright tabular-nums">{p.transferred_to.length}</div>
 						</div>
 						<div class="rounded-xl bg-white/[0.03] p-3">
-							<div class="text-[10px] uppercase tracking-wider text-muted">last used</div>
+							<div class="text-[10px] uppercase tracking-wider text-muted">{zh("last used")}</div>
 							<div class="mt-1 font-mono text-xs text-dim">{formatDate(p.last_used)}</div>
 						</div>
 					</div>
@@ -608,10 +607,9 @@
 				{:else}
 					<div class="flex flex-col items-center gap-2 py-6 text-center">
 						<div class="text-dim opacity-60 breathe"><Icon name="sparkle" size={30} draw /></div>
-						<div class="text-xs font-medium text-bright">Pick a pattern</div>
+						<div class="text-xs font-medium text-bright">{zh("Pick a pattern")}</div>
 						<p class="max-w-[15rem] text-[11px] text-muted leading-relaxed">
-							Click any card — or a glowing ring in the field — to see where the structure
-							started and which projects it spread to. Each ring is one theme.
+							{zh("Click any card — or a glowing ring in the field — to see where the structure started and which projects it spread to. Each ring is one theme.")}
 						</p>
 					</div>
 				{/if}

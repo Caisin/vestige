@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onMount } from 'svelte';
 	import { api, type Receipt } from '$stores/api';
 	import { base } from '$app/paths';
@@ -22,7 +23,7 @@
 	let input: HTMLInputElement | null = $state(null);
 
 	let receiptSeal = $state<Receipt | null>(null);
-	const EXAMPLES = ['refund compliance exception', 'What port does the dev server use?', 'How does FSRS-6 trust scoring work?'];
+	const EXAMPLES = [zh("refund compliance exception"), zh("What port does the dev server use?"), zh("How does FSRS-6 trust scoring work?")];
 	const confidence = $derived(Math.round((scene?.recommended?.trust_score ?? 0) * 100));
 	const receiptUrl = $derived(receiptId ? `${base}/observatory?receipt=${encodeURIComponent(receiptId)}` : null);
 	const blackBoxUrl = $derived(runId ? `${base}/blackbox?run=${encodeURIComponent(runId)}` : `${base}/blackbox`);
@@ -62,7 +63,7 @@
 				}
 			}
 		} catch (cause) {
-			error = cause instanceof Error ? cause.message : 'Unable to retrieve the supporting memory.';
+			error = cause instanceof Error ? cause.message : zh("Unable to retrieve the supporting memory.");
 		} finally {
 			loading = false;
 		}
@@ -84,10 +85,10 @@
 	}
 
 	function labelFor(evidence: NormalizedEvidence) {
-		if (evidence.role === 'primary') return 'Primary evidence';
-		if (evidence.role === 'contradicting') return 'Conflicting evidence';
-		if (evidence.role === 'superseded') return 'Older, superseded evidence';
-		return 'Supporting evidence';
+		if (evidence.role === 'primary') return zh("Primary evidence");
+		if (evidence.role === 'contradicting') return zh("Conflicting evidence");
+		if (evidence.role === 'superseded') return zh("Older, superseded evidence");
+		return zh("Supporting evidence");
 	}
 
 	onMount(() => input?.focus());
@@ -112,25 +113,25 @@
 </script>
 
 <svelte:head>
-	<title>Memory Replay · Vestige</title>
+	<title>{zh("Memory Replay · Vestige")}</title>
 </svelte:head>
 
 <main class="replay-shell" style="position: relative">
 	<AmbientField {...ambient} accent={[0.36, 0.94, 0.65]} opacity={0.5} />
 	<PageHeader
 		icon="reasoning"
-		title="Memory Replay"
-		subtitle="See the exact memories Vestige retrieved before it makes a recommendation."
+		title={zh("Memory Replay")}
+		subtitle={zh("See the exact memories Vestige retrieved before it makes a recommendation.")}
 		accent="recall"
 	>
-		<span class="live-pill"><span></span> Live retrieval proof</span>
+		<span class="live-pill"><span></span> {zh("Live retrieval proof")}</span>
 	</PageHeader>
 
 	<section class="hero-card">
 		<div class="hero-copy">
-			<p class="eyebrow">MAKE AI DECISIONS AUDITABLE</p>
-			<h1>Ask a question. See the memory behind the answer.</h1>
-			<p>Vestige retrieves real, local memory, evaluates conflicts, and gives you a receipt for the run.</p>
+			<p class="eyebrow">{zh("MAKE AI DECISIONS AUDITABLE")}</p>
+			<h1>{zh("Ask a question. See the memory behind the answer.")}</h1>
+			<p>{zh("Vestige retrieves real, local memory, evaluates conflicts, and gives you a receipt for the run.")}</p>
 		</div>
 		<form
 			class="ask-form"
@@ -139,22 +140,22 @@
 				void runReplay();
 			}}
 		>
-			<label for="memory-question">Your question</label>
+			<label for="memory-question">{zh("Your question")}</label>
 			<div class="ask-row">
 				<input
 					bind:this={input}
 					bind:value={query}
 					id="memory-question"
 					type="search"
-					placeholder="Ask Vestige something it should remember…"
+					placeholder={zh("Ask Vestige something it should remember…")}
 					autocomplete="off"
 				/>
 				<button type="submit" disabled={!query.trim() || loading}>
-					<Icon name="reasoning" size={16} /> {loading ? 'Retrieving…' : 'Run replay'}
+					<Icon name="reasoning" size={16} /> {loading ? zh("Retrieving…") : zh("Run replay")}
 				</button>
 			</div>
-			<div class="examples" aria-label="Example questions">
-				<span>Try:</span>
+			<div class="examples" aria-label={zh("Example questions")}>
+				<span>{zh("Try:")}</span>
 				{#each EXAMPLES as example}
 					<button type="button" onclick={() => useExample(example)}>{example}</button>
 				{/each}
@@ -165,90 +166,90 @@
 	{#if error}
 		<section class="notice error">
 			<Icon name="close" size={18} />
-			<div><strong>Replay could not complete.</strong><br />{error}</div>
-			<button type="button" onclick={() => void runReplay()}>Try again</button>
+			<div><strong>{zh("Replay could not complete.")}</strong><br />{error}</div>
+			<button type="button" onclick={() => void runReplay()}>{zh("Try again")}</button>
 		</section>
 	{:else if loading}
 		<section class="loading-card" aria-live="polite">
-			<div class="pulse"></div><div><strong>Retrieving from your memory</strong><p>Creating a trace and receipt for this run…</p></div>
+			<div class="pulse"></div><div><strong>{zh("Retrieving from your memory")}</strong><p>{zh("Creating a trace and receipt for this run…")}</p></div>
 		</section>
 	{:else if scene}
-		<section class="proof-strip" aria-label="Retrieval proof summary">
-			<div><strong>{scene.evidence.length}</strong><span>memories retrieved</span></div>
-			<div><strong>{scene.contradictions.length}</strong><span>conflicts flagged</span></div>
-			<div><strong>{confidence}%</strong><span>confidence</span></div>
-			<div class:ready={Boolean(receiptId)}><strong>{receiptId ? 'Receipt ready' : 'Trace recorded'}</strong><span>{receiptId ? 'proof is linked to this run' : 'receipt availability pending'}</span></div>
+		<section class="proof-strip" aria-label={zh("Retrieval proof summary")}>
+			<div><strong>{scene.evidence.length}</strong><span>{zh("memories retrieved")}</span></div>
+			<div><strong>{scene.contradictions.length}</strong><span>{zh("conflicts flagged")}</span></div>
+			<div><strong>{confidence}%</strong><span>{zh("confidence")}</span></div>
+			<div class:ready={Boolean(receiptId)}><strong>{receiptId ? zh("Receipt ready") : zh("Trace recorded")}</strong><span>{receiptId ? zh("proof is linked to this run") : zh("receipt availability pending")}</span></div>
 		</section>
 
 		<div class="results-grid">
 			<section class="decision-card">
-				<div class="section-kicker"><span class="dot"></span> Recommendation</div>
+				<div class="section-kicker"><span class="dot"></span> {zh("Recommendation")}</div>
 				{#if scene.recommended?.answer_preview}
 					<h2>{scene.recommended.answer_preview}</h2>
 				{:else}
-					<h2>No reliable recommendation was produced.</h2>
+					<h2>{zh("No reliable recommendation was produced.")}</h2>
 				{/if}
-				<p class="honesty"><strong>What this proves:</strong> the memory IDs below were retrieved in this run. It does not claim an answer changed.</p>
+				<p class="honesty"><strong>{zh("What this proves:")}</strong> {zh("the memory IDs below were retrieved in this run. It does not claim an answer changed.")}</p>
 				<div class="action-row">
-					<a href={blackBoxUrl}>Open this run in Black Box <span>→</span></a>
-					{#if receiptUrl}<a class="secondary" href={receiptUrl}>Open exact receipt <span>→</span></a>{/if}
-					<button class="quiet" type="button" onclick={reset}>New question</button>
+					<a href={blackBoxUrl}>{zh("Open this run in Black Box")} <span>→</span></a>
+					{#if receiptUrl}<a class="secondary" href={receiptUrl}>{zh("Open exact receipt")} <span>→</span></a>{/if}
+					<button class="quiet" type="button" onclick={reset}>{zh("New question")}</button>
 				</div>
 				{#if receiptSeal}
 					<div class="receipt-seal">
-						<strong>Receipt seal</strong>
-						<span>{receiptSeal.retrieved.length} retrieved · {receiptSeal.suppressed.length} suppressed · trust floor {receiptSeal.trust_floor}</span>
+						<strong>{zh("Receipt seal")}</strong>
+						<span>{receiptSeal.retrieved.length} {zh("retrieved ·")} {receiptSeal.suppressed.length} {zh("suppressed · trust floor")} {receiptSeal.trust_floor}</span>
 					</div>
 				{/if}
 				{#if runId}<code class="run-id">RUN {runId}</code>{/if}
 			</section>
 
 			<aside class="method-card">
-				<p class="section-kicker">Why this is different</p>
+				<p class="section-kicker">{zh("Why this is different")}</p>
 				<ol>
-					<li><span>1</span><div><strong>Retrieve</strong><small>Find the real memories relevant to your question.</small></div></li>
-					<li><span>2</span><div><strong>Evaluate</strong><small>Expose conflicts and older superseded context.</small></div></li>
-					<li><span>3</span><div><strong>Prove</strong><small>Keep a run receipt anyone can inspect.</small></div></li>
+					<li><span>1</span><div><strong>{zh("Retrieve")}</strong><small>{zh("Find the real memories relevant to your question.")}</small></div></li>
+					<li><span>2</span><div><strong>{zh("Evaluate")}</strong><small>{zh("Expose conflicts and older superseded context.")}</small></div></li>
+					<li><span>3</span><div><strong>{zh("Prove")}</strong><small>{zh("Keep a run receipt anyone can inspect.")}</small></div></li>
 				</ol>
 			</aside>
 		</div>
 
 		<section class="evidence-panel">
 			<header>
-				<div><p class="section-kicker">Proven: retrieved in this run</p><h2>The evidence Vestige actually used</h2></div>
-				<span>{scene.evidence.length} memory{scene.evidence.length === 1 ? '' : 'ies'}</span>
+				<div><p class="section-kicker">{zh("Proven: retrieved in this run")}</p><h2>{zh("The evidence Vestige actually used")}</h2></div>
+				<span>{scene.evidence.length} {zh("memory")}{scene.evidence.length === 1 ? '' : zh("ies")}</span>
 			</header>
 			{#if scene.evidence.length}
 				<div class="evidence-list">
 					{#each scene.evidence as evidence (evidence.id)}
 						<article class:primary={evidence.role === 'primary'} class:conflict={evidence.role === 'contradicting'}>
-							<div class="evidence-top"><span>{labelFor(evidence)}</span><b>{Math.round(evidence.trust * 100)}% trust</b></div>
-							<p>{evidence.preview || 'Memory content is unavailable in this response.'}</p>
+							<div class="evidence-top"><span>{labelFor(evidence)}</span><b>{Math.round(evidence.trust * 100)}{zh("% trust")}</b></div>
+							<p>{evidence.preview || zh("Memory content is unavailable in this response.")}</p>
 							<a href={`${base}/memories?memory=${encodeURIComponent(evidence.id)}`}><code>{evidence.id}</code></a>
 						</article>
 					{/each}
 				</div>
 			{:else}
-				<div class="empty-evidence">No memory was retrieved for this question. That result is visible rather than hidden.</div>
+				<div class="empty-evidence">{zh("No memory was retrieved for this question. That result is visible rather than hidden.")}</div>
 			{/if}
 		</section>
 
 		{#if scene.contradictions.length || scene.superseded.length}
 			<section class="attribution-panel">
-				<p class="section-kicker">Attributed: likely influence</p>
-				<h2>Context Vestige weighed, but did not treat as decisive</h2>
+				<p class="section-kicker">{zh("Attributed: likely influence")}</p>
+				<h2>{zh("Context Vestige weighed, but did not treat as decisive")}</h2>
 				{#each scene.contradictions as conflict}
-					<p><strong>Conflict flagged:</strong> {conflict.summary}</p>
+					<p><strong>{zh("Conflict flagged:")}</strong> {conflict.summary}</p>
 				{/each}
 				{#each scene.superseded as older}
-					<p><strong>Superseded:</strong> {older.preview || older.id} <code>{older.id}</code></p>
+					<p><strong>{zh("Superseded:")}</strong> {older.preview || older.id} <code>{older.id}</code></p>
 				{/each}
 			</section>
 		{/if}
 	{:else}
 		<section class="empty-state">
 			<div class="empty-icon"><Icon name="memories" size={28} /></div>
-			<div><h2>Turn an AI answer into evidence you can inspect.</h2><p>Run a replay to reveal retrieved memory, confidence, conflicts, and the exact run receipt.</p></div>
+			<div><h2>{zh("Turn an AI answer into evidence you can inspect.")}</h2><p>{zh("Run a replay to reveal retrieved memory, confidence, conflicts, and the exact run receipt.")}</p></div>
 		</section>
 	{/if}
 </main>

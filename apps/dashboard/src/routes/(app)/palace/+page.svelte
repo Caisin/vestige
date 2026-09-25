@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onDestroy } from 'svelte';
 	import { page } from '$app/stores';
 	import { base } from '$app/paths';
@@ -79,13 +80,13 @@
 		}
 	}
 
-	function sanitizeAscii(value: string): string {
+	function safeLabel(value: string): string {
 		return value
 			.replace(/[—–]/g, '-')
 			.replace(/[‘’]/g, "'")
 			.replace(/[“”]/g, '"')
 			.replace(/…/g, '...')
-			.replace(/[^\x20-\x7E]/g, '?');
+			.replace(/[\x00-\x1F\x7F]/g, ' ');
 	}
 
 	function buildText(): TextLayerItem[] {
@@ -93,7 +94,7 @@
 			{
 				id: 'palace:title',
 				kind: 'palace-hud',
-				text: 'VESTIGE // MEMORY PALACE',
+				text: zh("VESTIGE // MEMORY PALACE"),
 				x: -0.92,
 				y: 0.88,
 				size: 0.052,
@@ -105,7 +106,7 @@
 			{
 				id: 'palace:sub',
 				kind: 'palace-hud',
-				text: sanitizeAscii(`${ORGAN_REGIONS.length} LIVING ORGANS - HOVER TO REVEAL - CLICK TO ENTER`),
+				text: safeLabel(`${ORGAN_REGIONS.length} LIVING ORGANS - HOVER TO REVEAL - CLICK TO ENTER`),
 				x: -0.92,
 				y: 0.8,
 				size: 0.025,
@@ -118,7 +119,7 @@
 			{
 				id: 'palace:hint',
 				kind: 'palace-hud',
-				text: navigationStarted ? 'PORTAL LOCKED // COLLAPSING COGNITIVE FIELD' : 'MOVE THROUGH THE FIELD',
+				text: navigationStarted ? zh("PORTAL LOCKED // COLLAPSING COGNITIVE FIELD") : zh("MOVE THROUGH THE FIELD"),
 				x: -0.92,
 				y: -0.87,
 				size: 0.02,
@@ -150,7 +151,7 @@
 					{
 						id: 'palace:focus-purpose',
 						kind: 'palace-focus',
-						text: sanitizeAscii(route?.purpose ?? 'ENTER THIS COGNITIVE ORGAN'),
+						text: safeLabel(route?.purpose ?? zh("ENTER THIS COGNITIVE ORGAN")),
 						x: 0.34,
 						y: 0.8,
 						size: 0.021,
@@ -275,7 +276,7 @@
 </script>
 
 <svelte:head>
-	<title>Memory Palace · VestigeOS</title>
+	<title>{zh("Memory Palace · VestigeOS")}</title>
 </svelte:head>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -283,7 +284,7 @@
 	bind:this={hostEl}
 	class="palace-host fixed inset-0 bg-[#020307]"
 	role="application"
-	aria-label="VestigeOS Memory Palace. Nine living cognitive organs. Use the Command palette for keyboard navigation."
+	aria-label={zh("VestigeOS Memory Palace. Nine living cognitive organs. Use the Command palette for keyboard navigation.")}
 	onpointerdown={handlePointerDown}
 	onpointerup={handlePointerUp}
 	onpointercancel={handlePointerCancel}

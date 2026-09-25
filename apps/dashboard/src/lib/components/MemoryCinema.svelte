@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	// Memory Cinema — the orchestration layer (Phase 4).
 	//
 	// Ties the three tiers together into one fullscreen experience:
@@ -220,7 +221,7 @@
 
 		open = true;
 		stage = 'planning';
-		statusLine = 'Planning a path through your memory…';
+		statusLine = zh("Planning a path through your memory…");
 		caption = '';
 		chip = '';
 		progress = 0;
@@ -230,7 +231,7 @@
 		path = planCinemaPath(nodes, edges, centerId, 7);
 		totalBeats = path.beats.length;
 		if (totalBeats === 0) {
-			statusLine = 'Not enough memory to compose a tour yet.';
+			statusLine = zh("Not enough memory to compose a tour yet.");
 			stage = 'done';
 			return;
 		}
@@ -280,16 +281,16 @@
 				stage = 'done';
 				statusLine =
 					reducedMotion || !webgpuActive
-						? 'End of tour.'
-						: '∞ Dreaming — endless generative figures';
+						? zh("End of tour.")
+						: zh("∞ Dreaming — endless generative figures");
 				startDreamMode();
 			},
 		}, { reducedMotion, shots, centerOnOrigin: webgpuActive });
 
 		stage = 'playing';
 		statusLine = webgpuActive
-			? 'Rendering 150k-particle semantic storm on WebGPU…'
-			: 'Cinematic flythrough (captions mode).';
+			? zh("Rendering 150k-particle semantic storm on WebGPU…")
+			: zh("Cinematic flythrough (captions mode).");
 		lastFrame = performance.now();
 		director.start();
 		loop();
@@ -502,7 +503,7 @@
 		return async () => {
 			if (!path) return null;
 			try {
-				statusLine = 'Loading on-device model (first run downloads weights)…';
+				statusLine = zh("Loading on-device model (first run downloads weights)…");
 				// Computed specifier so TS/Vite don't resolve the optional,
 				// un-bundled package at build time.
 				const pkg = '@huggingface/transformers';
@@ -519,7 +520,7 @@
 
 				// Seed from the deterministic local captions, then enrich each beat.
 				const base = localCaptions(path);
-				statusLine = 'Narrating with the on-device model…';
+				statusLine = zh("Narrating with the on-device model…");
 				const out: BeatNarration[] = [];
 				for (const b of base.beats) {
 					const prompt =
@@ -543,9 +544,9 @@
 <button
 	class="cinema-launch glass rounded-full px-4 py-2 text-sm text-bright flex items-center gap-2 hover:scale-[1.03] transition"
 	onclick={launch}
-	aria-label="Start Memory Cinema — an AI-narrated flythrough of your memory"
+	aria-label={zh("Start Memory Cinema — an AI-narrated flythrough of your memory")}
 >
-	<span aria-hidden="true">🎬</span> Memory Cinema
+	<span aria-hidden="true">🎬</span> {zh("Memory Cinema")}
 </button>
 
 {#if open}
@@ -554,7 +555,7 @@
 		class="cinema-overlay"
 		role="dialog"
 		aria-modal="true"
-		aria-label="Memory Cinema"
+		aria-label={zh("Memory Cinema")}
 		tabindex="-1"
 		onkeydown={onOverlayKeydown}
 	>
@@ -563,8 +564,8 @@
 		<!-- Press H to hide all chrome for a clean demo capture. A tiny restore hint
 		     shows while hidden so it's never a trap. -->
 		{#if !cinemaChrome}
-			<button class="cinema-restore" onclick={() => (cinemaChrome = true)} title="Show UI (H)">
-				press H to show UI
+			<button class="cinema-restore" onclick={() => (cinemaChrome = true)} title={zh("Show UI (H)")}>
+				{zh("press H to show UI")}
 			</button>
 		{/if}
 
@@ -575,31 +576,31 @@
 				<span class="cinema-dot" class:active={stage === 'playing'}></span>
 				<span>{statusLine}</span>
 				{#if plan}
-					<span class="cinema-badge" title="Who directed this film">
-						{plan.source === 'deterministic' ? 'Auteur (local)' : 'Auteur (AI)'}
+					<span class="cinema-badge" title={zh("Who directed this film")}>
+						{plan.source === 'deterministic' ? zh("Auteur (local)") : zh("Auteur (AI)")}
 					</span>
 				{/if}
 				{#if narrationSource}
-					<span class="cinema-badge">{narrationSource === 'backend-llm' ? 'AI narration' : 'Live captions'}</span>
+					<span class="cinema-badge">{narrationSource === 'backend-llm' ? zh("AI narration") : zh("Live captions")}</span>
 				{/if}
 				{#if webgpuActive}<span class="cinema-badge cinema-badge-gpu">WebGPU</span>{/if}
-				{#if stage === 'playing'}<span class="cinema-act">Act {act}</span>{/if}
+				{#if stage === 'playing'}<span class="cinema-act">{zh("Act")} {act}</span>{/if}
 			</div>
 			<div class="flex items-center gap-2">
-				<label class="cinema-toggle" title="Speak narration aloud">
-					<input type="checkbox" bind:checked={voiceOn} /> Voice
+				<label class="cinema-toggle" title={zh("Speak narration aloud")}>
+					<input type="checkbox" bind:checked={voiceOn} /> {zh("Voice")}
 				</label>
-				<label class="cinema-toggle" title="Use an on-device model for narration (downloads weights on first use)">
-					<input type="checkbox" bind:checked={localAiOn} /> Local AI
+				<label class="cinema-toggle" title={zh("Use an on-device model for narration (downloads weights on first use)")}>
+					<input type="checkbox" bind:checked={localAiOn} /> {zh("Local AI")}
 				</label>
-				<button bind:this={closeBtn} class="cinema-close" onclick={close} aria-label="Close Memory Cinema (Esc)">✕</button>
+				<button bind:this={closeBtn} class="cinema-close" onclick={close} aria-label={zh("Close Memory Cinema (Esc)")}>✕</button>
 			</div>
 		</div>
 
 		<!-- Pre-roll DIRECTOR'S PLAN card: the AI states its film before rolling. -->
 		{#if stage === 'planning' && logline}
 			<div class="cinema-plan-card glass-panel">
-				<div class="cinema-plan-kicker">Director's plan</div>
+				<div class="cinema-plan-kicker">{zh("Director's plan")}</div>
 				<p class="cinema-plan-logline">{logline}</p>
 			</div>
 		{/if}
@@ -609,7 +610,7 @@
 			{#if chip}<div class="cinema-chip">{chip}</div>{/if}
 			<p class="cinema-caption">{caption}</p>
 			{#if directorNote && stage === 'playing'}
-				<p class="cinema-note" title="Why the director chose this shot">▸ {directorNote}</p>
+				<p class="cinema-note" title={zh("Why the director chose this shot")}>▸ {directorNote}</p>
 			{/if}
 			<div class="cinema-progress" aria-hidden="true">
 				<div
@@ -618,9 +619,9 @@
 				></div>
 			</div>
 			<div class="cinema-beatcount text-dim text-xs">
-				{#if stage === 'done' && dreamTimer}<span class="cinema-dream">∞ dreaming</span>
-				{:else if totalBeats > 0}Beat {beatIndex} / {totalBeats}{/if}
-				{#if stage === 'done'}<button class="cinema-replay" onclick={launch}>↻ Replay</button>{/if}
+				{#if stage === 'done' && dreamTimer}<span class="cinema-dream">{zh("∞ dreaming")}</span>
+				{:else if totalBeats > 0}{zh("Beat")} {beatIndex} / {totalBeats}{/if}
+				{#if stage === 'done'}<button class="cinema-replay" onclick={launch}>{zh("↻ Replay")}</button>{/if}
 			</div>
 		</div>
 		{/if}

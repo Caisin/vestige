@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	/**
 	 * ObservatoryStage — the full Cognitive Observatory experience as a
 	 * reusable, props-driven component so it can live in TWO places:
@@ -154,7 +155,7 @@
 			? 'now'
 			: timeAxisDays > 0
 				? `+${Math.round(timeAxisDays)}d`
-				: new Date(Date.now() + timeAxisDays * 86_400_000).toLocaleDateString(undefined, {
+				: new Date(Date.now() + timeAxisDays * 86_400_000).toLocaleDateString('zh-CN', {
 						month: 'short',
 						day: 'numeric'
 					})
@@ -306,7 +307,7 @@
 		const ndcY = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
 		const hit = await renderer.pickAt(ndcX, ndcY);
 		if (hit) {
-			lastPick = { kind: 'memory', id: hit.id, label: 'Field cell' };
+			lastPick = { kind: 'memory', id: hit.id, label: zh("Field cell") };
 			onpick?.(hit.id);
 		}
 	}
@@ -474,7 +475,7 @@
 			// launch-day first-run cohort). Render the friendly "NO MEMORIES IN
 			// FIELD" empty state (gated on graphData.nodeCount === 0), not a raw
 			// "API 404: Not Found" error box.
-			const msg = e instanceof Error ? e.message : 'Failed to load graph data';
+			const msg = e instanceof Error ? e.message : zh("Failed to load graph data");
 			if (/\b404\b/.test(msg)) {
 				graphData = {
 					nodes: [],
@@ -607,7 +608,7 @@
 						kind: engrave[i * 4 + 3],
 						beatKind: 'engrave',
 						nodeId: `engrave-${i}`,
-						label: 'edge engraved'
+						label: zh("edge engraved")
 					});
 				}
 				renderer.setPathSteps(engrave, engraveMetas);
@@ -827,7 +828,7 @@
 		class="absolute inset-0 z-0 touch-none"
 		class:cursor-crosshair={!!onpick && !capture}
 		role="application"
-		aria-label="Interactive 3D memory field"
+		aria-label={zh("Interactive 3D memory field")}
 		onclick={handleFieldClick}
 		onpointerdown={fieldPointerDown}
 		onpointermove={fieldPointerMove}
@@ -862,7 +863,7 @@
 					px-3.5 py-3 rounded-xl border border-[#A8FF5E]/15 bg-[#05060a]/55 backdrop-blur-[2px]"
 			>
 				<div class="font-mono text-[10px] tracking-[0.16em] text-[#A8FF5E]/70 uppercase">
-					{topRecalledSource === 'recalls' ? 'Most recalled · your mind' : 'Strongest memories · your mind'}
+					{topRecalledSource === 'recalls' ? zh("Most recalled · your mind") : zh("Strongest memories · your mind")}
 				</div>
 				{#each topRecalled as m, i (m.id)}
 					<div class="flex items-baseline gap-2 font-mono text-[11px]">
@@ -887,13 +888,13 @@
 					bg-[#1a0508]/85 backdrop-blur-sm text-center enter"
 			>
 				<div class="font-mono text-[11px] tracking-[0.2em] text-[#ff5c78] uppercase">
-					⬤ threat quarantined
+					{zh("⬤ threat quarantined")}
 				</div>
 				<div class="font-mono text-[13px] text-[#ffd0d8] max-w-sm truncate">
 					{liveFirewallLabel}
 				</div>
 				<div class="font-mono text-[10px] tracking-wide text-[#ff5c78]/70">
-					memory held in review · Memory PR opened
+					{zh("memory held in review · Memory PR opened")}
 				</div>
 			</div>
 		{/if}
@@ -908,11 +909,11 @@
 					rounded-xl border border-[#22C7DE]/25 bg-[#05060a]/80 backdrop-blur-sm
 					font-mono text-[11px] tracking-wide text-[#22C7DE]/80 hover:text-[#22C7DE]
 					hover:border-[#22C7DE]/50 transition-colors"
-				title={paused ? 'Resume field motion' : 'Pause field motion'}
+				title={paused ? zh("Resume field motion") : zh("Pause field motion")}
 				aria-pressed={paused}
-				aria-label={paused ? 'Resume 3D memory field motion' : 'Pause 3D memory field motion'}
+				aria-label={paused ? zh("Resume 3D memory field motion") : zh("Pause 3D memory field motion")}
 			>
-				{paused ? '▶ RESUME' : '❚❚ PAUSE'}
+				{paused ? zh("▶ RESUME") : zh("❚❚ PAUSE")}
 			</button>
 		{/if}
 
@@ -928,7 +929,7 @@
 				class:opacity-100={shuttleReady}
 				class:opacity-75={!shuttleReady}
 			>
-				<span class="text-[#91ad8a]/80 uppercase whitespace-nowrap">Chrono</span>
+				<span class="text-[#91ad8a]/80 uppercase whitespace-nowrap">{zh("Chrono")}</span>
 				<input
 					type="range"
 					min={chronoMinDays}
@@ -941,8 +942,8 @@
 					onpointercancel={() => (chronoScrubbing = false)}
 					onblur={() => (chronoScrubbing = false)}
 					class="w-36 sm:w-52 accent-[#91ad8a] cursor-ew-resize opacity-75 hover:opacity-100 transition-opacity"
-					aria-label="Scrub the memory field through time — back to the oldest memory, forward on the forgetting curve"
-					title="Rewind the whole brain to any instant, or project it forward — every memory relit on its real FSRS curve"
+					aria-label={zh("Scrub the memory field through time — back to the oldest memory, forward on the forgetting curve")}
+					title={zh("Rewind the whole brain to any instant, or project it forward — every memory relit on its real FSRS curve")}
 				/>
 				<span
 					class="w-16 text-right tabular-nums"
@@ -955,9 +956,9 @@
 					<button
 						onclick={() => (timeAxisDays = 0)}
 						class="text-[#d8ded0]/55 hover:text-[#d8ded0] transition-colors"
-						title="Return to now"
+						title={zh("Return to now")}
 					>
-						now
+						{zh("now")}
 					</button>
 				{/if}
 			</div>
@@ -986,9 +987,9 @@
 				class="absolute top-10 right-4 pointer-events-auto font-mono text-xs tracking-widest
 					text-[#5dcaa5]/70 hover:text-[#5dcaa5] border border-[#5dcaa5]/25 hover:border-[#5dcaa5]/60
 					bg-[#05060a]/70 rounded px-3 py-1.5 transition-colors"
-				title="Exit Observatory (Esc)"
+				title={zh("Exit Observatory (Esc)")}
 			>
-				× EXIT
+				{zh("× EXIT")}
 			</button>
 		{/if}
 
@@ -1014,7 +1015,7 @@
 		{#if loading}
 			<div class="absolute inset-0 flex items-center justify-center pointer-events-auto">
 				<div class="text-[#5dcaa5] font-mono text-sm tracking-widest animate-pulse">
-					LOADING MEMORY FIELD...
+					{zh("LOADING MEMORY FIELD...")}
 				</div>
 			</div>
 		{/if}
@@ -1056,7 +1057,7 @@
 		{#if !loading && graphData && graphData.nodeCount === 0}
 			<div class="absolute inset-0 flex items-center justify-center pointer-events-auto">
 				<div class="text-[#5dcaa5] font-mono text-sm tracking-widest">
-					NO MEMORIES IN FIELD
+					{zh("NO MEMORIES IN FIELD")}
 				</div>
 			</div>
 		{/if}
@@ -1067,7 +1068,7 @@
 <PickReceipt pick={lastPick} onclose={() => (lastPick = null)} />
 {#if hoverLabel && !capture}
 	<div class="pointer-events-none fixed left-4 bottom-24 z-30 font-mono text-[10px] tracking-widest text-[#7ff3e6]/80">
-		HOVER {hoverLabel}
+		{zh("HOVER")} {hoverLabel}
 	</div>
 {/if}
 

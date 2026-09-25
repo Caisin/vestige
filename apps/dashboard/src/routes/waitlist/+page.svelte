@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onMount } from 'svelte';
 	import { base } from '$app/paths';
 
@@ -22,7 +23,7 @@
 	let botMessages = $state<SupportMessage[]>([
 		{
 			role: 'bot',
-			content: 'Ask me about installing Vestige, whether heavy models are required, Solo vs Team Pro, sync, pricing, or what happens after you join the June list.'
+			content: "Ask me about installing Vestige, whether heavy models are required, Solo vs Team Pro, sync, pricing, or what happens after you join the June list."
 		}
 	]);
 
@@ -30,38 +31,38 @@
 	const supportBotEndpoint = import.meta.env.VITE_SUPPORT_BOT_ENDPOINT as string | undefined;
 
 	const proofPoints = [
-		{ value: 'Local', label: 'SQLite memory, no hosted memory service' },
+		{ value: 'Local', label: zh("SQLite memory, no hosted memory service") },
 		{ value: 'MCP', label: 'Claude Code, Cursor, Cline, Codex, Goose' },
-		{ value: 'June', label: 'Pro sync, backup, team memory early access' }
+		{ value: 'June', label: zh("Pro sync, backup, team memory early access") }
 	];
 
 	const proTracks = [
 		{
 			name: 'Solo Pro',
 			accent: '#22c55e',
-			copy: 'Multi-device sync, encrypted backups, managed updates, and a cleaner memory dashboard for developers living inside AI coding agents.'
+			copy: "Multi-device sync, encrypted backups, managed updates, and a cleaner memory dashboard for developers living inside AI coding agents."
 		},
 		{
 			name: 'Team Pro',
 			accent: '#06b6d4',
-			copy: 'Shared project memory, admin review, audit trails, PostgreSQL-backed deployments, and async support for engineering teams.'
+			copy: "Shared project memory, admin review, audit trails, PostgreSQL-backed deployments, and async support for engineering teams."
 		}
 	];
 
 	const launchPillars = [
-		'Private by default',
-		'Sync without lock-in',
-		'Team memory controls',
-		'Bot-assisted support'
+		zh("Private by default"),
+		zh("Sync without lock-in"),
+		zh("Team memory controls"),
+		zh("Bot-assisted support")
 	];
 
 	const supportPrompts = [
-		{ label: 'Install', prompt: 'How do I install Vestige and connect it to Claude Code?' },
-		{ label: 'No 20GB?', prompt: 'Do I need the Sanhedrin model or 20GB of RAM?' },
-		{ label: 'Solo vs Team', prompt: 'Should I choose Solo Pro or Team Pro?' },
-		{ label: 'Sync', prompt: 'How will Pro sync and backups work?' },
-		{ label: 'Pricing', prompt: 'How much will Vestige Pro cost?' },
-		{ label: 'Human help', prompt: 'When does a human get involved?' }
+		{ label: zh("Install"), prompt: "How do I install Vestige and connect it to Claude Code?" },
+		{ label: zh("No 20GB?"), prompt: "Do I need the Sanhedrin model or 20GB of RAM?" },
+		{ label: zh("Solo vs Team"), prompt: "Should I choose Solo Pro or Team Pro?" },
+		{ label: zh("Sync"), prompt: "How will Pro sync and backups work?" },
+		{ label: zh("Pricing"), prompt: "How much will Vestige Pro cost?" },
+		{ label: zh("Human help"), prompt: "When does a human get involved?" }
 	];
 
 	onMount(() => {
@@ -174,16 +175,16 @@
 
 	function githubWaitlistUrl() {
 		const body = [
-			'## Vestige Pro waitlist',
+			zh("## Vestige Pro waitlist"),
 			'',
 			`Plan: ${role}`,
 			`Priority: ${priority}`,
-			notes.trim() ? `Use case: ${notes.trim()}` : 'Use case:',
+			notes.trim() ? `Use case: ${notes.trim()}` : zh("Use case:"),
 			'',
-			'Please do not include private email addresses in this public issue.'
+			zh("Please do not include private email addresses in this public issue.")
 		].join('\n');
 
-		return `https://github.com/samvallad33/vestige/issues/new?title=${encodeURIComponent('Vestige Pro waitlist')}&body=${encodeURIComponent(body)}`;
+		return `https://github.com/samvallad33/vestige/issues/new?title=${encodeURIComponent(zh("Vestige Pro waitlist"))}&body=${encodeURIComponent(body)}`;
 	}
 
 	async function joinWaitlist(event: SubmitEvent) {
@@ -193,13 +194,13 @@
 
 		if (companySite.trim()) {
 			submitState = 'success';
-			submitMessage = 'You are on the list.';
+			submitMessage = zh("You are on the list.");
 			return;
 		}
 
 		if (!email.includes('@')) {
 			submitState = 'error';
-			submitMessage = 'Enter an email so the early-access invite can reach you.';
+			submitMessage = zh("Enter an email so the early-access invite can reach you.");
 			return;
 		}
 
@@ -215,7 +216,7 @@
 
 		if (!waitlistEndpoint) {
 			submitState = 'success';
-			submitMessage = 'Email capture is ready for an endpoint. Opening the GitHub waitlist fallback with your email omitted.';
+			submitMessage = zh("Email capture is ready for an endpoint. Opening the GitHub waitlist fallback with your email omitted.");
 			window.open(githubWaitlistUrl(), '_blank', 'noopener,noreferrer');
 			return;
 		}
@@ -228,7 +229,7 @@
 			});
 			if (!response.ok) throw new Error(`Waitlist endpoint returned ${response.status}`);
 			submitState = 'success';
-			submitMessage = 'You are on the June early-access list.';
+			submitMessage = zh("You are on the June early-access list.");
 			name = '';
 			email = '';
 			notes = '';
@@ -236,56 +237,56 @@
 			submitState = 'error';
 			submitMessage = error instanceof Error
 				? error.message
-				: 'The waitlist endpoint did not accept the request.';
+				: zh("The waitlist endpoint did not accept the request.");
 		}
 	}
 
 	function localSupportAnswer(question: string) {
 		const query = question.toLowerCase();
 
-		if (/(install|setup|onboard|claude|cursor|cline|codex|connect)/.test(query)) {
+		if (/(install|setup|onboard|claude|cursor|cline|codex|connect|安装|连接|配置)/.test(query)) {
 			return [
-				'Start with the open-source install:',
+				zh("Start with the open-source install:"),
 				'1. `npm install -g vestige-mcp-server@latest`',
 				'2. Claude Code: `claude mcp add vestige vestige-mcp -s user`',
 				'3. Codex: `codex mcp add vestige -- vestige-mcp`',
-				'Then test it by asking your agent to remember a preference, opening a fresh session, and asking for that preference back.'
+				zh("Then test it by asking your agent to remember a preference, opening a fresh session, and asking for that preference back.")
 			].join('\n');
 		}
 
-		if (/(sanhedrin|20gb|20 gb|ram|heavy|model|mlx|preflight|hook)/.test(query)) {
-			return 'No. The default Vestige path is the local MCP memory server. Sanhedrin, preflight hooks, and large local verifier models are optional. Pro should keep that promise: nobody should need a 20GB machine just to use memory.';
+		if (/(sanhedrin|20gb|20 gb|ram|heavy|model|mlx|preflight|hook|模型|内存|预检|钩子)/.test(query)) {
+			return zh("No. The default Vestige path is the local MCP memory server. Sanhedrin, preflight hooks, and large local verifier models are optional. Pro should keep that promise: nobody should need a 20GB machine just to use memory.");
 		}
 
-		if (/(solo|team|plan|seat|buying)/.test(query)) {
-			return 'Choose Solo Pro if you want your own multi-device memory, backups, smoother updates, and personal support. Choose Team Pro if multiple people need shared project memory, admin controls, PostgreSQL-backed storage, audit trails, or team onboarding.';
+		if (/(solo|team|plan|seat|buying|个人|团队|方案|套餐)/.test(query)) {
+			return zh("Choose Solo Pro if you want your own multi-device memory, backups, smoother updates, and personal support. Choose Team Pro if multiple people need shared project memory, admin controls, PostgreSQL-backed storage, audit trails, or team onboarding.");
 		}
 
-		if (/(sync|backup|device|dropbox|icloud|syncthing|postgres|postgresql|pg|central)/.test(query)) {
-			return 'Open-source Vestige should stay local-first. Pro is where guided sync, encrypted backups, conflict handling, and Team Pro PostgreSQL-backed storage belong. The important design rule: users own memory and can export it.';
+		if (/(sync|backup|device|dropbox|icloud|syncthing|postgres|postgresql|pg|central|同步|备份|设备)/.test(query)) {
+			return zh("Open-source Vestige should stay local-first. Pro is where guided sync, encrypted backups, conflict handling, and Team Pro PostgreSQL-backed storage belong. The important design rule: users own memory and can export it.");
 		}
 
-		if (/(price|pricing|cost|pay|billing|stripe|lemon|subscription|monthly|yearly)/.test(query)) {
-			return 'Pricing is not final yet. The current plan is simple: Solo Pro for individual developers, Team Pro for engineering teams. Join the waitlist so early users can shape pricing before the June launch.';
+		if (/(price|pricing|cost|pay|billing|stripe|lemon|subscription|monthly|yearly|价格|定价|收费|订阅)/.test(query)) {
+			return zh("Pricing is not final yet. The current plan is simple: Solo Pro for individual developers, Team Pro for engineering teams. Join the waitlist so early users can shape pricing before the June launch.");
 		}
 
-		if (/(update|upgrade|curl|reinstall|version)/.test(query)) {
-			return 'Use `vestige update` for existing installs. The goal is that users should not need to keep copying curl commands just to stay current.';
+		if (/(update|upgrade|curl|reinstall|version|更新|升级|版本)/.test(query)) {
+			return zh("Use `vestige update` for existing installs. The goal is that users should not need to keep copying curl commands just to stay current.");
 		}
 
-		if (/(privacy|local|cloud|telemetry|data|where.*stored|sqlite)/.test(query)) {
-			return 'Vestige core stores memory locally in SQLite and does not need a hosted memory service. Pro should add convenience around sync, backup, and teams without turning private local memory into a black box.';
+		if (/(privacy|local|cloud|telemetry|data|where.*stored|sqlite|隐私|本地|数据|云端)/.test(query)) {
+			return zh("Vestige core stores memory locally in SQLite and does not need a hosted memory service. Pro should add convenience around sync, backup, and teams without turning private local memory into a black box.");
 		}
 
-		if (/(support|bot|human|email|question|help|available|awake|discord)/.test(query)) {
-			return 'The support bot should answer common install, sync, plan, and onboarding questions instantly. Hard cases should escalate with context so a human teammate only handles the issues that actually need human judgment.';
+		if (/(support|bot|human|email|question|help|available|awake|discord|帮助|支持|人工|联系)/.test(query)) {
+			return zh("The support bot should answer common install, sync, plan, and onboarding questions instantly. Hard cases should escalate with context so a human teammate only handles the issues that actually need human judgment.");
 		}
 
-		if (/(waitlist|june|early|launch|invite|after)/.test(query)) {
-			return 'After you join the waitlist, the June early-access flow should invite you into the right lane: Solo Pro for personal memory, Team Pro for shared memory and admin controls. The bot will keep onboarding answers available while the launch scales.';
+		if (/(waitlist|june|early|launch|invite|after|候补|六月|体验|邀请)/.test(query)) {
+			return zh("After you join the waitlist, the June early-access flow should invite you into the right lane: Solo Pro for personal memory, Team Pro for shared memory and admin controls. The bot will keep onboarding answers available while the launch scales.");
 		}
 
-		return 'I can help with install, updates, optional heavy models, Solo vs Team Pro, sync, backups, privacy, pricing, and support escalation. For now, the fastest next step is to join the waitlist and include your use case so the June onboarding can prioritize the right workflows.';
+		return zh("I can help with install, updates, optional heavy models, Solo vs Team Pro, sync, backups, privacy, pricing, and support escalation. For now, the fastest next step is to join the waitlist and include your use case so the June onboarding can prioritize the right workflows.");
 	}
 
 	async function askSupportBot(event?: SubmitEvent, prompt?: string) {
@@ -333,7 +334,7 @@
 </script>
 
 <svelte:head>
-	<title>Vestige Pro Waitlist</title>
+	<title>{zh("Vestige Pro Waitlist")}</title>
 	<meta
 		name="description"
 		content="Join the Vestige Pro waitlist for local-first AI agent memory sync, backups, team memory, PostgreSQL-backed storage, and bot-assisted support."
@@ -345,35 +346,34 @@
 	<div class="field-vignette" aria-hidden="true"></div>
 
 	<header class="topbar">
-		<a class="brand" href={`${base}/waitlist`} aria-label="Vestige Pro waitlist home">
+		<a class="brand" href={`${base}/waitlist`} aria-label={zh("Vestige Pro waitlist home")}>
 			<span class="brand-mark">V</span>
 			<span>Vestige Pro</span>
 		</a>
-		<nav aria-label="Waitlist navigation">
+		<nav aria-label={zh("Waitlist navigation")}>
 			<a href="https://github.com/samvallad33/vestige" target="_blank" rel="noreferrer">GitHub</a>
-			<a href={`${base}/graph`}>Dashboard</a>
-			<a class="nav-cta" href="#join">Join</a>
+			<a href={`${base}/graph`}>{zh("Dashboard")}</a>
+			<a class="nav-cta" href="#join">{zh("Join")}</a>
 		</nav>
 	</header>
 
 	<main>
 		<section class="hero" aria-labelledby="hero-title">
 			<div class="hero-copy">
-				<p class="eyebrow">June early access</p>
+				<p class="eyebrow">{zh("June early access")}</p>
 				<h1 id="hero-title">Vestige Pro</h1>
 				<p class="hero-subtitle">
-					The paid layer for developers and teams who already trust Vestige as local memory for AI agents.
-					Sync, backups, team memory, and bot-assisted support come next.
+					{zh("The paid layer for developers and teams who already trust Vestige as local memory for AI agents. Sync, backups, team memory, and bot-assisted support come next.")}
 				</p>
 
-				<div class="hero-actions" aria-label="Primary actions">
-					<a class="primary-link" href="#join">Join the waitlist <span aria-hidden="true">-&gt;</span></a>
+				<div class="hero-actions" aria-label={zh("Primary actions")}>
+					<a class="primary-link" href="#join">{zh("Join the waitlist")} <span aria-hidden="true">-&gt;</span></a>
 					<a class="secondary-link" href="https://github.com/samvallad33/vestige" target="_blank" rel="noreferrer">
-						View open source
+						{zh("View open source")}
 					</a>
 				</div>
 
-				<div class="proof-row" aria-label="Vestige proof points">
+				<div class="proof-row" aria-label={zh("Vestige proof points")}>
 					{#each proofPoints as point}
 						<div class="proof-item">
 							<strong>{point.value}</strong>
@@ -385,22 +385,22 @@
 
 			<form id="join" class="waitlist-form" onsubmit={joinWaitlist}>
 				<div class="form-heading">
-					<p>Early access</p>
-					<h2>Reserve a Pro seat</h2>
+					<p>{zh("Early access")}</p>
+					<h2>{zh("Reserve a Pro seat")}</h2>
 				</div>
 
 				<label>
-					<span>Name</span>
+					<span>{zh("Name")}</span>
 					<input bind:value={name} autocomplete="name" name="name" placeholder="Alex" />
 				</label>
 
 				<label>
-					<span>Email</span>
+					<span>{zh("Email")}</span>
 					<input bind:value={email} autocomplete="email" name="email" placeholder="you@example.com" type="email" required />
 				</label>
 
 				<label>
-					<span>Who are you buying for?</span>
+					<span>{zh("Who are you buying for?")}</span>
 					<select bind:value={role} name="role">
 						<option value="solo">Solo Pro</option>
 						<option value="team">Team Pro</option>
@@ -408,32 +408,32 @@
 				</label>
 
 				<label>
-					<span>What matters most?</span>
+					<span>{zh("What matters most?")}</span>
 					<select bind:value={priority} name="priority">
-						<option value="sync">Multi-device sync</option>
-						<option value="team-memory">Shared team memory</option>
-						<option value="postgres">PostgreSQL / central backend</option>
-						<option value="support-bot">Bot-assisted support</option>
+						<option value="sync">{zh("Multi-device sync")}</option>
+						<option value="team-memory">{zh("Shared team memory")}</option>
+						<option value="postgres">{zh("PostgreSQL / central backend")}</option>
+						<option value="support-bot">{zh("Bot-assisted support")}</option>
 					</select>
 				</label>
 
 				<label>
-					<span>Use case</span>
+					<span>{zh("Use case")}</span>
 					<textarea
 						bind:value={notes}
 						name="notes"
-						placeholder="Tell us where your agent keeps forgetting context."
+						placeholder={zh("Tell us where your agent keeps forgetting context.")}
 						rows="4"
 					></textarea>
 				</label>
 
 				<label class="hidden-field" aria-hidden="true">
-					<span>Company site</span>
+					<span>{zh("Company site")}</span>
 					<input bind:value={companySite} name="company_site" tabindex="-1" autocomplete="off" />
 				</label>
 
 				<button class="submit-button" type="submit" disabled={submitState === 'submitting'}>
-					{submitState === 'submitting' ? 'Saving...' : 'Join June early access'}
+					{submitState === 'submitting' ? zh("Saving...") : zh("Join June early access")}
 				</button>
 
 				{#if submitMessage}
@@ -444,7 +444,7 @@
 			</form>
 		</section>
 
-		<section class="signal-band" aria-label="Launch focus">
+		<section class="signal-band" aria-label={zh("Launch focus")}>
 			{#each launchPillars as pillar}
 				<div>{pillar}</div>
 			{/each}
@@ -452,8 +452,8 @@
 
 		<section class="pro-grid" aria-labelledby="pro-title">
 			<div class="section-heading">
-				<p>Why Pro exists</p>
-				<h2 id="pro-title">Two plans. One promise: agent memory you can depend on.</h2>
+				<p>{zh("Why Pro exists")}</p>
+				<h2 id="pro-title">{zh("Two plans. One promise: agent memory you can depend on.")}</h2>
 			</div>
 			<div class="track-grid">
 				{#each proTracks as track}
@@ -468,18 +468,17 @@
 
 		<section class="support-bot" aria-labelledby="bot-title">
 			<div>
-				<p class="eyebrow">Always-on answers</p>
-				<h2 id="bot-title">The support bot handles the first wave.</h2>
+				<p class="eyebrow">{zh("Always-on answers")}</p>
+				<h2 id="bot-title">{zh("The support bot handles the first wave.")}</h2>
 				<p class="bot-intro">
-					This is the first support layer: instant onboarding answers before anyone has to write an email.
-					It can run locally from the FAQ now and call a hosted support endpoint later.
+					{zh("This is the first support layer: instant onboarding answers before anyone has to write an email. It can run locally from the FAQ now and call a hosted support endpoint later.")}
 				</p>
 			</div>
 			<div class="bot-panel">
 				<div class="bot-status">
 					<span class="bot-light" aria-hidden="true"></span>
-					<span>Onboarding bot</span>
-					<small>{supportBotEndpoint ? 'Connected' : 'FAQ mode'}</small>
+					<span>{zh("Onboarding bot")}</span>
+					<small>{supportBotEndpoint ? zh("Connected") : zh("FAQ mode")}</small>
 				</div>
 
 				<div class="bot-messages" aria-live="polite">
@@ -492,12 +491,12 @@
 					{/each}
 					{#if botBusy}
 						<div class="bot-bubble">
-							<p>Checking the onboarding notes...</p>
+							<p>{zh("Checking the onboarding notes...")}</p>
 						</div>
 					{/if}
 				</div>
 
-				<div class="prompt-row" aria-label="Common onboarding questions">
+				<div class="prompt-row" aria-label={zh("Common onboarding questions")}>
 					{#each supportPrompts as prompt}
 						<button type="button" onclick={() => askSupportBot(undefined, prompt.prompt)}>
 							{prompt.label}
@@ -509,11 +508,11 @@
 					<input
 						bind:value={botQuestion}
 						name="support_question"
-						placeholder="Ask about install, sync, pricing, or Team Pro"
-						aria-label="Ask the Vestige support bot"
+						placeholder={zh("Ask about install, sync, pricing, or Team Pro")}
+						aria-label={zh("Ask the Vestige support bot")}
 					/>
 					<button type="submit" disabled={botBusy || !botQuestion.trim()}>
-						Ask
+						{zh("Ask")}
 					</button>
 				</form>
 			</div>
@@ -521,21 +520,21 @@
 
 		<section class="roadmap" aria-labelledby="roadmap-title">
 			<div>
-				<p class="eyebrow">May to June</p>
-				<h2 id="roadmap-title">The plan is simple.</h2>
+				<p class="eyebrow">{zh("May to June")}</p>
+				<h2 id="roadmap-title">{zh("The plan is simple.")}</h2>
 			</div>
 			<ol>
 				<li>
-					<strong>May</strong>
-					<span>Get Vestige into every MCP, Claude Code, Cursor, local AI, Rust, and self-hosted channel that cares about agent memory.</span>
+					<strong>{zh("May")}</strong>
+					<span>{zh("Get Vestige into every MCP, Claude Code, Cursor, local AI, Rust, and self-hosted channel that cares about agent memory.")}</span>
 				</li>
 				<li>
-					<strong>June</strong>
-					<span>Invite the first Solo Pro and Team Pro users into sync, backups, shared memory, PostgreSQL-backed deployments, and bot-assisted support.</span>
+					<strong>{zh("June")}</strong>
+					<span>{zh("Invite the first Solo Pro and Team Pro users into sync, backups, shared memory, PostgreSQL-backed deployments, and bot-assisted support.")}</span>
 				</li>
 				<li>
-					<strong>After</strong>
-					<span>Use paid feedback to turn Vestige from a beloved local tool into durable agent-memory infrastructure.</span>
+					<strong>{zh("After")}</strong>
+					<span>{zh("Use paid feedback to turn Vestige from a beloved local tool into durable agent-memory infrastructure.")}</span>
 				</li>
 			</ol>
 		</section>

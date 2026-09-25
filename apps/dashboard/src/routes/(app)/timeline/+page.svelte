@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onMount } from 'svelte';
 	import { api } from '$stores/api';
 	import type { Memory, MemoryAuditEvent, TimelineDay } from '$types';
@@ -40,7 +41,7 @@
 			}
 		} catch (cause) {
 			timeline = [];
-			error = cause instanceof Error ? cause.message : 'Failed to load timeline';
+			error = cause instanceof Error ? cause.message : zh("Failed to load timeline");
 		} finally {
 			loading = false;
 		}
@@ -61,7 +62,7 @@
 			const response = await api.memoryAudit(memoryId, 100);
 			audits = { ...audits, [memoryId]: response.events };
 		} catch (cause) {
-			error = cause instanceof Error ? cause.message : 'Failed to load memory audit';
+			error = cause instanceof Error ? cause.message : zh("Failed to load memory audit");
 		} finally {
 			auditLoading = false;
 		}
@@ -119,11 +120,11 @@
 	}
 
 	function formatTime(value: string | undefined) {
-		return value ? new Date(value).toLocaleString() : 'Not recorded';
+		return value ? new Date(value).toLocaleString('zh-CN') : zh("Not recorded");
 	}
 </script>
 
-<svelte:head><title>Memory Timeline · Vestige</title></svelte:head>
+<svelte:head><title>{zh("Memory Timeline · Vestige")}</title></svelte:head>
 
 <RouteStage
 	organ="timeline"
@@ -139,40 +140,40 @@
 <main class="timeline-shell">
 	<header class="timeline-head">
 		<div>
-			<p class="eyebrow">BITEMPORAL MEMORY HISTORY</p>
-			<h1>Watch memory grow. Inspect every change.</h1>
-			<p class="lede">The rings are real valid-time history. Choose a date or a memory to open its transaction-time receipt.</p>
+			<p class="eyebrow">{zh("BITEMPORAL MEMORY HISTORY")}</p>
+			<h1>{zh("Watch memory grow. Inspect every change.")}</h1>
+			<p class="lede">{zh("The rings are real valid-time history. Choose a date or a memory to open its transaction-time receipt.")}</p>
 		</div>
-		<div class="range-control" aria-label="Timeline range">
-			<span>TIME WINDOW</span>
+		<div class="range-control" aria-label={zh("Timeline range")}>
+			<span>{zh("TIME WINDOW")}</span>
 			{#each RANGE_CYCLE as range}
 				<button type="button" class:active={days === range} aria-pressed={days === range} onclick={() => selectRange(range)}>{range}D</button>
 			{/each}
-			<button type="button" class:active={rewrittenOnly} aria-pressed={rewrittenOnly} onclick={() => (rewrittenOnly = !rewrittenOnly)}>REWRITTEN</button>
+			<button type="button" class:active={rewrittenOnly} aria-pressed={rewrittenOnly} onclick={() => (rewrittenOnly = !rewrittenOnly)}>{zh("REWRITTEN")}</button>
 		</div>
 	</header>
 
-	<dl class="vitals" aria-label="Timeline metrics">
-		<div><dt>Memories</dt><dd>{totalMemories}</dd></div>
-		<div><dt>Rewritten</dt><dd>{rewriteCount}</dd></div>
-		<div><dt>Calendar slices</dt><dd>{timeline.length}</dd></div>
-		<div><dt>Average retention</dt><dd>{Math.round(avgRetention * 100)}%</dd></div>
+	<dl class="vitals" aria-label={zh("Timeline metrics")}>
+		<div><dt>{zh("Memories")}</dt><dd>{totalMemories}</dd></div>
+		<div><dt>{zh("Rewritten")}</dt><dd>{rewriteCount}</dd></div>
+		<div><dt>{zh("Calendar slices")}</dt><dd>{timeline.length}</dd></div>
+		<div><dt>{zh("Average retention")}</dt><dd>{Math.round(avgRetention * 100)}%</dd></div>
 	</dl>
 
 	<section class="timeline-grid">
 		<div class="glass-panel day-list">
-			<div class="panel-label"><span>VALID-TIME SLICES</span><strong>{days} DAYS</strong></div>
+			<div class="panel-label"><span>{zh("VALID-TIME SLICES")}</span><strong>{days} {zh("DAYS")}</strong></div>
 			{#if loading}
-				<p class="state-line">Weaving the live memory history…</p>
+				<p class="state-line">{zh("Weaving the live memory history…")}</p>
 			{:else if error}
 				<p class="state-line error">{error}</p>
 			{:else if visibleTimeline.length === 0}
-				<p class="state-line">{rewrittenOnly ? 'No rewritten memories in this window.' : 'No memory growth in this window.'}</p>
+				<p class="state-line">{rewrittenOnly ? zh("No rewritten memories in this window.") : zh("No memory growth in this window.")}</p>
 			{:else}
 				<div class="day-rows">
 					{#each visibleTimeline as day (day.date)}
 						<button type="button" class:active={selectedDate === day.date} onclick={() => selectDay(day.date)}>
-							<span>{day.date}</span><strong>{day.count}</strong><small>{Math.round((day.memories.reduce((sum, memory) => sum + memory.retentionStrength, 0) / Math.max(1, day.memories.length)) * 100)}% retained</small>
+							<span>{day.date}</span><strong>{day.count}</strong><small>{Math.round((day.memories.reduce((sum, memory) => sum + memory.retentionStrength, 0) / Math.max(1, day.memories.length)) * 100)}{zh("% retained")}</small>
 						</button>
 					{/each}
 				</div>
@@ -181,32 +182,32 @@
 
 		<aside class="glass-panel receipt" aria-live="polite">
 			{#if selectedMemory}
-				<p class="eyebrow">TIME-SLICE RECEIPT</p>
+				<p class="eyebrow">{zh("TIME-SLICE RECEIPT")}</p>
 				<h2>{selectedMemory.content}</h2>
 				<dl class="receipt-metrics">
-					<div><dt>Memory ID</dt><dd><code>{selectedMemory.id}</code></dd></div>
-					<div><dt>Valid time</dt><dd>{formatTime(selectedMemory.validFrom ?? selectedMemory.createdAt)}</dd></div>
-					<div><dt>Transaction time</dt><dd>{formatTime(selectedMemory.updatedAt)}</dd></div>
-					<div><dt>Retention</dt><dd>{Math.round(selectedMemory.retentionStrength * 100)}%</dd></div>
+					<div><dt>{zh("Memory ID")}</dt><dd><code>{selectedMemory.id}</code></dd></div>
+					<div><dt>{zh("Valid time")}</dt><dd>{formatTime(selectedMemory.validFrom ?? selectedMemory.createdAt)}</dd></div>
+					<div><dt>{zh("Transaction time")}</dt><dd>{formatTime(selectedMemory.updatedAt)}</dd></div>
+					<div><dt>{zh("Retention")}</dt><dd>{Math.round(selectedMemory.retentionStrength * 100)}%</dd></div>
 				</dl>
-				<h3>Audit events</h3>
-				{#if auditLoading}<p class="state-line">Loading this memory’s audit…</p>
-				{:else if selectedAudit.length === 0}<p class="state-line">No audit events returned for this record.</p>
+				<h3>{zh("Audit events")}</h3>
+				{#if auditLoading}<p class="state-line">{zh("Loading this memory’s audit…")}</p>
+				{:else if selectedAudit.length === 0}<p class="state-line">{zh("No audit events returned for this record.")}</p>
 				{:else}<ol>{#each selectedAudit.slice(0, 12) as event}<li><strong>{event.action}</strong><span>{formatTime(event.timestamp)}</span>{#each auditDiffLines(event) as line}<small>{line}</small>{/each}</li>{/each}</ol>{/if}
 			{:else if selectedDay}
-				<p class="eyebrow">DATE SLICE</p><h2>{selectedDay.date}</h2><p class="slice-summary">{selectedDay.count} memories entered this valid-time slice. Select one below to inspect its receipt.</p>
+				<p class="eyebrow">{zh("DATE SLICE")}</p><h2>{selectedDay.date}</h2><p class="slice-summary">{selectedDay.count} {zh("memories entered this valid-time slice. Select one below to inspect its receipt.")}</p>
 			{:else}
-				<p class="eyebrow">FIELD IS LIVE</p><h2>Choose a ring, date, or memory.</h2><p class="slice-summary">The field shows growth. This panel makes the evidence legible.</p>
+				<p class="eyebrow">{zh("FIELD IS LIVE")}</p><h2>{zh("Choose a ring, date, or memory.")}</h2><p class="slice-summary">{zh("The field shows growth. This panel makes the evidence legible.")}</p>
 			{/if}
 		</aside>
 	</section>
 
 	{#if selectedDay}
 		<section class="memory-strip glass-panel">
-			<div class="panel-label"><span>MEMORIES IN {selectedDay.date}</span><strong>{selectedDay.memories.length} RECORDS</strong></div>
+			<div class="panel-label"><span>{zh("MEMORIES IN")} {selectedDay.date}</span><strong>{selectedDay.memories.length} {zh("RECORDS")}</strong></div>
 			<div class="memory-buttons">
 				{#each selectedDay.memories.slice(0, 20) as memory (memory.id)}
-					<button type="button" class:active={selectedMemoryId === memory.id} onclick={() => selectMemory(memory, selectedDay.date)}><strong>{memory.content}</strong><small>{memory.id.slice(0, 8)} · {Math.round(memory.retentionStrength * 100)}% retention</small></button>
+					<button type="button" class:active={selectedMemoryId === memory.id} onclick={() => selectMemory(memory, selectedDay.date)}><strong>{memory.content}</strong><small>{memory.id.slice(0, 8)} · {Math.round(memory.retentionStrength * 100)}{zh("% retention")}</small></button>
 				{/each}
 			</div>
 		</section>

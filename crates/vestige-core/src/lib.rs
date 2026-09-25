@@ -94,6 +94,7 @@ pub mod memory;
 pub mod intention_graph;
 pub mod security;
 pub mod storage;
+pub mod writer;
 
 /// Agent Black Box, Memory Receipts & Memory PRs — the cognitive flight
 /// recorder, immune system, and reviewable-diff model for agent memory.

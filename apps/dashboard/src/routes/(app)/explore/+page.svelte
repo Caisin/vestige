@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onDestroy, onMount } from 'svelte';
 	import { replaceState } from '$app/navigation';
 	import { api } from '$stores/api';
@@ -291,7 +292,7 @@
 			if (gen !== loadGen) return;
 			searchResult = null;
 			results = [];
-			error = err instanceof Error ? err.message : 'UNKNOWN EXPLORE FETCH ERROR';
+			error = err instanceof Error ? err.message : zh("UNKNOWN EXPLORE FETCH ERROR");
 		} finally {
 			if (gen === loadGen) {
 				loading = false;
@@ -323,13 +324,13 @@
 		return layoutGalaxy(data, { maxRadius: 0.9, minCellR: 0.035, maxCellR: 0.1 });
 	}
 
-	function sanitizeAscii(value: string): string {
+	function safeLabel(value: string): string {
 		return value
 			.replace(/[—–]/g, '-')
 			.replace(/[‘’]/g, "'")
 			.replace(/[“”]/g, '"')
 			.replace(/…/g, '...')
-			.replace(/[^\x20-\x7E]/g, '?');
+			.replace(/[\x00-\x1F\x7F]/g, ' ');
 	}
 
 	function clamp01(value: number): number {
@@ -366,7 +367,7 @@
 	// Trim to a cap on a word boundary near the cap so a portrait row never ends
 	// mid-token; hard-slice fallback for a single unbroken token.
 	function trimSnippet(text: string, cap: number): string {
-		const s = sanitizeAscii(text).replace(/\s+/g, ' ').trim();
+		const s = safeLabel(text).replace(/\s+/g, ' ').trim();
 		if (s.length <= cap) return s;
 		const hard = s.slice(0, cap);
 		const lastSpace = hard.lastIndexOf(' ');
@@ -491,12 +492,12 @@
 	// The primary action is disabled with a reason when there is nothing to commit.
 	const primaryDisabled = $derived(loading || inputValue.trim().length === 0);
 	const primaryDisabledReason = $derived(
-		loading ? 'Walking…' : inputValue.trim().length === 0 ? 'Type a thought to search' : ''
+		loading ? 'Walking…' : inputValue.trim().length === 0 ? zh("Type a thought to search") : ''
 	);
 </script>
 
 <svelte:head>
-	<title>Semantic Explorer · Vestige</title>
+	<title>{zh("Semantic Explorer · Vestige")}</title>
 </svelte:head>
 
 <!-- Living field BEHIND (unchanged WebGPU aesthetic) -->
@@ -520,13 +521,13 @@
 	<div class="pointer-events-auto">
 		<PageHeader
 			icon="explore"
-			title="Semantic Explorer"
-			subtitle="Walk your memory by meaning: pick a thought, see its nearest neighbors, walk deeper."
+			title={zh("Semantic Explorer")}
+			subtitle={zh("Walk your memory by meaning: pick a thought, see its nearest neighbors, walk deeper.")}
 			accent="synapse"
 		>
 			{#if seededFrom}
 				<span class="text-dim text-xs tabular-nums inline-flex items-center gap-1.5">
-					seeded from {seededFrom}
+					{zh("seeded from")} {seededFrom}
 				</span>
 			{/if}
 		</PageHeader>
@@ -542,8 +543,8 @@
 				type="text"
 				bind:value={inputValue}
 				onkeydown={onSearchKeydown}
-				placeholder="Search a thought by meaning…"
-				aria-label="Search memory by meaning"
+				placeholder={zh("Search a thought by meaning…")}
+				aria-label={zh("Search memory by meaning")}
 				class="w-full bg-white/[0.03] border border-subtle/25 rounded-lg pl-9 pr-3 py-2.5 text-sm text-text placeholder:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-synapse/50 transition"
 			/>
 		</div>
@@ -555,12 +556,12 @@
 			class="inline-flex items-center justify-center gap-2 rounded-lg bg-synapse/20 px-4 py-2.5 text-sm font-medium text-synapse-glow transition hover:bg-synapse/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-synapse/60 disabled:opacity-40 disabled:cursor-not-allowed"
 		>
 			<Icon name="explore" size={15} />
-			{loading ? 'Walking…' : 'Explore'}
+			{loading ? zh("Walking…") : zh("Explore")}
 		</button>
 		<div
 			class="flex rounded-lg border border-subtle/25 overflow-hidden text-xs"
 			role="group"
-			aria-label="Neighborhood physics"
+			aria-label={zh("Neighborhood physics")}
 		>
 			<button
 				type="button"
@@ -568,9 +569,9 @@
 				class="px-3 py-2.5 transition {mode === 'walk'
 					? 'bg-synapse/25 text-synapse-glow font-medium'
 					: 'text-dim hover:text-text'}"
-				title="Semantic associations — nearest neighbors by meaning"
+				title={zh("Semantic associations — nearest neighbors by meaning")}
 			>
-				Walk
+				{zh("Walk")}
 			</button>
 			<button
 				type="button"
@@ -578,9 +579,9 @@
 				class="px-3 py-2.5 transition {mode === 'spread'
 					? 'bg-synapse/25 text-synapse-glow font-medium'
 					: 'text-dim hover:text-text'}"
-				title="Activation spread — edge-weighted BFS over the real graph"
+				title={zh("Activation spread — edge-weighted BFS over the real graph")}
 			>
-				Spread
+				{zh("Spread")}
 			</button>
 		</div>
 	</div>
@@ -592,14 +593,14 @@
 		<div
 			class="glass-panel pointer-events-auto flex flex-col items-center gap-3 rounded-2xl p-10 text-center"
 		>
-			<div class="text-sm text-decay">Couldn't load neighbors</div>
+			<div class="text-sm text-decay">{zh("Couldn't load neighbors")}</div>
 			<div class="max-w-md text-xs text-muted break-words">{error}</div>
 			<button
 				type="button"
 				onclick={loadNeighbors}
 				class="mt-2 rounded-lg bg-synapse/20 px-4 py-2 text-xs font-medium text-synapse-glow transition hover:bg-synapse/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-synapse/60"
 			>
-				Retry
+				{zh("Retry")}
 			</button>
 		</div>
 	{:else if loading}
@@ -624,12 +625,12 @@
 			<div class="text-sm font-medium text-bright">
 				{searchQuery.trim()
 					? `No neighbors for "${searchQuery.slice(0, 60)}"`
-					: 'Nothing to explore yet'}
+					: zh("Nothing to explore yet")}
 			</div>
 			<div class="max-w-sm text-xs text-muted">
 				{searchQuery.trim()
-					? 'Try a broader phrase, or ingest more memories on this topic.'
-					: 'Ingest a memory, then search a thought above to walk its nearest neighbors by meaning.'}
+					? zh("Try a broader phrase, or ingest more memories on this topic.")
+					: zh("Ingest a memory, then search a thought above to walk its nearest neighbors by meaning.")}
 			</div>
 		</div>
 	{:else}
@@ -639,25 +640,25 @@
 				<div class="text-2xl text-bright font-bold tabular-nums">
 					<AnimatedNumber value={neighborCount} />
 				</div>
-				<div class="text-xs text-dim mt-1">nearest neighbors</div>
+				<div class="text-xs text-dim mt-1">{zh("nearest neighbors")}</div>
 			</div>
 			<div use:reveal={{ delay: 60, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="text-2xl font-bold tabular-nums" style="color: #22C7DE">
 					<AnimatedNumber value={avgSimilarity} scale={100} decimals={0} suffix="%" />
 				</div>
-				<div class="text-xs text-dim mt-1">avg similarity</div>
+				<div class="text-xs text-dim mt-1">{zh("avg similarity")}</div>
 			</div>
 			<div use:reveal={{ delay: 120, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="text-2xl font-bold tabular-nums" style="color: #29F2A9">
 					<AnimatedNumber value={topSimilarity} scale={100} decimals={0} suffix="%" />
 				</div>
-				<div class="text-xs text-dim mt-1">closest match</div>
+				<div class="text-xs text-dim mt-1">{zh("closest match")}</div>
 			</div>
 			<div use:reveal={{ delay: 180, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="text-2xl text-bright font-bold tabular-nums">
 					<AnimatedNumber value={searchMs} suffix="ms" />
 				</div>
-				<div class="text-xs text-dim mt-1">retrieval time</div>
+				<div class="text-xs text-dim mt-1">{zh("retrieval time")}</div>
 			</div>
 		</div>
 
@@ -666,7 +667,7 @@
 			<div class="pointer-events-auto glass-subtle rounded-xl px-4 py-3 text-xs text-dim flex items-start gap-2">
 				<span class="text-synapse-glow mt-0.5 shrink-0"><Icon name="search" size={14} /></span>
 				<span>
-					<span class="text-muted uppercase tracking-wider text-[10px]">Centered on</span>
+					<span class="text-muted uppercase tracking-wider text-[10px]">{zh("Centered on")}</span>
 					<span class="text-text ml-1">{trimSnippet(centerContent, 120)}</span>
 				</span>
 			</div>
@@ -678,7 +679,7 @@
 				<div
 					class="flex items-center justify-between px-1 pb-2 sticky top-0 bg-deep/60 backdrop-blur-sm z-10"
 				>
-					<span class="text-xs text-dim uppercase tracking-wider">Neighborhood · click to select, walk to re-center</span>
+					<span class="text-xs text-dim uppercase tracking-wider">{zh("Neighborhood · click to select, walk to re-center")}</span>
 					<span class="text-xs text-muted tabular-nums"><AnimatedNumber value={neighborCount} /></span>
 				</div>
 
@@ -698,10 +699,10 @@
 								class="w-2 h-2 rounded-full shrink-0"
 								style="background: #22C7DE; opacity: {0.35 + sim * 0.65}"
 							></div>
-							<span class="text-[10px] uppercase tracking-wider text-muted">{memory.nodeType}</span>
+							<span class="text-[10px] uppercase tracking-wider text-muted">{zh(String(memory.nodeType))}</span>
 							<span class="ml-auto text-[11px] tabular-nums font-medium" style="color: #22C7DE">
 								{mode === 'spread'
-									? `${Math.round(sim * 100)}% activation · ${spreadHops[memory.id] ?? '?'} hop${spreadHops[memory.id] === 1 ? '' : 's'}`
+									? `${Math.round(sim * 100)}% activation · ${spreadHops[memory.id] ?? '?'} hop$`
 									: `${Math.round(sim * 100)}% match`}
 							</span>
 						</div>
@@ -710,7 +711,7 @@
 						</div>
 						<div class="mt-1.5 flex items-center gap-3 text-[10px] text-muted tabular-nums">
 							<span>{memory.id.slice(0, 8)}</span>
-							<span>retention {Math.round(retention(memory) * 100)}%</span>
+							<span>{zh("retention")} {Math.round(retention(memory) * 100)}%</span>
 						</div>
 					</button>
 				{/each}
@@ -723,7 +724,7 @@
 						<div class="flex items-start justify-between gap-3 border-b border-subtle/20 pb-3">
 							<div>
 								<div class="font-mono text-[10px] uppercase tracking-[0.22em] text-synapse-glow">
-									Selected thought
+									{zh("Selected thought")}
 								</div>
 								<div class="mt-1 text-[11px] text-muted font-mono break-all">{selected.id}</div>
 							</div>
@@ -738,13 +739,13 @@
 						<p class="text-sm text-text leading-relaxed">{selected.content}</p>
 						<div class="grid grid-cols-2 gap-2">
 							<div class="rounded-lg bg-white/[0.03] p-2.5">
-								<div class="text-[10px] uppercase tracking-wider text-muted">similarity</div>
+								<div class="text-[10px] uppercase tracking-wider text-muted">{zh("similarity")}</div>
 								<div class="mt-0.5 font-mono text-lg" style="color: #22C7DE">
 									{Math.round(similarity(selected) * 100)}%
 								</div>
 							</div>
 							<div class="rounded-lg bg-white/[0.03] p-2.5">
-								<div class="text-[10px] uppercase tracking-wider text-muted">retention</div>
+								<div class="text-[10px] uppercase tracking-wider text-muted">{zh("retention")}</div>
 								<div class="mt-0.5 font-mono text-lg" style="color: #29F2A9">
 									{Math.round(retention(selected) * 100)}%
 								</div>
@@ -765,7 +766,7 @@
 							class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-synapse/20 px-4 py-2.5 text-sm font-medium text-synapse-glow transition hover:bg-synapse/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-synapse/60 disabled:opacity-40 disabled:cursor-not-allowed"
 						>
 							<Icon name="explore" size={15} />
-							Walk from this thought
+							{zh("Walk from this thought")}
 						</button>
 					</div>
 				{:else}
@@ -774,8 +775,7 @@
 							<Icon name="graph" size={34} strokeWidth={1.2} />
 						</div>
 						<p class="text-xs text-dim">
-							Click a neighbor to inspect it. Then <span class="text-synapse-glow">Walk</span> to
-							re-center the map on that thought and explore deeper.
+							{zh("Click a neighbor to inspect it. Then")} <span class="text-synapse-glow">{zh("Walk")}</span> {zh("to re-center the map on that thought and explore deeper.")}
 						</p>
 					</div>
 				{/if}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onMount } from 'svelte';
 	import { api, type MemoryPr, type MemoryPrAction, type ReviewMode } from '$lib/stores/api';
 	import { memoryPrEvents } from '$lib/stores/websocket';
@@ -36,7 +37,7 @@
 			const result = await api.memoryPrs.setMode(next);
 			mode = result.mode;
 		} catch (err) {
-			modeError = err instanceof Error ? err.message : "Could not save memory settings";
+			modeError = err instanceof Error ? err.message : zh("Could not save memory settings");
 		} finally {
 			savingMode = false;
 		}
@@ -71,7 +72,7 @@
 			prs = [];
 			total = 0;
 			pendingCount = 0;
-			error = err instanceof Error ? err.message : 'Failed to load memory PRs';
+			error = err instanceof Error ? err.message : zh("Failed to load memory PRs");
 		} finally {
 			loading = false;
 		}
@@ -113,31 +114,31 @@
 	const MUTATIONS: PrActionDef[] = [
 		{
 			action: 'promote',
-			label: 'Approve',
+			label: zh("Approve"),
 			icon: 'sparkle',
 			cls: 'border-recall/30 text-recall hover:bg-recall/15'
 		},
 		{
 			action: 'merge',
-			label: 'Merge',
+			label: zh("Merge"),
 			icon: 'duplicates',
 			cls: 'border-synapse/30 text-synapse-glow hover:bg-synapse/15'
 		},
 		{
 			action: 'supersede',
-			label: 'Supersede',
+			label: zh("Supersede"),
 			icon: 'timeline',
 			cls: 'border-memory/30 text-memory hover:bg-memory/15'
 		},
 		{
 			action: 'quarantine',
-			label: 'Quarantine',
+			label: zh("Quarantine"),
 			icon: 'contradictions',
 			cls: 'border-warning/30 text-warning hover:bg-warning/15'
 		},
 		{
 			action: 'forget',
-			label: 'Forget',
+			label: zh("Forget"),
 			icon: 'close',
 			cls: 'border-decay/30 text-decay hover:bg-decay/15'
 		}
@@ -167,7 +168,7 @@
 			const res = (await api.memoryPrs.act(prId, 'ask_agent_why')) as { why?: WhySignal[] };
 			whySignals = res.why ?? [];
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to ask the agent why';
+			error = err instanceof Error ? err.message : zh("Failed to ask the agent why");
 		} finally {
 			whyLoading = false;
 		}
@@ -196,13 +197,13 @@
 	// ==========================================================================
 	let fieldPass: MemoryPrFieldPass | null = null;
 
-	function sanitizeAscii(value: string): string {
+	function safeLabel(value: string): string {
 		return value
 			.replace(/[—–]/g, '-')
 			.replace(/[‘’]/g, "'")
 			.replace(/[“”]/g, '"')
 			.replace(/…/g, '...')
-			.replace(/[^\x20-\x7E]/g, '?');
+			.replace(/[\x00-\x1F\x7F]/g, ' ');
 	}
 
 	function clamp01(value: number): number {
@@ -236,7 +237,7 @@
 	}
 
 	function prLine(pr: MemoryPr): string {
-		return sanitizeAscii(`${pr.title} | ${pr.id.slice(0, 8)} | ${pr.status}`)
+		return safeLabel(`${pr.title} | ${pr.id.slice(0, 8)} | ${pr.status}`)
 			.replace(/\s+/g, ' ')
 			.trim()
 			.slice(0, 96);
@@ -251,8 +252,8 @@
 			retention: 1,
 			activation: confidenceDepth(pr),
 			trust: confidenceDepth(pr),
-			tags: pr.signals.map((signal) => sanitizeAscii(signal.code)),
-			type: sanitizeAscii(pr.kind)
+			tags: pr.signals.map((signal) => safeLabel(signal.code)),
+			type: safeLabel(pr.kind)
 		})),
 		edges: [],
 		events: [],
@@ -332,7 +333,7 @@
 </script>
 
 <svelte:head>
-	<title>Memory Pull Requests · Vestige</title>
+	<title>{zh("Memory Pull Requests · Vestige")}</title>
 </svelte:head>
 
 <RouteStage
@@ -354,8 +355,8 @@
 	<div class="pointer-events-auto">
 		<PageHeader
 			icon="memorypr"
-			title="Memory Pull Requests"
-			subtitle="Memory saves automatically by default. Review is optional and can be turned off at any time."
+			title={zh("Memory Pull Requests")}
+			subtitle={zh("Memory saves automatically by default. Review is optional and can be turned off at any time.")}
 			accent="warning"
 		>
 			<span
@@ -365,21 +366,21 @@
 				<span class="breathe h-2 w-2 rounded-full bg-warning"></span>
 			</span>
 			<span class="text-dim text-sm tabular-nums inline-flex items-center gap-1.5">
-				<AnimatedNumber value={pendingCount} /> pending
+				<AnimatedNumber value={pendingCount} /> {zh("pending")}
 			</span>
 		</PageHeader>
 	</div>
 
 	{#if !loading && !error}
 		<div class="glass-panel pointer-events-auto rounded-2xl p-4 space-y-3">
-			<div class="text-sm text-bright">Memory writes: {modeLabel}</div>
-			<div class="flex flex-wrap gap-2" role="group" aria-label="Memory write mode">
-				{#each [{ value: 'fast', label: 'Automatic (default)' }, { value: 'risk_gated', label: 'Review risky changes' }, { value: 'paranoid', label: 'Review every change' }] as choice}
+			<div class="text-sm text-bright">{zh("Memory writes:")} {modeLabel}</div>
+			<div class="flex flex-wrap gap-2" role="group" aria-label={zh("Memory write mode")}>
+				{#each [{ value: 'fast', label: zh("Automatic (default)") }, { value: 'risk_gated', label: zh("Review risky changes") }, { value: 'paranoid', label: zh("Review every change") }] as choice}
 					<button type="button" class={`rounded-lg border px-3 py-2 text-sm text-bright disabled:opacity-50 ${mode === choice.value ? "border-recall/50 bg-recall/15" : "border-white/20"}`} aria-pressed={mode === choice.value} disabled={savingMode} onclick={() => void changeMode(choice.value as ReviewMode)}>{choice.label}</button>
 				{/each}
 			</div>
-			<p class="text-xs text-muted">{mode === 'fast' ? 'New memories apply immediately. No approval steps or waiting.' : 'Review is enabled by your settings. Choose Automatic to apply future memory writes immediately.'}</p>
-			{#if mode === 'fast' && pendingCount > 0}<p class="text-xs text-muted">Previously held changes remain below. Switching modes does not apply historical proposals.</p>{/if}
+			<p class="text-xs text-muted">{mode === 'fast' ? zh("New memories apply immediately. No approval steps or waiting.") : zh("Review is enabled by your settings. Choose Automatic to apply future memory writes immediately.")}</p>
+			{#if mode === 'fast' && pendingCount > 0}<p class="text-xs text-muted">{zh("Previously held changes remain below. Switching modes does not apply historical proposals.")}</p>{/if}
 			{#if modeError}<p role="alert" class="text-xs text-decay">{modeError}</p>{/if}
 		</div>
 	{/if}
@@ -389,14 +390,14 @@
 		<div
 			class="glass-panel pointer-events-auto flex flex-col items-center gap-3 rounded-2xl p-10 text-center"
 		>
-			<div class="text-sm text-decay">Couldn't load memory PRs</div>
+			<div class="text-sm text-decay">{zh("Couldn't load memory PRs")}</div>
 			<div class="max-w-md text-xs text-muted">{error}</div>
 			<button
 				type="button"
 				onclick={() => void loadPrs()}
 				class="mt-2 rounded-lg bg-warning/20 px-4 py-2 text-xs font-medium text-warning transition hover:bg-warning/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-warning/60"
 			>
-				Retry
+				{zh("Retry")}
 			</button>
 		</div>
 	{:else if loading}
@@ -422,10 +423,10 @@
 				<Icon name="sparkle" size={26} draw />
 			</div>
 			<div class="text-sm font-medium text-bright">
-				{mode === 'fast' ? 'Memory is automatic. Nothing to approve.' : 'No memory changes are waiting for review.'}
+				{mode === 'fast' ? zh("Memory is automatic. Nothing to approve.") : zh("No memory changes are waiting for review.")}
 			</div>
 			<div class="max-w-md text-xs text-muted">
-				{mode === 'fast' ? 'Keep working with your agent. Memory writes apply immediately and their receipts remain available in Runs.' : 'Only changes held by your selected review mode appear here. You can return to Automatic at any time.'}
+				{mode === 'fast' ? zh("Keep working with your agent. Memory writes apply immediately and their receipts remain available in Runs.") : zh("Only changes held by your selected review mode appear here. You can return to Automatic at any time.")}
 			</div>
 		</div>
 	{:else}
@@ -435,7 +436,7 @@
 				<div class="text-2xl text-bright font-bold tabular-nums">
 					<AnimatedNumber value={total} />
 				</div>
-				<div class="text-xs text-dim mt-1">pull requests total</div>
+				<div class="text-xs text-dim mt-1">{zh("pull requests total")}</div>
 			</div>
 			<div use:reveal={{ delay: 60, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="flex items-center gap-2">
@@ -446,17 +447,17 @@
 						<AnimatedNumber value={pendingCount} />
 					</div>
 				</div>
-				<div class="text-xs text-dim mt-1">awaiting your review</div>
+				<div class="text-xs text-dim mt-1">{zh("awaiting your review")}</div>
 			</div>
 			<div use:reveal={{ delay: 120, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="text-2xl text-bright font-bold tabular-nums">
 					<AnimatedNumber value={totalSignals} />
 				</div>
-				<div class="text-xs text-dim mt-1">risk signals flagged</div>
+				<div class="text-xs text-dim mt-1">{zh("risk signals flagged")}</div>
 			</div>
 			<div use:reveal={{ delay: 180, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="text-lg text-bright font-bold tabular-nums capitalize">{modeLabel}</div>
-				<div class="text-xs text-dim mt-1">review gate mode</div>
+				<div class="text-xs text-dim mt-1">{zh("review gate mode")}</div>
 			</div>
 		</div>
 
@@ -467,15 +468,13 @@
 		>
 			<div class="flex flex-wrap items-center gap-x-4 gap-y-2">
 				<span class="text-dim">
-					A <span class="text-text font-medium">Memory PR</span> is a proposed brain-change your
-					agent wants to make — supersede an outdated fact, merge duplicates, or forget something —
-					held under an optional review mode. Automatic mode applies future writes immediately.
+					A <span class="text-text font-medium">{zh("Memory PR")}</span> {zh("is a proposed brain-change your agent wants to make — supersede an outdated fact, merge duplicates, or forget something — held under an optional review mode. Automatic mode applies future writes immediately.")}
 				</span>
 				<span class="ml-auto flex flex-wrap items-center gap-3 tabular-nums">
-					<span><span class="text-memory font-medium">{supersedeCount}</span> supersede</span>
-					<span><span class="text-synapse-glow font-medium">{mergeCount}</span> merge</span>
-					<span><span class="text-decay font-medium">{forgetCount}</span> forget</span>
-					<span><span class="text-recall font-medium">{decidedCount}</span> decided</span>
+					<span><span class="text-memory font-medium">{supersedeCount}</span> {zh("supersede")}</span>
+					<span><span class="text-synapse-glow font-medium">{mergeCount}</span> {zh("merge")}</span>
+					<span><span class="text-decay font-medium">{forgetCount}</span> {zh("forget")}</span>
+					<span><span class="text-recall font-medium">{decidedCount}</span> {zh("decided")}</span>
 				</span>
 			</div>
 		</div>
@@ -515,15 +514,15 @@
 								<div class="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-dim">
 									<span class="font-mono">{pr.id.slice(0, 8)}</span>
 									<span class="text-muted">·</span>
-									<span class="uppercase tracking-wide">{pr.kind}</span>
+									<span class="uppercase tracking-wide">{zh(String(pr.kind))}</span>
 									{#if pr.signals.length}
 										<span class="text-muted">·</span>
 										<span class="text-warning"
-											>{pr.signals.length} signal{pr.signals.length === 1 ? '' : 's'}</span
+											>{pr.signals.length} {zh("signal")}</span
 										>
 									{/if}
 									<span class="text-muted">·</span>
-									<span>{new Date(pr.created_at).toLocaleDateString()}</span>
+									<span>{new Date(pr.created_at).toLocaleDateString('zh-CN')}</span>
 								</div>
 							</div>
 							<span
@@ -531,7 +530,7 @@
 									pr.status
 								)}"
 							>
-								{pr.status}
+								{zh(String(pr.status))}
 							</span>
 						</div>
 					</button>
@@ -541,7 +540,7 @@
 						<div class="mt-3 space-y-3 border-t border-white/[0.06] pt-3">
 							{#if pr.signals.length}
 								<div class="space-y-1.5">
-									<div class="text-[10px] uppercase tracking-wider text-muted">Risk signals</div>
+									<div class="text-[10px] uppercase tracking-wider text-muted">{zh("Risk signals")}</div>
 									{#each pr.signals as signal (signal.code)}
 										<div class="flex gap-2 text-[11px]">
 											<span class="shrink-0 font-mono text-warning">{signal.code}</span>
@@ -550,14 +549,14 @@
 									{/each}
 								</div>
 							{:else}
-								<div class="text-[11px] text-muted">No risk signals attached to this PR.</div>
+								<div class="text-[11px] text-muted">{zh("No risk signals attached to this PR.")}</div>
 							{/if}
 
 							{#if whyForPrId === pr.id}
 								<div class="space-y-1.5">
-									<div class="text-[10px] uppercase tracking-wider text-muted">Agent explanation</div>
+									<div class="text-[10px] uppercase tracking-wider text-muted">{zh("Agent explanation")}</div>
 									{#if whyLoading}
-										<div class="text-[11px] text-dim">Asking the agent…</div>
+										<div class="text-[11px] text-dim">{zh("Asking the agent…")}</div>
 									{:else if whySignals.length}
 										{#each whySignals.slice(0, 5) as signal (signal.code)}
 											<div class="flex gap-2 text-[11px]">
@@ -566,24 +565,24 @@
 											</div>
 										{/each}
 									{:else}
-										<div class="text-[11px] text-muted">The agent returned no extra reasoning.</div>
+										<div class="text-[11px] text-muted">{zh("The agent returned no extra reasoning.")}</div>
 									{/if}
 								</div>
 							{/if}
 
 							<div class="space-y-2 rounded-xl border border-white/[0.06] bg-black/20 p-3">
-								<div class="text-[10px] uppercase tracking-wider text-muted">Proposed change</div>
+								<div class="text-[10px] uppercase tracking-wider text-muted">{zh("Proposed change")}</div>
 								{#if diff.targetId}
-									<a class="block font-mono text-[11px] text-synapse-glow hover:underline" href={`${base}/memories?memory=${encodeURIComponent(diff.targetId)}`}>target {diff.targetId}</a>
+									<a class="block font-mono text-[11px] text-synapse-glow hover:underline" href={`${base}/memories?memory=${encodeURIComponent(diff.targetId)}`}>{zh("target")} {diff.targetId}</a>
 								{/if}
 								{#if diff.before}
-									<div class="text-[11px]"><span class="text-muted">Before:</span> {diff.before}</div>
+									<div class="text-[11px]"><span class="text-muted">{zh("Before:")}</span> {diff.before}</div>
 								{/if}
 								{#if diff.proposed || diff.after}
-									<div class="text-[11px] text-bright"><span class="text-muted">Proposed:</span> {diff.proposed ?? diff.after}</div>
+									<div class="text-[11px] text-bright"><span class="text-muted">{zh("Proposed:")}</span> {diff.proposed ?? diff.after}</div>
 								{/if}
 								{#if !diff.proposed && !diff.after && !diff.before}
-									<div class="text-[11px] text-muted">No content diff was attached to this PR.</div>
+									<div class="text-[11px] text-muted">{zh("No content diff was attached to this PR.")}</div>
 								{/if}
 								{#each diff.rest.slice(0, 4) as row (row.key)}
 									<div class="flex gap-2 text-[10px] font-mono text-dim"><span>{row.key}</span><span class="ml-auto break-all">{row.value.slice(0, 120)}</span></div>
@@ -601,7 +600,7 @@
 							class="inline-flex items-center gap-1.5 rounded-lg border border-white/12 px-3 py-1.5 text-xs text-dim transition hover:text-text hover:border-warning/30 hover:bg-white/[0.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-warning/50"
 						>
 							<Icon name="sparkle" size={13} />
-							Ask agent why
+							{zh("Ask agent why")}
 						</button>
 
 						{#if isPending}
@@ -620,10 +619,10 @@
 								</button>
 							{/each}
 						{:else}
-							<span class="text-[11px] text-muted" title="Only pending PRs can be acted on">
-								Decided{pr.decided_at
-									? ` ${new Date(pr.decided_at).toLocaleDateString()}`
-									: ''} — no actions available
+							<span class="text-[11px] text-muted" title={zh("Only pending PRs can be acted on")}>
+								{zh("Decided")}{pr.decided_at
+									? ` ${new Date(pr.decided_at).toLocaleDateString('zh-CN')}`
+									: ''} {zh("— no actions available")}
 							</span>
 						{/if}
 					</div>

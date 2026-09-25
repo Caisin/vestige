@@ -30,12 +30,12 @@ export interface CinemaNarration {
 // `satisfies` makes the compiler error if a new CinemaBeat['kind'] is added
 // without a chip here — closes the silent "undefined chip → blank UI" gap.
 const KIND_CHIP = {
-	origin: 'Origin',
-	connection: 'Connection',
-	contradiction: 'Tension',
-	recent: 'Now',
-	bridge: 'Jump',
-	surprise: 'Surprise',
+	origin: '起点',
+	connection: '关联',
+	contradiction: '张力',
+	recent: '当下',
+	bridge: '跨域',
+	surprise: '发现',
 } satisfies Record<CinemaBeat['kind'], string>;
 
 function snippet(content: string, max = 90): string {
@@ -46,7 +46,7 @@ function snippet(content: string, max = 90): string {
 
 function typeLabel(nodeType: string): string {
 	const t = (nodeType ?? 'memory').toLowerCase();
-	return t.charAt(0).toUpperCase() + t.slice(1);
+	return ({fact:'事实',concept:'概念',event:'事件',note:'笔记',decision:'决策',pattern:'模式',person:'人物',place:'地点',memory:'记忆'} as Record<string,string>)[t] ?? t;
 }
 
 /**
@@ -56,27 +56,27 @@ function typeLabel(nodeType: string): string {
 export function localCaptions(path: CinemaPath): CinemaNarration {
 	const beats: BeatNarration[] = path.beats.map((beat, i) => {
 		const n = beat.node;
-		const what = snippet(n.label || `(${typeLabel(n.type)} memory)`);
+		const what = snippet(n.label || `（${typeLabel(n.type)}）`);
 		let text: string;
 		switch (beat.kind) {
 			case 'origin':
-				text = `We begin at a ${typeLabel(n.type).toLowerCase()} the graph is centered on — "${what}".`;
+				text = `从图谱中心的一条${typeLabel(n.type)}开始——「${what}」。`;
 				break;
 			case 'contradiction': {
-				const via = beat.viaEdge?.type ? beat.viaEdge.type.replace(/_/g, ' ') : 'a conflict';
-				text = `This is held in tension with the last memory through ${via}: "${what}".`;
+				const via = ({causal:'因果关系',temporal:'时间关系',semantic:'语义关联',contradiction:'矛盾关系',contradicts:'矛盾关系'} as Record<string,string>)[beat.viaEdge?.type ?? ''] ?? '冲突关系';
+				text = `它通过${via}与上一条记忆形成张力：「${what}」。`;
 				break;
 			}
 			case 'recent':
-				text = `And where the mind is now — a recent memory: "${what}".`;
+				text = `回到当下，一条最近的记忆：「${what}」。`;
 				break;
 			case 'bridge':
-				text = `Crossing to a separate cluster — "${what}".`;
+				text = `跨越到另一组记忆——「${what}」。`;
 				break;
 			default: {
 				const w = beat.viaEdge?.weight ?? 0;
-				const strength = w > 0.66 ? 'strongly' : w > 0.33 ? 'closely' : 'loosely';
-				text = `${strength} connected from there: a ${typeLabel(n.type).toLowerCase()} — "${what}".`;
+				const strength = w > 0.66 ? '强' : w > 0.33 ? '紧密' : '较弱';
+				text = `一条具有${strength}关联的${typeLabel(n.type)}——「${what}」。`;
 			}
 		}
 		// Tags add texture when present.

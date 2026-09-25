@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import {
 		roleMetaFor,
 		trustColor,
@@ -44,7 +45,7 @@
 			</span>
 			{#if nodeType}
 				<span class="px-1.5 py-0.5 rounded bg-white/[0.04]" style="color: {typeColor}">
-					{nodeType}
+					{zh(String(nodeType))}
 				</span>
 			{/if}
 		</div>
@@ -57,7 +58,7 @@
 	<!-- Trust bar -->
 	<div class="space-y-1.5">
 		<div class="flex items-center justify-between text-[10px]">
-			<span class="text-dim uppercase tracking-wider">Trust</span>
+			<span class="text-dim uppercase tracking-wider">{zh("Trust")}</span>
 			<span class="font-mono" style="color: {trustColor(trust)}">{trustPct.toFixed(0)}%</span>
 		</div>
 		<div class="h-1.5 bg-deep rounded-full overflow-hidden">
@@ -71,7 +72,7 @@
 	<!-- Date -->
 	<div class="flex items-center justify-between text-[10px] text-muted pt-1">
 		<span>{formatDate(date)}</span>
-		<span class="font-mono opacity-60">FSRS · reps × retention</span>
+		<span class="font-mono opacity-60">{zh("FSRS · reps × retention")}</span>
 	</div>
 </div>
 

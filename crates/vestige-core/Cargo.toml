@@ -122,6 +122,11 @@ uuid = { version = "1", features = ["v4", "serde"] }
 # Error handling
 thiserror = "2"
 
+# Local screenplay import; no cloud parser or external process is involved.
+quick-xml = "0.38"
+zip = { version = "7", default-features = false, features = ["deflate"] }
+lopdf = { version = "0.42", default-features = false }
+
 # Database - SQLite with FTS5 full-text search and JSON
 # Note: "bundled" or "bundled-sqlcipher" added via feature flags above
 rusqlite = { version = "0.40", features = ["chrono", "serde_json"] }

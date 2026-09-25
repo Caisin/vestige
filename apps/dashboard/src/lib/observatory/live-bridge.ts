@@ -1,3 +1,4 @@
+import { zh } from '$lib/i18n';
 /**
  * Live event bridge — the field's nervous system (Phase 0, v2.3).
  *
@@ -454,7 +455,7 @@ export class LiveBridge {
 					data[i * 4 + 1] = targetIndex;
 					data[i * 4 + 2] = beatFrame;
 					data[i * 4 + 3] = PATH_KIND.backwardCause;
-					steps.push({ sourceIndex, targetIndex, beatFrame, kind: PATH_KIND.backwardCause, beatKind: 'receipt-path', nodeId: ids[i + 1], label: 'receipt-backed candidate path' });
+					steps.push({ sourceIndex, targetIndex, beatFrame, kind: PATH_KIND.backwardCause, beatKind: 'receipt-path', nodeId: ids[i + 1], label: zh("receipt-backed candidate path") });
 				}
 				this.renderer.setPathSteps(data, steps);
 				return;

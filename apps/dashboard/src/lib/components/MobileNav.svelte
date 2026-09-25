@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	// ─────────────────────────────────────────────────────────────────────────
 	// MobileNav — the ONE reliable navigation surface for phones.
 	//
@@ -62,7 +63,7 @@
 {#if show}
 	<!-- Floating pill that expands to the full organ list. Bottom-centre so it sits
 	     in the thumb zone and never overlaps the top-of-page instrument text. -->
-	<nav class="mobile-nav" class:open aria-label="Organs">
+	<nav class="mobile-nav" class:open aria-label={zh("Organs")}>
 		{#if open}
 			<div class="sheet" role="menu">
 				{#each COGNITIVE_OS_ROUTES as route (route.href)}
@@ -82,14 +83,14 @@
 		<button
 			class="fab"
 			aria-expanded={open}
-			aria-label={open ? 'Close navigation' : 'Open navigation'}
+			aria-label={open ? zh("Close navigation") : zh("Open navigation")}
 			onclick={() => (open = !open)}
 		>
 			{#if open}
 				<span class="fab-x">esc</span>
 			{:else}
 				<span class="fab-key">{COGNITIVE_OS_ROUTES.find((r) => r.href === activeHref)?.shortcut ?? '≡'}</span>
-				<span class="fab-word">{COGNITIVE_OS_ROUTES.find((r) => r.href === activeHref)?.label ?? 'Menu'}</span>
+				<span class="fab-word">{COGNITIVE_OS_ROUTES.find((r) => r.href === activeHref)?.label ?? zh("Menu")}</span>
 			{/if}
 		</button>
 	</nav>

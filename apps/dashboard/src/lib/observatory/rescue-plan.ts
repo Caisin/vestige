@@ -1,3 +1,4 @@
+import { zh } from '$lib/i18n';
 /**
  * Cognitive Observatory — Retroactive Salience Backfill demo plan (salience-rescue).
  *
@@ -735,7 +736,7 @@ export function buildReceiptRescuePlan(
 		{ sourceIndex: failureIndex, targetIndex: failureIndex, beatFrame: DETONATE_FRAME, kind: 1, beatKind: 'receipt-failure', nodeId: evidence.failureId, label: `recorded failure · ${failureLabel}` },
 		{ sourceIndex: failureIndex, targetIndex: failureIndex, beatFrame: WAVE_START, kind: 1, beatKind: 'receipt-join', nodeId: 'receipt-join', label: `shared entity · ${join}` },
 		{ sourceIndex: causeIndex, targetIndex: failureIndex, beatFrame: WAVE_START + (causeDepth - 1) * hopSlot, kind: PATH_KIND.backwardCause, beatKind: 'receipt-candidate', nodeId: cause.memoryId, label: `candidate · ${causeLabel}` },
-		{ sourceIndex: causeIndex, targetIndex: causeIndex, beatFrame: VERDICT_START, kind: 1, beatKind: 'receipt-verdict', nodeId: 'receipt-verdict', label: 'candidate cause found' }
+		{ sourceIndex: causeIndex, targetIndex: causeIndex, beatFrame: VERDICT_START, kind: 1, beatKind: 'receipt-verdict', nodeId: 'receipt-verdict', label: zh("candidate cause found") }
 	];
 	return {
 		viable: true,

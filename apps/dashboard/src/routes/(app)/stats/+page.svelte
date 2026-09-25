@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onMount } from 'svelte';
 	import PageHeader from '$components/PageHeader.svelte';
 	import AnimatedNumber from '$components/AnimatedNumber.svelte';
@@ -75,7 +76,7 @@
 			| undefined
 	);
 	const consolidateDisabledReason = $derived(
-		loading ? 'Waiting for live vitals' : !stats ? 'Vitals unavailable' : totalMemories === 0 ? 'No memories to consolidate' : null
+		loading ? zh("Waiting for live vitals") : !stats ? zh("Vitals unavailable") : totalMemories === 0 ? zh("No memories to consolidate") : null
 	);
 
 	onMount(() => {
@@ -119,7 +120,7 @@
 			dreamNotice = `Dream complete: ${d.memoriesReplayed} memories replayed, ${d.stats?.newConnectionsFound ?? 0} new connections`;
 			await loadStats();
 		} catch (err) {
-			actionError = err instanceof Error ? err.message : 'Dream cycle failed';
+			actionError = err instanceof Error ? err.message : zh("Dream cycle failed");
 		} finally {
 			dreaming = false;
 		}
@@ -133,7 +134,7 @@
 			consolidation = await api.consolidate();
 			await loadStats();
 		} catch (err) {
-			actionError = err instanceof Error ? err.message : 'Consolidation failed';
+			actionError = err instanceof Error ? err.message : zh("Consolidation failed");
 		} finally {
 			consolidating = false;
 		}
@@ -149,15 +150,15 @@
 	function metricExplanation(metric: string): string {
 		switch (metric) {
 			case 'totalMemories':
-				return 'The total durable memory population currently held by this Vestige brain.';
+				return zh("The total durable memory population currently held by this Vestige brain.");
 			case 'averageRetention':
-				return 'The mean FSRS retrievability across memories; higher values indicate stronger expected recall.';
+				return zh("The mean FSRS retrievability across memories; higher values indicate stronger expected recall.");
 			case 'embeddingCoverage':
-				return 'The share of memories with semantic embeddings available for similarity-aware recall.';
+				return zh("The share of memories with semantic embeddings available for similarity-aware recall.");
 			case 'dueForReview':
-				return 'Memories whose FSRS schedule says they are ready for maintenance in the next consolidation cycle.';
+				return zh("Memories whose FSRS schedule says they are ready for maintenance in the next consolidation cycle.");
 			default:
-				return 'A live backend measurement represented by one of the breathing cells in the field.';
+				return zh("A live backend measurement represented by one of the breathing cells in the field.");
 		}
 	}
 
@@ -256,7 +257,7 @@
 				id: metric,
 				scalar: { name: metric, value: magnitude }
 			},
-			label: sanitizeAscii(`${metric} | ${formatValue(metric, rawValue)}`),
+			label: safeLabel(`${metric} | ${formatValue(metric, rawValue)}`),
 			nodeIndices: [],
 			metric,
 			rawValue,
@@ -285,7 +286,7 @@
 		if (typeof value === 'number' && Number.isFinite(value)) {
 			if (metric.includes('Coverage')) return `${value.toFixed(value > 1 ? 0 : 2)}%`;
 			if (metric.includes('average')) return `${(value * 100).toFixed(1)}%`;
-			if (Number.isInteger(value)) return value.toLocaleString();
+			if (Number.isInteger(value)) return value.toLocaleString('zh-CN');
 			return value.toFixed(3);
 		}
 		if (typeof value === 'string') {
@@ -298,13 +299,13 @@
 		return String(value);
 	}
 
-	function sanitizeAscii(value: string): string {
+	function safeLabel(value: string): string {
 		return value
 			.replace(/[\u2014\u2013]/g, '-')
 			.replace(/[\u2018\u2019]/g, "'")
 			.replace(/[\u201C\u201D]/g, '"')
 			.replace(/\u2026/g, '...')
-			.replace(/[^\x20-\x7E]/g, '?');
+			.replace(/[\x00-\x1F\x7F]/g, ' ');
 	}
 
 	function clamp01(value: number): number {
@@ -327,14 +328,14 @@
 	<div class="pointer-events-auto">
 		<PageHeader
 			icon="stats"
-			title="System Vitals"
-			subtitle="The live health of your memory: retention, coverage, and what is due."
+			title={zh("System Vitals")}
+			subtitle={zh("The live health of your memory: retention, coverage, and what is due.")}
 			accent="recall"
 		>
 			<div class="flex items-center gap-2">
 				<span class="inline-flex items-center gap-1.5 rounded-full border border-subtle/30 bg-deep/60 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-dim">
 					<span class="h-1.5 w-1.5 rounded-full {health?.status === 'healthy' ? 'bg-recall' : health?.status === 'empty' ? 'bg-muted' : 'bg-warning'}"></span>
-					{healthLabel}
+					{zh(healthLabel)}
 				</span>
 				<div class="flex flex-col items-end gap-1">
 					<button
@@ -344,7 +345,7 @@
 						class="inline-flex items-center gap-2 rounded-xl border border-synapse/35 bg-synapse/15 px-3.5 py-2 text-xs font-semibold text-synapse-glow transition hover:bg-synapse/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-synapse/60 disabled:cursor-not-allowed disabled:opacity-45"
 					>
 						<Icon name="pulse" size={14} />
-						{consolidating ? 'Consolidating…' : 'Consolidate memory'}
+						{consolidating ? zh("Consolidating…") : zh("Consolidate memory")}
 					</button>
 					<button
 						type="button"
@@ -353,7 +354,7 @@
 						class="inline-flex items-center gap-2 rounded-xl border border-dream/35 bg-dream/15 px-3.5 py-2 text-xs font-semibold text-dream-glow transition hover:bg-dream/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-dream/60 disabled:cursor-not-allowed disabled:opacity-45"
 					>
 						<Icon name="dreams" size={14} />
-						{dreaming ? 'Dreaming…' : 'Run dream cycle'}
+						{dreaming ? zh("Dreaming…") : zh("Run dream cycle")}
 					</button>
 					{#if consolidateDisabledReason && !consolidating}
 						<span class="text-[9px] text-muted">{consolidateDisabledReason}</span>
@@ -371,50 +372,50 @@
 			<div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-decay/25 bg-decay/10 text-decay">
 				<Icon name="pulse" size={24} />
 			</div>
-			<h2 class="text-sm font-semibold text-bright">System vitals are unavailable</h2>
+			<h2 class="text-sm font-semibold text-bright">{zh("System vitals are unavailable")}</h2>
 			<p class="max-w-md text-xs text-muted">{error}</p>
 			<button type="button" onclick={loadStats} class="mt-1 rounded-lg bg-synapse/20 px-4 py-2 text-xs font-medium text-synapse-glow transition hover:bg-synapse/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-synapse/60">
-				Retry vitals
+				{zh("Retry vitals")}
 			</button>
 		</section>
 	{:else if loading}
-		<div class="grid grid-cols-2 gap-3 lg:grid-cols-4 pointer-events-auto" aria-label="Loading system vitals">
+		<div class="grid grid-cols-2 gap-3 lg:grid-cols-4 pointer-events-auto" aria-label={zh("Loading system vitals")}>
 			{#each Array(4) as _}
 				<div class="glass-subtle shimmer h-28 rounded-xl"></div>
 			{/each}
 		</div>
 		<div class="glass-subtle shimmer h-[360px] rounded-2xl pointer-events-auto"></div>
 	{:else}
-		<section class="grid grid-cols-2 gap-3 lg:grid-cols-4 pointer-events-auto" aria-label="Live memory statistics">
+		<section class="grid grid-cols-2 gap-3 lg:grid-cols-4 pointer-events-auto" aria-label={zh("Live memory statistics")}>
 			<button type="button" aria-pressed={selectedVitalId === 'stats:totalMemories'} onclick={() => (selectedVitalId = 'stats:totalMemories')} use:reveal={{ delay: 0, y: 12 }} class="glass rounded-xl p-5 text-left lift transition {selectedVitalId === 'stats:totalMemories' ? 'border-recall/50 bg-recall/10' : ''}">
 				<div class="text-3xl font-bold tabular-nums text-bright"><AnimatedNumber value={totalMemories} /></div>
-				<div class="mt-2 text-[11px] font-medium uppercase tracking-wider text-dim">Memories</div>
-				<div class="mt-1 text-[10px] text-muted">Stored in the live brain</div>
+				<div class="mt-2 text-[11px] font-medium uppercase tracking-wider text-dim">{zh("Memories")}</div>
+				<div class="mt-1 text-[10px] text-muted">{zh("Stored in the live brain")}</div>
 			</button>
 			<button type="button" aria-pressed={selectedVitalId === 'stats:averageRetention'} onclick={() => (selectedVitalId = 'stats:averageRetention')} use:reveal={{ delay: 60, y: 12 }} class="glass rounded-xl p-5 text-left lift transition {selectedVitalId === 'stats:averageRetention' ? 'border-recall/50 bg-recall/10' : ''}">
 				<div class="text-3xl font-bold tabular-nums text-recall"><AnimatedNumber value={averageRetention * 100} decimals={1} /><span class="text-base">%</span></div>
-				<div class="mt-2 text-[11px] font-medium uppercase tracking-wider text-dim">Avg retention</div>
-				<div class="mt-1 text-[10px] text-muted">Current FSRS retrievability</div>
+				<div class="mt-2 text-[11px] font-medium uppercase tracking-wider text-dim">{zh("Avg retention")}</div>
+				<div class="mt-1 text-[10px] text-muted">{zh("Current FSRS retrievability")}</div>
 			</button>
 			<button type="button" aria-pressed={selectedVitalId === 'stats:embeddingCoverage'} onclick={() => (selectedVitalId = 'stats:embeddingCoverage')} use:reveal={{ delay: 120, y: 12 }} class="glass rounded-xl p-5 text-left lift transition {selectedVitalId === 'stats:embeddingCoverage' ? 'border-synapse/50 bg-synapse/10' : ''}">
 				<div class="text-3xl font-bold tabular-nums text-synapse-glow"><AnimatedNumber value={embeddingCoverage} decimals={1} /><span class="text-base">%</span></div>
-				<div class="mt-2 text-[11px] font-medium uppercase tracking-wider text-dim">Embedding coverage</div>
-				<div class="mt-1 text-[10px] text-muted">{stats?.withEmbeddings.toLocaleString() ?? 0} memories searchable by meaning</div>
+				<div class="mt-2 text-[11px] font-medium uppercase tracking-wider text-dim">{zh("Embedding coverage")}</div>
+				<div class="mt-1 text-[10px] text-muted">{stats?.withEmbeddings.toLocaleString('zh-CN') ?? 0} {zh("memories searchable by meaning")}</div>
 			</button>
 			<button type="button" aria-pressed={selectedVitalId === 'stats:dueForReview'} onclick={() => (selectedVitalId = 'stats:dueForReview')} use:reveal={{ delay: 180, y: 12 }} class="glass rounded-xl p-5 text-left lift transition {selectedVitalId === 'stats:dueForReview' ? 'border-warning/50 bg-warning/10' : ''}">
 				<div class="flex items-end justify-between gap-2">
 					<div>
 						<div class="text-3xl font-bold tabular-nums text-recall"><AnimatedNumber value={bands.active} /></div>
-						<div class="mt-2 text-[11px] font-medium uppercase tracking-wider text-dim">Active</div>
+						<div class="mt-2 text-[11px] font-medium uppercase tracking-wider text-dim">{zh("Active")}</div>
 					</div>
 					<div class="text-right">
 						<div class="text-lg font-bold tabular-nums text-warning"><AnimatedNumber value={bands.dormant} /></div>
-						<div class="text-[10px] uppercase tracking-wider text-muted">Dormant</div>
+						<div class="text-[10px] uppercase tracking-wider text-muted">{zh("Dormant")}</div>
 						<div class="text-lg font-bold tabular-nums text-dim"><AnimatedNumber value={bands.silent + bands.unavailable} /></div>
-						<div class="text-[10px] uppercase tracking-wider text-muted">Silent</div>
+						<div class="text-[10px] uppercase tracking-wider text-muted">{zh("Silent")}</div>
 					</div>
 				</div>
-				<div class="mt-1 text-[10px] text-muted">Retention-derived bands · {dueForReview} due next cycle</div>
+				<div class="mt-1 text-[10px] text-muted">{zh("Retention-derived bands ·")} {dueForReview} {zh("due next cycle")}</div>
 			</button>
 		</section>
 
@@ -424,13 +425,13 @@
 			</div>
 			{#if selectedReceipt}
 				<div class="min-w-0">
-					<div class="text-[10px] font-medium uppercase tracking-wider text-muted">Selected vital · {selectedReceipt.metric}</div>
-					<p class="mt-1 text-xs text-dim">{metricExplanation(selectedReceipt.metric)} Live value: <span class="font-medium text-bright">{formatValue(selectedReceipt.metric, selectedReceipt.rawValue)}</span>.</p>
+					<div class="text-[10px] font-medium uppercase tracking-wider text-muted">{zh("Selected vital ·")} {selectedReceipt.metric}</div>
+					<p class="mt-1 text-xs text-dim">{metricExplanation(selectedReceipt.metric)} {zh("Live value:")} <span class="font-medium text-bright">{formatValue(selectedReceipt.metric, selectedReceipt.rawValue)}</span>.</p>
 				</div>
 			{:else}
 				<div>
-					<div class="text-[10px] font-medium uppercase tracking-wider text-muted">What you're seeing</div>
-					<p class="mt-1 text-xs text-dim">Select a stat card or a breathing field cell to inspect the live measurement. Selection never changes memory.</p>
+					<div class="text-[10px] font-medium uppercase tracking-wider text-muted">{zh("What you're seeing")}</div>
+					<p class="mt-1 text-xs text-dim">{zh("Select a stat card or a breathing field cell to inspect the live measurement. Selection never changes memory.")}</p>
 				</div>
 			{/if}
 		</div>
@@ -438,12 +439,12 @@
 		{#if actionError}
 			<div class="glass pointer-events-auto flex items-center gap-2 rounded-xl border border-decay/25 px-4 py-3 text-xs text-decay" aria-live="polite">
 				<Icon name="pulse" size={14} />
-				Consolidation failed: {actionError}
+				{zh("Consolidation failed:")} {actionError}
 			</div>
 		{:else if consolidation}
 			<div class="glass pointer-events-auto flex items-center gap-2 rounded-xl border border-recall/25 px-4 py-3 text-xs text-recall" aria-live="polite">
 				<Icon name="sparkle" size={14} />
-				Consolidation complete. Vitals and retention bands have been refreshed.
+				{zh("Consolidation complete. Vitals and retention bands have been refreshed.")}
 			</div>
 		{/if}
 
@@ -452,11 +453,11 @@
 				<div>
 					<div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-bright">
 						<Icon name="stats" size={15} />
-						Retention distribution
+						{zh("Retention distribution")}
 					</div>
-					<p class="mt-1.5 text-xs text-muted">Every memory grouped by its current probability of successful recall.</p>
+					<p class="mt-1.5 text-xs text-muted">{zh("Every memory grouped by its current probability of successful recall.")}</p>
 				</div>
-				<div class="text-right text-xs text-dim"><AnimatedNumber value={distributionTotal} /> memories measured</div>
+				<div class="text-right text-xs text-dim"><AnimatedNumber value={distributionTotal} /> {zh("memories measured")}</div>
 			</div>
 
 			{#if distribution.length === 0 || distributionTotal === 0}
@@ -464,17 +465,17 @@
 					<div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-recall/25 bg-recall/10 text-recall">
 						<Icon name="stats" size={24} draw />
 					</div>
-					<h2 class="text-sm font-medium text-bright">No retention history yet</h2>
-					<p class="max-w-sm text-xs text-muted">Add memories to build the first retention profile. The histogram will fill as Vestige learns their recall strength.</p>
+					<h2 class="text-sm font-medium text-bright">{zh("No retention history yet")}</h2>
+					<p class="max-w-sm text-xs text-muted">{zh("Add memories to build the first retention profile. The histogram will fill as Vestige learns their recall strength.")}</p>
 					<button type="button" onclick={loadStats} class="rounded-lg bg-recall/15 px-4 py-2 text-xs font-medium text-recall transition hover:bg-recall/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-recall/60">
-						Refresh vitals
+						{zh("Refresh vitals")}
 					</button>
 				</div>
 			{:else}
-				<div class="mt-7 grid min-h-64 grid-cols-[repeat(auto-fit,minmax(44px,1fr))] items-end gap-2" role="img" aria-label="Histogram of memory counts by retention range">
+				<div class="mt-7 grid min-h-64 grid-cols-[repeat(auto-fit,minmax(44px,1fr))] items-end gap-2" role="img" aria-label={zh("Histogram of memory counts by retention range")}>
 					{#each distribution as bucket, index (bucket.range)}
 						<div class="group flex h-full min-w-0 flex-col items-center justify-end gap-2">
-							<div class="text-xs font-semibold tabular-nums text-bright opacity-80 transition group-hover:opacity-100">{bucket.count.toLocaleString()}</div>
+							<div class="text-xs font-semibold tabular-nums text-bright opacity-80 transition group-hover:opacity-100">{bucket.count.toLocaleString('zh-CN')}</div>
 							<div class="relative flex h-44 w-full items-end overflow-hidden rounded-t-lg border border-subtle/20 bg-deep/45">
 								<div
 									class="w-full min-h-[3px] rounded-t-md transition-all duration-500 group-hover:brightness-125"
@@ -488,11 +489,11 @@
 			{/if}
 
 			<div class="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-subtle/20 pt-4 text-[10px] text-dim">
-				<span class="font-medium uppercase tracking-wider text-muted">Legend</span>
-				<span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-decay"></span>Fragile · review soon</span>
-				<span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-warning"></span>Stabilizing</span>
-				<span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-recall"></span>Durable recall</span>
-				<span class="ml-auto text-muted">Taller bars mean more memories in that retention band.</span>
+				<span class="font-medium uppercase tracking-wider text-muted">{zh("Legend")}</span>
+				<span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-decay"></span>{zh("Fragile · review soon")}</span>
+				<span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-warning"></span>{zh("Stabilizing")}</span>
+				<span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-recall"></span>{zh("Durable recall")}</span>
+				<span class="ml-auto text-muted">{zh("Taller bars mean more memories in that retention band.")}</span>
 			</div>
 		</section>
 	{/if}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	/**
 	 * /benchmark — the cross-model memory benchmark, rendered ON TOP of the real
 	 * living Observatory WebGPU field. The field runs the `salience-rescue` demo:
@@ -29,7 +30,7 @@
 	type Arm = { v: number; cls: 'void' | 'low' | 'hi' | 'perfect' };
 	const rows: { model: string; note: string; lab: string; anarchy: Arm; rag: Arm; vestige: Arm }[] = [
 		{
-			model: 'Kimi K2.7', note: 'open-weight coder', lab: 'Moonshot',
+			model: 'Kimi K2.7', note: "open-weight coder", lab: 'Moonshot',
 			anarchy: { v: 0, cls: 'void' }, rag: { v: 1, cls: 'low' }, vestige: { v: 5, cls: 'perfect' }
 		},
 		{
@@ -41,7 +42,7 @@
 			anarchy: { v: 0, cls: 'void' }, rag: { v: 1, cls: 'low' }, vestige: { v: 3, cls: 'hi' }
 		},
 		{
-			model: 'Kimi K3', note: '2.8T · 1M context · newest', lab: 'Moonshot',
+			model: 'Kimi K3', note: "2.8T · 1M context · newest", lab: 'Moonshot',
 			anarchy: { v: 0, cls: 'void' }, rag: { v: 3, cls: 'low' }, vestige: { v: 5, cls: 'perfect' }
 		}
 	];
@@ -64,7 +65,7 @@
 </script>
 
 <svelte:head>
-	<title>Prove or Void · Vestige memory benchmark</title>
+	<title>{zh("Prove or Void · Vestige memory benchmark")}</title>
 </svelte:head>
 
 <!-- The living WebGPU field: real Observatory engine, salience-rescue demo.
@@ -90,33 +91,31 @@
 <main class="bench">
 	<!-- ── HERO ── -->
 	<section class="hero">
-		<div class="eyebrow">Cross-model memory benchmark · July 2026</div>
-		<h1>The model didn't need to be <span class="void-word">smarter</span>.<br />It needed to <span class="know-word">remember</span>.</h1>
+		<div class="eyebrow">{zh("Cross-model memory benchmark · July 2026")}</div>
+		<h1>{zh("The model didn't need to be")} <span class="void-word">{zh("smarter")}</span>.<br />{zh("It needed to")} <span class="know-word">{zh("remember")}</span>.</h1>
 		<p class="lede">
-			Four frontier models fixed the same production bug. Without memory, none could ship a
-			safe fix. With causal memory, they nearly always could. Same models. Same budget. The
-			only variable was which past they could reach.
+			{zh("Four frontier models fixed the same production bug. Without memory, none could ship a safe fix. With causal memory, they nearly always could. Same models. Same budget. The only variable was which past they could reach.")}
 		</p>
 		<div class="hero-stats">
-			<div class="hstat void"><span class="n">0<i>/20</i></span><span class="l">No memory</span></div>
-			<div class="hstat low"><span class="n">5<i>/20</i></span><span class="l">Similarity · RAG</span></div>
-			<div class="hstat hi"><span class="n">18<i>/20</i></span><span class="l">Vestige · backfill</span></div>
+			<div class="hstat void"><span class="n">0<i>/20</i></span><span class="l">{zh("No memory")}</span></div>
+			<div class="hstat low"><span class="n">5<i>/20</i></span><span class="l">{zh("Similarity · RAG")}</span></div>
+			<div class="hstat hi"><span class="n">18<i>/20</i></span><span class="l">{zh("Vestige · backfill")}</span></div>
 		</div>
 	</section>
 
 	<!-- ── MONEY SHOT ── -->
 	<section class="money">
-		<div class="sec-eyebrow">The money shot · Kimi K3 · 2.8T params · 1M context</div>
-		<h2>The largest AI model ever built chose a production key because it was first in the list.</h2>
+		<div class="sec-eyebrow">{zh("The money shot · Kimi K3 · 2.8T params · 1M context")}</div>
+		<h2>{zh("The largest AI model ever built chose a production key because it was first in the list.")}</h2>
 		<div class="diff">
 			<div class="diff-bar">
 				<span class="d r"></span><span class="d y"></span><span class="d g"></span>
-				<span class="path">trial 1 · correct key = k_yildun · absent from the repo</span>
+				<span class="path">{zh("trial 1 · correct key = k_yildun · absent from the repo")}</span>
 				<span class="model">kimi-k3 · max reasoning</span>
 			</div>
 			<div class="diff-cols">
 				<div class="col no-mem">
-					<div class="col-head"><span class="k">No memory</span><span class="verdict">green · voids prod</span></div>
+					<div class="col-head"><span class="k">{zh("No memory")}</span><span class="verdict">{zh("green · voids prod")}</span></div>
 					<pre>&gt; reasoning
 The failure is "no active signing key selected."
 Both configs were blanked by the refactor.
@@ -131,7 +130,7 @@ defensible single choice.
 &gt; write · test passes · <span class="fail">prod replay: VOIDS 5 tokens</span></pre>
 				</div>
 				<div class="col with-mem">
-					<div class="col-head"><span class="k">Vestige backfill</span><span class="verdict">fixed · prod-safe</span></div>
+					<div class="col-head"><span class="k">{zh("Vestige backfill")}</span><span class="verdict">{zh("fixed · prod-safe")}</span></div>
 					<pre>&gt; vestige_backfill(failure)
 The backfill surfaced a memory: a Q3 rotation
 runbook. The live signer was migrated to <b class="right">k_yildun</b>
@@ -144,24 +143,24 @@ Both services must select it.
 				</div>
 			</div>
 			<div class="diff-foot">
-				<span class="axon">←</span> Backfill reaches <b>backward through time</b> to the cause. Similarity searches the goal line; the turnover happened in midfield, three weeks ago.
+				<span class="axon">←</span> {zh("Backfill reaches")} <b>{zh("backward through time")}</b> {zh("to the cause. Similarity searches the goal line; the turnover happened in midfield, three weeks ago.")}
 			</div>
 		</div>
 	</section>
 
 	<!-- ── LEADERBOARD ── -->
 	<section class="board-sec">
-		<div class="sec-eyebrow">The leaderboard</div>
-		<h2>Every model. Same seed. Shipped-correct <span class="dim">and</span> production-safe.</h2>
+		<div class="sec-eyebrow">{zh("The leaderboard")}</div>
+		<h2>{zh("Every model. Same seed. Shipped-correct")} <span class="dim">{zh("and")}</span> {zh("production-safe.")}</h2>
 		<div class="board-scroll">
 			<table class="board">
 				<thead>
 					<tr>
-						<th>Model</th>
-						<th>Lab</th>
-						<th class="a-void">No memory</th>
-						<th class="a-rag">RAG · similarity</th>
-						<th class="a-vest">Vestige · backfill</th>
+						<th>{zh("Model")}</th>
+						<th>{zh("Lab")}</th>
+						<th class="a-void">{zh("No memory")}</th>
+						<th class="a-rag">{zh("RAG · similarity")}</th>
+						<th class="a-vest">{zh("Vestige · backfill")}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -175,8 +174,8 @@ Both services must select it.
 						</tr>
 					{/each}
 					<tr class="agg">
-						<td><div class="mc"><span class="mn">All four</span><span class="ml">20 trials each arm</span></div></td>
-						<td class="dim">4 labs</td>
+						<td><div class="mc"><span class="mn">{zh("All four")}</span><span class="ml">{zh("20 trials each arm")}</span></div></td>
+						<td class="dim">{zh("4 labs")}</td>
 						<td><span class="score s-void">{agg.anarchy}<i>/20</i></span></td>
 						<td><span class="score s-low">{agg.rag}<i>/20</i></span></td>
 						<td><span class="score s-hi">{agg.vestige}<i>/20</i></span></td>
@@ -185,22 +184,21 @@ Both services must select it.
 			</table>
 		</div>
 		<div class="board-note">
-			<span>Clean separation on Kimi K3: anarchy 0/5, Vestige 5/5 → <b class="p">p = (1/50)<sup>5</sup> = 3.2×10<sup>−9</sup></b></span>
-			<span class="dim">GPT-5.6 Sol and Fable 5 rows land next.</span>
+			<span>{zh("Clean separation on Kimi K3: anarchy 0/5, Vestige 5/5 →")} <b class="p">p = (1/50)<sup>5</sup> = 3.2×10<sup>−9</sup></b></span>
+			<span class="dim">{zh("GPT-5.6 Sol and Fable 5 rows land next.")}</span>
 		</div>
 	</section>
 
 	<!-- ── REPRODUCE ── -->
 	<section class="repro-sec">
-		<div class="sec-eyebrow">Run it yourself</div>
-		<h2>Every number here is one command away from being yours.</h2>
+		<div class="sec-eyebrow">{zh("Run it yourself")}</div>
+		<h2>{zh("Every number here is one command away from being yours.")}</h2>
 		<p class="lede">
-			Deterministic. Fixed seed. The same fifty keys every model faces. The correct key is
-			provably absent from the repo, so nobody can claim the agents were tuned to it.
+			{zh("Deterministic. Fixed seed. The same fifty keys every model faces. The correct key is provably absent from the repo, so nobody can claim the agents were tuned to it.")}
 		</p>
 		<div class="repro">
-			<div class="repro-bar"><span class="g"></span> silent-rotation · N=5 · 3 arms
-				<button class="copy" onclick={copyRepro}>{copied ? 'copied ✓' : 'copy'}</button>
+			<div class="repro-bar"><span class="g"></span> {zh("silent-rotation · N=5 · 3 arms")}
+				<button class="copy" onclick={copyRepro}>{copied ? zh("copied ✓") : zh("copy")}</button>
 			</div>
 			<pre>{REPRO}</pre>
 		</div>
@@ -208,11 +206,11 @@ Both services must select it.
 
 	<!-- ── CTA ── -->
 	<footer class="cta">
-		<div class="sec-eyebrow">Vestige · local-first memory for AI agents</div>
-		<h2>Give your agent the one thing a bigger context window can't buy.</h2>
+		<div class="sec-eyebrow">{zh("Vestige · local-first memory for AI agents")}</div>
+		<h2>{zh("Give your agent the one thing a bigger context window can't buy.")}</h2>
 		<a class="btn" href="https://github.com/samvallad33/vestige" target="_blank" rel="noreferrer">npm i -g vestige-mcp-server →</a>
 		<div class="foot-meta">
-			<span>One 25MB binary</span><span>No cloud</span><span>Your data never leaves your machine</span><span>AGPL-3.0</span>
+			<span>{zh("One 25MB binary")}</span><span>{zh("No cloud")}</span><span>{zh("Your data never leaves your machine")}</span><span>AGPL-3.0</span>
 		</div>
 	</footer>
 </main>

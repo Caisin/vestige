@@ -159,7 +159,7 @@ describe('deriveTraits', () => {
 	it('names a dense associative field from high edge density', () => {
 		const traits = deriveTraits(shape({ nodeCount: 100, edgeCount: 180 }));
 		expect(traits.map((t) => t.id)).toContain('dense-associative');
-		expect(traits.map((t) => t.label)).toContain('dense associative field');
+		expect(traits.map((t) => t.label)).toContain('密集关联场');
 		expect(traits.length).toBeGreaterThanOrEqual(2);
 		expect(traits.length).toBeLessThanOrEqual(3);
 	});
@@ -187,7 +187,7 @@ describe('deriveTraits', () => {
 		expect(traits.length).toBeGreaterThanOrEqual(2);
 		expect(traits.length).toBeLessThanOrEqual(3);
 		for (const trait of traits) {
-			expect(trait.label).toMatch(/^[a-z][a-z- ]+$/);
+			expect(['密集关联场','稀疏晶格','深层档案','沉积的暗层','充盈的记忆场','分类马赛克','概念加权','事件驱动','决策密集','向量覆盖完整','紧凑核心','广域档案','扩展中的皮层']).toContain(trait.label);
 			expect(trait.label).not.toMatch(/memory-|content|sk-/i);
 		}
 	});

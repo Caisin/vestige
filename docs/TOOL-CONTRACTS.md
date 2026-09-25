@@ -1,6 +1,8 @@
 # Tool contracts and progressive discovery
 
-Vestige advertises fourteen MCP tools. Most are action multiplexers: `recall`
+Vestige advertises twenty-two MCP tools, including seven writer-workspace tools.
+The writer workflow and example contracts are documented in [中文编剧工作台](WRITER-STUDIO.md).
+Most tools are action multiplexers: `recall`
 uses `mode`, `memory_status` uses `view`, and tools such as `memory` and `dedup`
 use `action`. An agent should choose the action needed for its current task.
 There is no requirement to call every tool during every session.

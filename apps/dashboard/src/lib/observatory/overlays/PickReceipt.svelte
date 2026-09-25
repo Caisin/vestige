@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { base } from '$app/paths';
 
 	/**
@@ -34,15 +35,15 @@
 
 {#if pick}
 	<aside class="pick-receipt" aria-live="polite">
-		<div class="kicker">PICK RECEIPT · {pick.kind}</div>
+		<div class="kicker">{zh("PICK RECEIPT ·")} {zh(String(pick.kind))}</div>
 		<code>{pick.id}</code>
 		{#if pick.label}<p>{pick.label}</p>{/if}
 		{#if pick.detail}<p class="detail">{pick.detail}</p>{/if}
 		<div class="row">
 			{#if href}
-				<a href={href}>Open in organ →</a>
+				<a href={href}>{zh("Open in organ →")}</a>
 			{/if}
-			<button type="button" onclick={() => onclose?.()}>Dismiss</button>
+			<button type="button" onclick={() => onclose?.()}>{zh("Dismiss")}</button>
 		</div>
 	</aside>
 {/if}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import type { Memory } from '$types';
 	import { NODE_TYPE_COLORS } from '$types';
 	import {
@@ -152,11 +153,11 @@
 	const DOW_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 	function shortDate(d: Date): string {
-		return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+		return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
 	}
 
 	function fullDate(d: Date): string {
-		return d.toLocaleDateString(undefined, {
+		return d.toLocaleDateString('zh-CN', {
 			weekday: 'long',
 			month: 'long',
 			day: 'numeric',
@@ -169,10 +170,10 @@
 	<!-- Retention sparkline -->
 	<div class="p-4 glass-subtle rounded-xl">
 		<div class="flex items-center justify-between mb-2">
-			<span class="text-xs text-dim font-medium">Avg retention of memories due — last 2 weeks → next 4</span>
+			<span class="text-xs text-dim font-medium">{zh("Avg retention of memories due — last 2 weeks → next 4")}</span>
 			<div class="flex items-center gap-3 text-[10px] text-muted">
-				<span class="flex items-center gap-1"><span class="w-2 h-0.5 bg-recall"></span>retention</span>
-				<span class="flex items-center gap-1"><span class="w-px h-3 bg-synapse-glow"></span>today</span>
+				<span class="flex items-center gap-1"><span class="w-2 h-0.5 bg-recall"></span>{zh("retention")}</span>
+				<span class="flex items-center gap-1"><span class="w-px h-3 bg-synapse-glow"></span>{zh("today")}</span>
 			</div>
 		</div>
 		<svg viewBox="0 0 {SPARK_W} {SPARK_H}" preserveAspectRatio="none" class="w-full h-12 block" aria-hidden="true">
@@ -225,7 +226,7 @@
 							{cell.date.getDate()}
 						</span>
 						{#if cell.date.getDate() === 1}
-							<span class="text-[9px] text-muted">{cell.date.toLocaleDateString(undefined, { month: 'short' })}</span>
+							<span class="text-[9px] text-muted">{cell.date.toLocaleDateString('zh-CN', { month: "short" })}</span>
 						{/if}
 					</div>
 					{#if cell.memories.length > 0}
@@ -247,19 +248,19 @@
 	<div class="flex items-center gap-4 text-[10px] text-muted flex-wrap px-1">
 		<span class="flex items-center gap-1.5">
 			<span class="w-3 h-3 rounded" style="background: rgba(239,68,68,0.16); border: 1px solid rgba(239,68,68,0.45);"></span>
-			Overdue
+			{zh("Overdue")}
 		</span>
 		<span class="flex items-center gap-1.5">
 			<span class="w-3 h-3 rounded" style="background: rgba(245,158,11,0.18); border: 1px solid rgba(245,158,11,0.5);"></span>
-			Due today
+			{zh("Due today")}
 		</span>
 		<span class="flex items-center gap-1.5">
 			<span class="w-3 h-3 rounded" style="background: rgba(99,102,241,0.16); border: 1px solid rgba(99,102,241,0.45);"></span>
-			Within 7 days
+			{zh("Within 7 days")}
 		</span>
 		<span class="flex items-center gap-1.5">
 			<span class="w-3 h-3 rounded" style="background: rgba(168,85,247,0.08); border: 1px solid rgba(168,85,247,0.2);"></span>
-			Future (8+ days)
+			{zh("Future (8+ days)")}
 		</span>
 	</div>
 
@@ -270,17 +271,16 @@
 				<div>
 					<h3 class="text-sm text-bright font-semibold">{fullDate(selectedCell.date)}</h3>
 					<p class="text-xs text-dim mt-0.5">
-						{selectedCell.memories.length} memor{selectedCell.memories.length === 1 ? 'y' : 'ies'} due
-						· avg retention {(selectedCell.avgRetention * 100).toFixed(0)}%
+						{selectedCell.memories.length} {zh("memor")} {zh("due · avg retention")} {(selectedCell.avgRetention * 100).toFixed(0)}%
 					</p>
 				</div>
 				<button
 					type="button"
 					onclick={() => (selectedKey = null)}
 					class="text-xs text-muted hover:text-dim px-2 py-1 rounded-lg hover:bg-white/[0.03]"
-					aria-label="Close"
+					aria-label={zh("Close")}
 				>
-					close ×
+					{zh("close ×")}
 				</button>
 			</div>
 			<div class="space-y-2 max-h-96 overflow-y-auto pr-1">
@@ -293,9 +293,9 @@
 						<div class="flex-1 min-w-0">
 							<p class="text-sm text-text leading-snug line-clamp-2">{m.content}</p>
 							<div class="flex items-center gap-2 mt-1 text-[10px] text-muted">
-								<span>{m.nodeType}</span>
+								<span>{zh(String(m.nodeType))}</span>
 								{#if m.reviewCount !== undefined}
-									<span>· {m.reviewCount} review{m.reviewCount === 1 ? '' : 's'}</span>
+									<span>· {m.reviewCount} {zh("review")}</span>
 								{/if}
 								{#each m.tags.slice(0, 2) as tag}
 									<span class="px-1 py-0.5 bg-white/[0.04] rounded text-muted">{tag}</span>
@@ -319,7 +319,7 @@
 				{/each}
 				{#if selectedCell.memories.length > 100}
 					<p class="text-xs text-muted text-center pt-2">
-						+{selectedCell.memories.length - 100} more
+						+{selectedCell.memories.length - 100} {zh("more")}
 					</p>
 				{/if}
 			</div>

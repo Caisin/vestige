@@ -160,18 +160,18 @@ describe('relativeTime — boundary cases', () => {
 	const ago = (offsetMs: number) => new Date(NOW - offsetMs).toISOString();
 
 	const cases: Array<[string, number, string]> = [
-		['0s ago', 0, '0s ago'],
-		['59s ago', 59 * 1000, '59s ago'],
-		['60s flips to 1m', 60 * 1000, '1m ago'],
-		['59m ago', 59 * 60 * 1000, '59m ago'],
-		['60m flips to 1h', 60 * 60 * 1000, '1h ago'],
-		['23h ago', 23 * 3600 * 1000, '23h ago'],
-		['24h flips to 1d', 24 * 3600 * 1000, '1d ago'],
-		['6d ago', 6 * 86400 * 1000, '6d ago'],
-		['7d ago', 7 * 86400 * 1000, '7d ago'],
-		['29d ago', 29 * 86400 * 1000, '29d ago'],
-		['30d flips to 1mo', 30 * 86400 * 1000, '1mo ago'],
-		['365d → 12mo flips to 1y', 365 * 86400 * 1000, '1y ago']
+		['0秒前', 0, '0秒前'],
+		['59秒前', 59 * 1000, '59秒前'],
+		['60s flips to 1m', 60 * 1000, '1分钟前'],
+		['59分钟前', 59 * 60 * 1000, '59分钟前'],
+		['60m flips to 1h', 60 * 60 * 1000, '1小时前'],
+		['23小时前', 23 * 3600 * 1000, '23小时前'],
+		['24h flips to 1d', 24 * 3600 * 1000, '1天前'],
+		['6天前', 6 * 86400 * 1000, '6天前'],
+		['7天前', 7 * 86400 * 1000, '7天前'],
+		['29天前', 29 * 86400 * 1000, '29天前'],
+		['30d flips to 1mo', 30 * 86400 * 1000, '1个月前'],
+		['365d → 12mo flips to 1y', 365 * 86400 * 1000, '1年前']
 	];
 
 	for (const [name, offset, expected] of cases) {
@@ -180,9 +180,9 @@ describe('relativeTime — boundary cases', () => {
 		});
 	}
 
-	it('future timestamps clamp to "0s ago"', () => {
+	it('future timestamps clamp to "0秒前"', () => {
 		const future = new Date(NOW + 60_000).toISOString();
-		expect(relativeTime(future, NOW)).toBe('0s ago');
+		expect(relativeTime(future, NOW)).toBe('0秒前');
 	});
 });
 

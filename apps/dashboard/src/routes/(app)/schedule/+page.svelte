@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onDestroy, onMount } from 'svelte';
 	import RouteStage, { type RouteFramePass, type RoutePick } from '$lib/observatory/RouteStage.svelte';
 	import PageHeader from '$components/PageHeader.svelte';
@@ -60,7 +61,7 @@
 
 	// Trim to a cap on a word boundary so a portrait row never ends mid-token.
 	function trimSnippet(text: string, cap: number): string {
-		const s = sanitizeAscii(text).replace(/\s+/g, ' ').trim();
+		const s = safeLabel(text).replace(/\s+/g, ' ').trim();
 		if (s.length <= cap) return s;
 		const hard = s.slice(0, cap);
 		const lastSpace = hard.lastIndexOf(' ');
@@ -85,7 +86,7 @@
 		} catch (err) {
 			memories = [];
 			totalMemories = 0;
-			error = err instanceof Error ? err.message : 'API FETCH FAILED';
+			error = err instanceof Error ? err.message : zh("API FETCH FAILED");
 		} finally {
 			loading = false;
 		}
@@ -132,7 +133,7 @@
 			predictions = Array.isArray(res.predictions) ? res.predictions : [];
 			predictedAt = Date.now();
 		} catch (err) {
-			predictError = err instanceof Error ? err.message : 'PREDICT FAILED';
+			predictError = err instanceof Error ? err.message : zh("PREDICT FAILED");
 			predictions = [];
 		} finally {
 			predicting = false;
@@ -157,19 +158,19 @@
 			);
 			error = null;
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'PROMOTE FAILED';
+			error = err instanceof Error ? err.message : zh("PROMOTE FAILED");
 		} finally {
 			promoting = false;
 		}
 	}
 
-	function sanitizeAscii(value: string): string {
+	function safeLabel(value: string): string {
 		return value
 			.replace(/[—–]/g, '-')
 			.replace(/[‘’]/g, "'")
 			.replace(/[“”]/g, '"')
 			.replace(/…/g, '...')
-			.replace(/[^\x20-\x7E]/g, '?');
+			.replace(/[\x00-\x1F\x7F]/g, ' ');
 	}
 
 	function clamp01(value: number): number {
@@ -191,12 +192,12 @@
 	// Human "due in" label for a DOM row: negative -> overdue, 0 -> today, else Nd.
 	function dueInLabel(memory: Memory, nowMs: number): string {
 		const next = dueAt(memory);
-		if (!Number.isFinite(next)) return 'no date';
+		if (!Number.isFinite(next)) return zh("no date");
 		const days = Math.ceil((next - nowMs) / 86_400_000);
-		if (days < 0) return `${Math.abs(days)}d overdue`;
-		if (days === 0) return 'due today';
-		if (days === 1) return 'due tomorrow';
-		return `in ${days}d`;
+		if (days < 0) return `已逾期 ${Math.abs(days)} 天`;
+		if (days === 0) return zh("due today");
+		if (days === 1) return zh("due tomorrow");
+		return `${days} 天后`;
 	}
 
 	function scheduleLine(memory: Memory, nowMs: number, portrait = false): string {
@@ -208,10 +209,10 @@
 		// narrow width on one readable line — never edge-to-edge, never truncated
 		// mid-word. Desktop keeps the full, byte-identical row.
 		if (portrait) {
-			return sanitizeAscii(`${trimSnippet(memory.content, 26)}  ${due} ${pct}`);
+			return safeLabel(`${trimSnippet(memory.content, 26)}  ${due} ${pct}`);
 		}
-		const snippet = sanitizeAscii(memory.content).replace(/\s+/g, ' ').trim().slice(0, 48);
-		return sanitizeAscii(`${snippet} | ${memory.id.slice(0, 8)} | ${due} | ${pct}`);
+		const snippet = safeLabel(memory.content).replace(/\s+/g, ' ').trim().slice(0, 48);
+		return safeLabel(`${snippet} | ${memory.id.slice(0, 8)} | ${due} | ${pct}`);
 	}
 
 	function dueMemories(source: Memory[]): Memory[] {
@@ -372,33 +373,33 @@
 	<div class="pointer-events-auto">
 		<PageHeader
 			icon="schedule"
-			title="Review Schedule"
-			subtitle="What FSRS says is due for review, and when each memory next resurfaces."
+			title={zh("Review Schedule")}
+			subtitle={zh("What FSRS says is due for review, and when each memory next resurfaces.")}
 			accent="recall"
 		>
 			<button
 				type="button"
 				onclick={runPredict}
 				disabled={predicting || loading || memories.length === 0}
-				title={memories.length === 0 ? 'Load memories first' : 'Ask the backend what you will need next'}
+				title={memories.length === 0 ? zh("Load memories first") : zh("Ask the backend what you will need next")}
 				class="inline-flex items-center gap-2 rounded-xl border border-recall/30 bg-recall/12 px-4 py-2 text-sm font-medium text-recall-glow transition hover:bg-recall/20 disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-recall/60"
 			>
 				<Icon name="importance" size={15} />
-				{predicting ? 'Predicting…' : 'Predict what I need next'}
+				{predicting ? zh("Predicting…") : zh("Predict what I need next")}
 			</button>
 		</PageHeader>
 	</div>
 
 	{#if error}
 		<div class="glass-panel pointer-events-auto flex flex-col items-center gap-3 rounded-2xl p-10 text-center">
-			<div class="text-sm text-decay">Couldn't load the review schedule</div>
+			<div class="text-sm text-decay">{zh("Couldn't load the review schedule")}</div>
 			<div class="max-w-md text-xs text-muted">{error}</div>
 			<button
 				type="button"
 				onclick={loadSchedule}
 				class="mt-2 rounded-lg bg-recall/20 px-4 py-2 text-xs font-medium text-recall-glow transition hover:bg-recall/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-recall/60"
 			>
-				Retry
+				{zh("Retry")}
 			</button>
 		</div>
 	{:else if loading}
@@ -419,14 +420,12 @@
 				<Icon name="schedule" size={26} draw />
 			</div>
 			<div class="text-sm font-medium text-bright">
-				Nothing is due for review right now.
+				{zh("Nothing is due for review right now.")}
 			</div>
 			<div class="max-w-sm text-xs text-muted">
-				{memories.length.toLocaleString()} recent memories are sampled{totalMemories > memories.length ? ` from ${totalMemories.toLocaleString()} total` : ''}, but none carry an FSRS
-				<code class="text-dim">nextReviewAt</code> timestamp yet. Reviews are scheduled as
-				memories are recalled and consolidated — check back, or run
-				<span class="text-recall-glow">Predict what I need next</span> to see what the backend
-				thinks is slipping.
+				{memories.length.toLocaleString('zh-CN')} {zh("recent memories are sampled")}{totalMemories > memories.length ? ` from ${totalMemories.toLocaleString('zh-CN')} total` : ''}{zh(", but none carry an FSRS")}
+				<code class="text-dim">nextReviewAt</code> {zh("timestamp yet. Reviews are scheduled as memories are recalled and consolidated — check back, or run")}
+				<span class="text-recall-glow">{zh("Predict what I need next")}</span> {zh("to see what the backend thinks is slipping.")}
 			</div>
 		</div>
 	{:else}
@@ -441,35 +440,35 @@
 						<AnimatedNumber value={dueNowCount} />
 					</div>
 				</div>
-				<div class="text-xs text-dim mt-1">due now (overdue or today)</div>
+				<div class="text-xs text-dim mt-1">{zh("due now (overdue or today)")}</div>
 			</div>
 			<div use:reveal={{ delay: 60, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="text-3xl font-bold tabular-nums" style="color: #FFB000">
 					<AnimatedNumber value={dueThisWeekCount} />
 				</div>
-				<div class="text-xs text-dim mt-1">coming due within 7 days</div>
+				<div class="text-xs text-dim mt-1">{zh("coming due within 7 days")}</div>
 			</div>
 			<div use:reveal={{ delay: 120, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="text-3xl text-bright font-bold tabular-nums">
 					<AnimatedNumber value={avgDueRetention} />%
 				</div>
-				<div class="text-xs text-dim mt-1">avg retention across the due set</div>
+				<div class="text-xs text-dim mt-1">{zh("avg retention across the due set")}</div>
 			</div>
 		</div>
 
 		<!-- INTERPRETATION — one-line insight tying colour to meaning -->
 		<div class="pointer-events-auto flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-muted">
 			<span class="inline-flex items-center gap-1.5">
-				<span class="w-2 h-2 rounded-full" style="background: #FF3B30"></span> at risk (&lt;40% retention)
+				<span class="w-2 h-2 rounded-full" style="background: #FF3B30"></span> {zh("at risk (<40% retention)")}
 			</span>
 			<span class="inline-flex items-center gap-1.5">
-				<span class="w-2 h-2 rounded-full" style="background: #FFB000"></span> softening (40–70%)
+				<span class="w-2 h-2 rounded-full" style="background: #FFB000"></span> {zh("softening (40–70%)")}
 			</span>
 			<span class="inline-flex items-center gap-1.5">
-				<span class="w-2 h-2 rounded-full" style="background: #22C7DE"></span> healthy (&gt;70%)
+				<span class="w-2 h-2 rounded-full" style="background: #22C7DE"></span> {zh("healthy (>70%)")}
 			</span>
 			<span class="ml-auto text-dim">
-				{scheduled.length.toLocaleString()} scheduled from {memories.length.toLocaleString()} recent memories{totalMemories > memories.length ? ` · ${totalMemories.toLocaleString()} total` : ''}
+				{scheduled.length.toLocaleString('zh-CN')} {zh("scheduled from")} {memories.length.toLocaleString('zh-CN')} {zh("recent memories")}{totalMemories > memories.length ? ` · ${totalMemories.toLocaleString('zh-CN')} total` : ''}
 			</span>
 		</div>
 
@@ -477,7 +476,7 @@
 		<div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-4 pointer-events-auto">
 			<div class="glass-panel rounded-2xl p-3 space-y-1.5 max-h-[620px] overflow-y-auto">
 				<div class="flex items-center justify-between px-1 pb-2 sticky top-0 bg-deep/60 backdrop-blur-sm z-10">
-					<span class="text-xs text-dim uppercase tracking-wider">Upcoming reviews</span>
+					<span class="text-xs text-dim uppercase tracking-wider">{zh("Upcoming reviews")}</span>
 					<span class="text-xs text-muted tabular-nums"><AnimatedNumber value={upcomingRows.length} /></span>
 				</div>
 
@@ -502,10 +501,10 @@
 							>
 								{row.dueIn}
 							</span>
-							<span class="ml-auto text-[10px] text-muted tabular-nums">{row.retentionPct}% retained</span>
+							<span class="ml-auto text-[10px] text-muted tabular-nums">{row.retentionPct}{zh("% retained")}</span>
 						</div>
 						<div class="text-xs text-text truncate">
-							{sanitizeAscii(row.memory.content).slice(0, 90) || 'Untitled memory'}
+							{safeLabel(row.memory.content).slice(0, 90) || zh("Untitled memory")}
 						</div>
 					</button>
 				{/each}
@@ -515,32 +514,32 @@
 			<aside use:reveal={{ delay: 100, y: 16 }} class="glass rounded-2xl p-4 space-y-3 max-h-[620px] overflow-y-auto">
 				{#if selectedMemory}
 					<div class="flex items-start justify-between gap-2">
-						<div class="font-mono text-[10px] uppercase tracking-[0.2em] text-recall-glow">Review detail</div>
+						<div class="font-mono text-[10px] uppercase tracking-[0.2em] text-recall-glow">{zh("Review detail")}</div>
 						<button
 							type="button"
 							onclick={() => (selectedId = null)}
 							class="rounded-lg border border-subtle/30 px-2.5 py-1 text-[11px] text-muted transition hover:border-recall/40 hover:text-recall"
 						>
-							Close
+							{zh("Close")}
 						</button>
 					</div>
-					<p class="text-sm text-text leading-relaxed">{sanitizeAscii(selectedMemory.content)}</p>
+					<p class="text-sm text-text leading-relaxed">{safeLabel(selectedMemory.content)}</p>
 					<div class="grid grid-cols-2 gap-2 pt-1">
 						<div class="rounded-lg bg-white/[0.03] p-2.5">
-							<div class="text-[10px] uppercase tracking-wider text-muted">next review</div>
+							<div class="text-[10px] uppercase tracking-wider text-muted">{zh("next review")}</div>
 							<div class="mt-0.5 text-xs text-bright">{dueInLabel(selectedMemory, Date.now())}</div>
 						</div>
 						<div class="rounded-lg bg-white/[0.03] p-2.5">
-							<div class="text-[10px] uppercase tracking-wider text-muted">retention</div>
+							<div class="text-[10px] uppercase tracking-wider text-muted">{zh("retention")}</div>
 							<div class="mt-0.5 text-xs text-bright tabular-nums">{Math.round(clamp01(selectedMemory.retentionStrength) * 100)}%</div>
 						</div>
 						<div class="rounded-lg bg-white/[0.03] p-2.5">
-							<div class="text-[10px] uppercase tracking-wider text-muted">retrieval</div>
+							<div class="text-[10px] uppercase tracking-wider text-muted">{zh("retrieval")}</div>
 							<div class="mt-0.5 text-xs text-bright tabular-nums">{Math.round(clamp01(selectedMemory.retrievalStrength) * 100)}%</div>
 						</div>
 						<div class="rounded-lg bg-white/[0.03] p-2.5">
-							<div class="text-[10px] uppercase tracking-wider text-muted">type</div>
-							<div class="mt-0.5 truncate text-xs text-dim">{selectedMemory.nodeType}</div>
+							<div class="text-[10px] uppercase tracking-wider text-muted">{zh("type")}</div>
+							<div class="mt-0.5 truncate text-xs text-dim">{zh(String(selectedMemory.nodeType))}</div>
 						</div>
 					</div>
 					{#if selectedMemory.tags && selectedMemory.tags.length > 0}
@@ -557,13 +556,13 @@
 						class="w-full mt-1 inline-flex items-center justify-center gap-2 rounded-xl border border-recall/30 bg-recall/12 px-3 py-2 text-xs font-medium text-recall-glow transition hover:bg-recall/20 disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-recall/60"
 					>
 						<Icon name="sparkle" size={13} />
-						{promoting ? 'Marking…' : 'Mark reviewed (strengthen)'}
+						{promoting ? zh("Marking…") : zh("Mark reviewed (strengthen)")}
 					</button>
 				{:else if predictions.length > 0}
-					<div class="font-mono text-[10px] uppercase tracking-[0.2em] text-recall-glow">Predicted need</div>
+					<div class="font-mono text-[10px] uppercase tracking-[0.2em] text-recall-glow">{zh("Predicted need")}</div>
 					<p class="text-[11px] text-muted">
-						The backend's blended FSRS urgency for the {predictions.length} most active memories.
-						{#if predictedAt}<span class="text-dim">Just now.</span>{/if}
+						{zh("The backend's blended FSRS urgency for the")} {predictions.length} {zh("most active memories.")}
+						{#if predictedAt}<span class="text-dim">{zh("Just now.")}</span>{/if}
 					</p>
 					<div class="space-y-1.5">
 						{#each predictions as p (p.id)}
@@ -576,9 +575,9 @@
 									<span class="text-[9px] uppercase tracking-wider font-medium" style="color: {needColor[p.predictedNeed]}">
 										{p.predictedNeed}
 									</span>
-									<span class="ml-auto text-[10px] text-muted tabular-nums">{Math.round(p.urgency * 100)}% urgency</span>
+									<span class="ml-auto text-[10px] text-muted tabular-nums">{Math.round(p.urgency * 100)}{zh("% urgency")}</span>
 								</div>
-								<div class="text-[11px] text-dim truncate">{sanitizeAscii(p.content)}</div>
+								<div class="text-[11px] text-dim truncate">{safeLabel(p.content)}</div>
 							</button>
 						{/each}
 					</div>
@@ -588,8 +587,8 @@
 							<Icon name="schedule" size={38} strokeWidth={1.2} />
 						</div>
 						<p class="text-xs text-muted max-w-[220px]">
-							Select any upcoming review to see its retention, next-review date, and a
-							<span class="text-recall-glow">Mark reviewed</span> action.
+							{zh("Select any upcoming review to see its retention, next-review date, and a")}
+							<span class="text-recall-glow">{zh("Mark reviewed")}</span> {zh("action.")}
 						</p>
 						{#if predictError}
 							<p class="text-[11px] text-decay">{predictError}</p>

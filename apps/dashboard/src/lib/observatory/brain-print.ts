@@ -1,3 +1,4 @@
+import { zh } from '$lib/i18n';
 /**
  * Brain print — share mechanic #2.
  *
@@ -267,88 +268,88 @@ interface TraitRule {
 const TRAIT_RULES: TraitRule[] = [
 	{
 		id: 'dense-associative',
-		label: 'dense associative field',
+		label: zh("dense associative field"),
 		group: 'density',
 		score: (m) => (m.edgeDensity >= 1.2 ? Math.min(3, m.edgeDensity) : 0)
 	},
 	{
 		id: 'sparse-lattice',
-		label: 'sparse lattice',
+		label: zh("sparse lattice"),
 		group: 'density',
 		score: (m) => (m.edgeDensity > 0 && m.edgeDensity < 0.45 ? 1.4 - m.edgeDensity : 0)
 	},
 	{
 		id: 'deep-archive',
-		label: 'deep archive',
+		label: zh("deep archive"),
 		group: 'vitality',
 		score: (m) => (m.highRetFrac >= 0.4 || m.avgRet >= 0.72 ? 1.2 + m.highRetFrac : 0)
 	},
 	{
 		id: 'sedimentary',
-		label: 'sedimentary dark',
+		label: zh("sedimentary dark"),
 		group: 'vitality',
 		score: (m) => (m.lowRetFrac >= 0.3 || m.endangeredRatio >= 0.22 ? 1.1 + m.lowRetFrac : 0)
 	},
 	{
 		id: 'oxygen-rich',
-		label: 'oxygen-rich field',
+		label: zh("oxygen-rich field"),
 		group: 'vitality',
 		score: (m) => (m.avgRet >= 0.78 && m.highRetFrac >= 0.35 ? m.avgRet : 0)
 	},
 	{
 		id: 'typed-mosaic',
-		label: 'typed mosaic',
+		label: zh("typed mosaic"),
 		group: 'types',
 		score: (m) => (m.typeCount >= 5 && m.typeEntropy >= 1.8 ? m.typeEntropy : 0)
 	},
 	{
 		id: 'concept-dominant',
-		label: 'concept-weighted',
+		label: zh("concept-weighted"),
 		group: 'types',
 		score: (m) => (m.dominantType === 'concept' && m.dominantFrac >= 0.4 ? m.dominantFrac : 0)
 	},
 	{
 		id: 'event-forward',
-		label: 'event-forward',
+		label: zh("event-forward"),
 		group: 'types',
 		score: (m) => (m.dominantType === 'event' && m.dominantFrac >= 0.4 ? m.dominantFrac : 0)
 	},
 	{
 		id: 'decision-heavy',
-		label: 'decision-heavy',
+		label: zh("decision-heavy"),
 		group: 'types',
 		score: (m) => (m.dominantType === 'decision' && m.dominantFrac >= 0.35 ? m.dominantFrac : 0)
 	},
 	{
 		id: 'wide-field',
-		label: 'wide-field archive',
+		label: zh("wide-field archive"),
 		group: 'scale',
 		score: (m) => (m.total >= 400 ? Math.log10(m.total) : 0)
 	},
 	{
 		id: 'expanding-cortex',
-		label: 'expanding cortex',
+		label: zh("expanding cortex"),
 		group: 'scale',
 		score: (m) => (m.total >= 80 && m.total < 400 ? 0.6 : 0)
 	},
 	{
 		id: 'compact-nucleus',
-		label: 'compact nucleus',
+		label: zh("compact nucleus"),
 		group: 'scale',
 		score: (m) => (m.total > 0 && m.total < 80 ? 0.55 : 0)
 	},
 	{
 		id: 'covered-embeddings',
-		label: 'fully embedded',
+		label: zh("fully embedded"),
 		group: 'coverage',
 		score: (m) => (m.coverage >= 0.95 ? m.coverage : 0)
 	}
 ];
 
 const SCALE_FALLBACKS: BrainTrait[] = [
-	{ id: 'wide-field', label: 'wide-field archive' },
-	{ id: 'expanding-cortex', label: 'expanding cortex' },
-	{ id: 'compact-nucleus', label: 'compact nucleus' }
+	{ id: 'wide-field', label: zh("wide-field archive") },
+	{ id: 'expanding-cortex', label: zh("expanding cortex") },
+	{ id: 'compact-nucleus', label: zh("compact nucleus") }
 ];
 
 export function deriveTraits(shape: BrainShape): BrainTrait[] {
@@ -381,7 +382,7 @@ export function deriveTraits(shape: BrainShape): BrainTrait[] {
 		}
 	}
 	if (picked.length < 2) {
-		picked.push({ id: 'structured-field', label: 'structured field' });
+		picked.push({ id: 'structured-field', label: zh("structured field") });
 	}
 	return picked.slice(0, 3);
 }

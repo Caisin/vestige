@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onMount, untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
@@ -67,7 +68,7 @@
 		maxDpr = 2,
 		loading = false,
 		error = null,
-		emptyLabel = 'NO ROUTE DATA IN FIELD'
+		emptyLabel = zh("NO ROUTE DATA IN FIELD")
 	}: Props = $props();
 
 	let currentScene = $derived(scene ?? emptyScene(organ));
@@ -152,18 +153,18 @@
 			.filter(([, v]) => Number.isFinite(v))
 			.slice(0, 3)
 			.map(([k, v]) => {
-				const name = k.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').toUpperCase();
+				const name = zh(k.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').toUpperCase());
 				const value = Math.abs(v) < 1 && v !== 0 ? `${Math.round(v * 100)}%` : `${Math.round(v)}`;
 				return `${name} ${value}`;
 			});
-		const counts = `${sceneToTell.nodes.length} CELLS - ${sceneToTell.edges.length} LINKS - ${sceneToTell.events.length} EVENTS`;
+		const counts = `${sceneToTell.nodes.length} 个单元 - ${sceneToTell.edges.length} 条连接 - ${sceneToTell.events.length} 个事件`;
 		// Whole facts only: never cut a number mid-word.
 		let line = `${label} - ${purpose}`;
 		for (const fact of facts.length ? facts : [counts]) {
 			if (`${line} - ${fact}`.length > 132) break;
 			line = `${line} - ${fact}`;
 		}
-		return asciiSafe(line);
+		return safeLabel(line);
 	}
 
 	function handleFrame(frame: number, fps: number) {
@@ -234,17 +235,15 @@
 		return path.startsWith(base) ? path.slice(base.length) || '/' : path;
 	}
 
-	// MSDF atlas is ASCII-only: any non-ASCII (em-dashes in organ emptyLabels,
-	// unicode in backend error messages) renders as a literal '?'. Sanitize the two
-	// chrome strings that come from OUTSIDE this file (emptyLabel prop, error prop)
-	// at the single point they enter the text pass, so no organ can ship a '?'.
-	function asciiSafe(value: string): string {
+	// Preserve Unicode: the atlas supplies missing glyphs from local fonts.
+	// Only non-printing controls are stripped from external chrome text.
+	function safeLabel(value: string): string {
 		return value
 			.replace(/[—–]/g, '-')
 			.replace(/[‘’]/g, "'")
 			.replace(/[“”]/g, '"')
 			.replace(/…/g, '...')
-			.replace(/[^\x20-\x7E]/g, '?');
+			.replace(/[\x00-\x1F\x7F]/g, ' ');
 	}
 
 	// Portrait/phone check — same live-aspect signal the text + field layers use
@@ -320,7 +319,7 @@
 				{
 					id: 'route-chrome:error',
 					kind: 'route-status',
-					text: asciiSafe(`ERROR - ${error}`).slice(0, 72),
+					text: safeLabel(`ERROR - ${error}`).slice(0, 72),
 					x: portrait ? -0.82 : -0.54,
 					y: 0.025,
 					size: portrait ? 0.028 : 0.032,
@@ -333,7 +332,7 @@
 			items.push({
 				id: 'route-chrome:empty',
 				kind: 'route-status',
-				text: asciiSafe(emptyLabel),
+				text: safeLabel(emptyLabel),
 				x: portrait ? -0.82 : -0.36,
 				y: 0.02,
 				size: portrait ? 0.03 : 0.034,
@@ -498,9 +497,9 @@
 		class="route-motion-control"
 		onclick={togglePause}
 		aria-pressed={paused}
-		aria-label={paused ? 'Resume 3D field motion' : 'Pause 3D field motion'}
+		aria-label={paused ? zh("Resume 3D field motion") : zh("Pause 3D field motion")}
 	>
-		{paused ? 'RESUME MOTION' : 'PAUSE MOTION'}
+		{paused ? zh("RESUME MOTION") : zh("PAUSE MOTION")}
 	</button>
 	<PickReceipt pick={lastPick} onclose={() => (lastPick = null)} />
 </div>

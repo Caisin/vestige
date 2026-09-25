@@ -6,6 +6,7 @@
   review / dismiss actions.
 -->
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onMount, onDestroy } from 'svelte';
 	import DuplicateCluster from '$components/DuplicateCluster.svelte';
 	import { clusterKey } from '$components/duplicates-helpers';
@@ -72,7 +73,7 @@
 			for (const k of dismissed) if (presentKeys.has(k)) pruned.add(k);
 			dismissed = pruned;
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to detect duplicates';
+			error = e instanceof Error ? e.message : zh("Failed to detect duplicates");
 			clusters = [];
 		} finally {
 			loading = false;
@@ -161,8 +162,8 @@
 	<!-- Header -->
 	<PageHeader
 		icon="duplicates"
-		title="Memory Hygiene: Duplicate Detection"
-		subtitle="Cosine-similarity clustering over embeddings. Merge previews a reversible plan and applies it only on your say-so; dedup undo reverses it. Oversized similarity components are quarantined for review because they chain through pairwise similarity and are not safe to merge. Dismissed clusters are hidden for this session only."
+		title={zh("Memory Hygiene: Duplicate Detection")}
+		subtitle={zh("Cosine-similarity clustering over embeddings. Merge previews a reversible plan and applies it only on your say-so; dedup undo reverses it. Oversized similarity components are quarantined for review because they chain through pairwise similarity and are not safe to merge. Dismissed clusters are hidden for this session only.")}
 		accent="synapse"
 	>
 		<!-- The badge reports the last fetch, not a hope: Live after a successful
@@ -175,7 +176,7 @@
 				<span class="breathe h-2 w-2 rounded-full bg-synapse-glow"></span>
 			</span>
 		{/if}
-		<span class="text-xs text-dim">{error ? 'Offline' : loading ? 'Refreshing' : 'Live'}</span>
+		<span class="text-xs text-dim">{error ? zh("Offline") : loading ? zh("Refreshing") : zh("Live")}</span>
 	</PageHeader>
 
 	<!-- Controls panel -->
@@ -186,7 +187,7 @@
 		{#if isPortrait}
 			<label class="flex w-full flex-col gap-2 text-xs text-dim">
 				<span class="flex items-baseline justify-between gap-3">
-					<span class="whitespace-nowrap">Similarity threshold</span>
+					<span class="whitespace-nowrap">{zh("Similarity threshold")}</span>
 					<span class="font-mono text-sm text-bright">{(threshold * 100).toFixed(0)}%</span>
 				</span>
 				<input
@@ -197,12 +198,12 @@
 					bind:value={threshold}
 					oninput={onThresholdChange}
 					class="w-full accent-synapse"
-					aria-label="Similarity threshold"
+					aria-label={zh("Similarity threshold")}
 				/>
 			</label>
 		{:else}
 			<label class="flex flex-1 min-w-64 items-center gap-3 text-xs text-dim">
-				<span class="whitespace-nowrap">Similarity threshold</span>
+				<span class="whitespace-nowrap">{zh("Similarity threshold")}</span>
 				<input
 					type="range"
 					min="0.70"
@@ -211,7 +212,7 @@
 					bind:value={threshold}
 					oninput={onThresholdChange}
 					class="flex-1 accent-synapse"
-					aria-label="Similarity threshold"
+					aria-label={zh("Similarity threshold")}
 				/>
 				<span class="w-14 text-right font-mono text-sm text-bright">
 					{(threshold * 100).toFixed(0)}%
@@ -232,20 +233,20 @@
 			>
 				{#if loading}
 					<span class="breathe h-2 w-2 rounded-full bg-synapse-glow text-synapse-glow"></span>
-					<span>Detecting…</span>
+					<span>{zh("Detecting…")}</span>
 				{:else if error}
 					<span class="h-2 w-2 rounded-full bg-decay"></span>
-					<span class="text-decay">Error</span>
+					<span class="text-decay">{zh("Error")}</span>
 				{:else}
 					<span class="breathe h-2 w-2 rounded-full bg-synapse-glow text-synapse-glow"></span>
 					<span class="tabular-nums">
 						{#if visibleClusters.length < apiTotal}
-							<AnimatedNumber value={visibleClusters.length} /> visible of {apiTotal} clusters
+							<AnimatedNumber value={visibleClusters.length} /> {zh("visible of")} {apiTotal} {zh("clusters")}
 						{:else}
 							<AnimatedNumber value={visibleClusters.length} />
-							{visibleClusters.length === 1 ? 'cluster' : 'clusters'}
+							{visibleClusters.length === 1 ? zh("cluster") : zh("clusters")}
 						{/if}
-						· <AnimatedNumber value={totalImplicated} /> memories implicated
+						· <AnimatedNumber value={totalImplicated} /> {zh("memories implicated")}
 					</span>
 				{/if}
 			</div>
@@ -256,7 +257,7 @@
 				disabled={loading}
 				class="rounded-lg bg-white/[0.04] px-3 py-1.5 text-xs text-dim transition hover:bg-white/[0.08] hover:text-text disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-synapse/60"
 			>
-				Rerun
+				{zh("Rerun")}
 			</button>
 		{/if}
 	</div>
@@ -267,13 +268,13 @@
 			<div class="flex flex-wrap items-center justify-between gap-3">
 				<div>
 					<div class="font-mono text-[11px] uppercase tracking-[0.18em] text-synapse-glow">
-						Synaptic neck selected
+						{zh("Synaptic neck selected")}
 					</div>
 					<div class="mt-1 text-sm text-bright">
-						{selectedCluster.memories.length} memories · {(selectedCluster.similarity * 100).toFixed(1)}% similar · winner {selectedCluster.winnerId.slice(0, 8)}
+						{selectedCluster.memories.length} {zh("memories ·")} {(selectedCluster.similarity * 100).toFixed(1)}{zh("% similar · winner")} {selectedCluster.winnerId.slice(0, 8)}
 					</div>
 					<div class="mt-1 max-w-2xl text-xs text-muted">
-						Real pair key: {selectedCluster.id}. Mismatch filaments: {selectedCluster.mismatchTokens.length ? selectedCluster.mismatchTokens.join(', ') : 'none exposed'}.
+						{zh("Real pair key:")} {selectedCluster.id}{zh(". Mismatch filaments:")} {selectedCluster.mismatchTokens.length ? selectedCluster.mismatchTokens.join(', ') : zh("none exposed")}.
 					</div>
 				</div>
 				<button
@@ -281,7 +282,7 @@
 					onclick={() => (selectedCluster = null)}
 					class="rounded-lg bg-white/[0.04] px-3 py-1.5 text-xs text-dim transition hover:bg-white/[0.08] hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-synapse/60"
 				>
-					Clear field focus
+					{zh("Clear field focus")}
 				</button>
 			</div>
 		</div>
@@ -292,14 +293,14 @@
 		<div
 			class="glass-panel pointer-events-auto flex flex-col items-center gap-3 rounded-2xl p-10 text-center"
 		>
-			<div class="text-sm text-decay">Couldn't detect duplicates</div>
+			<div class="text-sm text-decay">{zh("Couldn't detect duplicates")}</div>
 			<div class="max-w-md text-xs text-muted">{error}</div>
 			<button
 				type="button"
 				onclick={detect}
 				class="mt-2 rounded-lg bg-synapse/20 px-4 py-2 text-xs font-medium text-synapse-glow transition hover:bg-synapse/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-synapse/60"
 			>
-				Retry
+				{zh("Retry")}
 			</button>
 		</div>
 	{:else if loading}
@@ -318,11 +319,10 @@
 				<Icon name="sparkle" size={26} draw />
 			</div>
 			<div class="text-sm font-medium text-bright">
-				No duplicates found — your memory is clean.
+				{zh("No duplicates found — your memory is clean.")}
 			</div>
 			<div class="max-w-sm text-xs text-muted">
-				Nothing clusters above {(threshold * 100).toFixed(0)}% similarity. Lower the threshold to
-				surface looser matches.
+				{zh("Nothing clusters above")} {(threshold * 100).toFixed(0)}{zh("% similarity. Lower the threshold to surface looser matches.")}
 			</div>
 		</div>
 	{:else}
@@ -331,8 +331,7 @@
 				<div
 					class="glass-subtle rounded-xl border border-warning/30 bg-warning/5 px-4 py-2 text-xs text-dim"
 				>
-					Showing first {CLUSTER_RENDER_CAP} of {visibleClusters.length} clusters. Raise the
-					threshold to narrow results.
+					{zh("Showing first")} {CLUSTER_RENDER_CAP} {zh("of")} {visibleClusters.length} {zh("clusters. Raise the threshold to narrow results.")}
 				</div>
 			{/if}
 			{#each renderedClusters as { c, key }, i (key)}

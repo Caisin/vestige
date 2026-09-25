@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	/**
 	 * Cognitive Observatory — WebGPU canvas host.
 	 *
@@ -82,7 +83,7 @@
 <canvas
 	bind:this={canvasEl}
 	class="observatory-canvas"
-	aria-label="Vestige 3D memory field"
+	aria-label={zh("Vestige 3D memory field")}
 	aria-describedby="webgpu-field-status"
 ></canvas>
 
@@ -90,9 +91,9 @@
 	<!-- The GPU device was lost (reset, driver update, backgrounding). The
 	     engine re-acquires it with backoff; the field returns on its own. -->
 	<div id="webgpu-field-status" class="fallback" role="status" aria-live="polite">
-		<div class="fallback-title">GPU DEVICE LOST · RECOVERING</div>
+		<div class="fallback-title">{zh("GPU DEVICE LOST · RECOVERING")}</div>
 		<div class="fallback-reason">
-			Re-acquiring the graphics device (attempt {status.attempt} of 5). {status.reason}
+			{zh("Re-acquiring the graphics device (attempt")} {status.attempt} {zh("of 5).")} {status.reason}
 		</div>
 	</div>
 {:else if status.state === 'unsupported' || status.state === 'error'}
@@ -102,14 +103,12 @@
 	     through the persistent shell; this surface never claims that a 3D field
 	     has rendered when WebGPU could not be created. -->
 	<div id="webgpu-field-status" class="fallback" role="alert">
-		<div class="fallback-title">3D MEMORY FIELD UNAVAILABLE</div>
+		<div class="fallback-title">{zh("3D MEMORY FIELD UNAVAILABLE")}</div>
 		<div class="fallback-reason">
-			This browser or device could not create a WebGPU graphics context, so this
-			visual field has not rendered.
+			{zh("This browser or device could not create a WebGPU graphics context, so this visual field has not rendered.")}
 		</div>
 		<div class="fallback-hint">
-			Your local memories have not been changed. Use the persistent navigation to
-			continue in another tool, or open this view in a WebGPU-capable browser.
+			{zh("Your local memories have not been changed. Use the persistent navigation to continue in another tool, or open this view in a WebGPU-capable browser.")}
 		</div>
 	</div>
 {/if}

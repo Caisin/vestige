@@ -1,3 +1,4 @@
+import { zh } from '$lib/i18n';
 /**
  * Pure helpers for MemoryAuditTrail.
  *
@@ -48,14 +49,14 @@ export interface Meta {
  * colour palette alone (accessibility).
  */
 export const META: Record<AuditAction, Meta> = {
-	created: { label: 'Created', color: '#10b981', glyph: '', kind: 'ring' },
-	accessed: { label: 'Accessed', color: '#3b82f6', glyph: '', kind: 'dot' },
-	promoted: { label: 'Promoted', color: '#10b981', glyph: '', kind: 'arrow-up' },
-	demoted: { label: 'Demoted', color: '#f59e0b', glyph: '', kind: 'arrow-down' },
-	edited: { label: 'Edited', color: '#facc15', glyph: '', kind: 'pencil' },
-	suppressed: { label: 'Suppressed', color: '#FF3B30', glyph: '', kind: 'x' },
-	dreamed: { label: 'Dreamed', color: '#29F2A9', glyph: '', kind: 'star' },
-	reconsolidated: { label: 'Reconsolidated', color: '#1BD6FF', glyph: '', kind: 'circle-arrow' }
+	created: { label: zh("Created"), color: '#10b981', glyph: '', kind: 'ring' },
+	accessed: { label: zh("Accessed"), color: '#3b82f6', glyph: '', kind: 'dot' },
+	promoted: { label: zh("Promoted"), color: '#10b981', glyph: '', kind: 'arrow-up' },
+	demoted: { label: zh("Demoted"), color: '#f59e0b', glyph: '', kind: 'arrow-down' },
+	edited: { label: zh("Edited"), color: '#facc15', glyph: '', kind: 'pencil' },
+	suppressed: { label: zh("Suppressed"), color: '#FF3B30', glyph: '', kind: 'x' },
+	dreamed: { label: zh("Dreamed"), color: '#29F2A9', glyph: '', kind: 'star' },
+	reconsolidated: { label: zh("Reconsolidated"), color: '#1BD6FF', glyph: '', kind: 'circle-arrow' }
 };
 
 export const VISIBLE_LIMIT = 15;
@@ -239,17 +240,17 @@ export function relativeTime(iso: string, nowMs: number = Date.now()): string {
 	const then = new Date(iso).getTime();
 	const diff = Math.max(0, nowMs - then);
 	const s = Math.floor(diff / 1000);
-	if (s < 60) return `${s}s ago`;
+	if (s < 60) return `${s}秒前`;
 	const m = Math.floor(s / 60);
-	if (m < 60) return `${m}m ago`;
+	if (m < 60) return `${m}分钟前`;
 	const h = Math.floor(m / 60);
-	if (h < 24) return `${h}h ago`;
+	if (h < 24) return `${h}小时前`;
 	const d = Math.floor(h / 24);
-	if (d < 30) return `${d}d ago`;
+	if (d < 30) return `${d}天前`;
 	const mo = Math.floor(d / 30);
-	if (mo < 12) return `${mo}mo ago`;
+	if (mo < 12) return `${mo}个月前`;
 	const y = Math.floor(mo / 12);
-	return `${y}y ago`;
+	return `${y}年前`;
 }
 
 /**

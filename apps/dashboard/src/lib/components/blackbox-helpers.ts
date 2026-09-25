@@ -120,7 +120,7 @@ export function eventMemoryIds(ev: TraceEvent): string[] {
 export function formatAt(at: number): string {
 	if (!Number.isFinite(at) || at <= 0) return '—';
 	const d = new Date(at);
-	return d.toLocaleTimeString(undefined, {
+	return d.toLocaleTimeString('zh-CN', {
 		hour12: false,
 		hour: '2-digit',
 		minute: '2-digit',

@@ -18,12 +18,14 @@ export default defineConfig({
 			// that UI-only prefix before it reaches the dashboard server.
 			'/dashboard/api': {
 				target: dashboardApiTarget,
-				changeOrigin: true,
+				// Preserve the browser's loopback Host so writer API Origin checks
+				// still hold when requests pass through the development proxy.
+				changeOrigin: false,
 				rewrite: (path) => path.replace(/^\/dashboard/, '')
 			},
 			'/api': {
 				target: dashboardApiTarget,
-				changeOrigin: true
+				changeOrigin: false
 			},
 			'/ws': {
 				target: dashboardApiTarget.replace('http', 'ws'),

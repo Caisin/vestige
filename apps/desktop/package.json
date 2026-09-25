@@ -1,0 +1,13 @@
+{
+  "name": "@vestige/desktop",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare:sidecar": "node scripts/prepare-sidecar.mjs",
+    "dev": "pnpm prepare:sidecar && tauri dev",
+    "build": "pnpm prepare:sidecar && tauri build --bundles app",
+    "tauri": "tauri"
+  },
+  "devDependencies": { "@tauri-apps/cli": "^2.11.0" }
+}

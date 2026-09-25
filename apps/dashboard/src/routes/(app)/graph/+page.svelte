@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onMount } from 'svelte';
 	import { osGoto } from '$lib/os-nav';
 	import { page } from '$app/stores';
@@ -193,20 +194,20 @@
 	maxDpr={1.25}
 	{loading}
 	{error}
-	emptyLabel="NO RECEIPT SELECTED - WITNESS CHAMBER ARMED"
+	emptyLabel={zh("NO RECEIPT SELECTED - WITNESS CHAMBER ARMED")}
 	onpick={handleWitnessPick}
 />
 
 <main class="witness-shell relative z-10 mx-auto min-h-full max-w-[1520px] px-4 py-5 sm:px-7 sm:py-7">
 	<header class="witness-header">
 		<div>
-			<p class="eyebrow"><span></span> WITNESS / RECEIPT-BOUND MEMORY ACCOUNTABILITY</p>
-			<h1>What shaped the decision?</h1>
-			<p class="lede">A forensic loom of exactly what this agent run retrieved, changed, suppressed, and proved.</p>
+			<p class="eyebrow"><span></span> {zh("WITNESS / RECEIPT-BOUND MEMORY ACCOUNTABILITY")}</p>
+			<h1>{zh("What shaped the decision?")}</h1>
+			<p class="lede">{zh("A forensic loom of exactly what this agent run retrieved, changed, suppressed, and proved.")}</p>
 		</div>
 		<div class="header-actions">
 			<button class="instrument-button" onclick={openBlackBox} disabled={!selectedRunId}>
-				<Icon name="blackbox" size={15} /> Open Black Box
+				<Icon name="blackbox" size={15} /> {zh("Open Black Box")}
 			</button>
 			<!-- MEMORY CINEMA — PROTECTED. Kept intact and fed a bounded graph only
 			     when a user deliberately launches the finished flythrough. -->
@@ -216,8 +217,8 @@
 		</div>
 	</header>
 
-	<section class="run-strip" aria-label="Agent runs">
-		<div class="strip-label">AGENT RUNS <span>{runs.length}</span></div>
+	<section class="run-strip" aria-label={zh("Agent runs")}>
+		<div class="strip-label">{zh("AGENT RUNS")} <span>{runs.length}</span></div>
 		<div class="run-list">
 			{#each runs as run (run.runId)}
 				<button
@@ -227,19 +228,19 @@
 					title={`Open run ${run.runId}`}
 				>
 					<span class="run-pulse"></span>
-					<span>{run.firstTool ?? 'agent run'}</span>
-					<small>{run.retrievedCount} recalled</small>
+					<span>{run.firstTool ?? zh("agent run")}</span>
+					<small>{run.retrievedCount} {zh("recalled")}</small>
 				</button>
 			{/each}
 			{#if !loading && runs.length === 0}
-				<p class="empty-run">No Black Box run has been recorded locally yet.</p>
+				<p class="empty-run">{zh("No Black Box run has been recorded locally yet.")}</p>
 			{/if}
 		</div>
 	</section>
 
 	{#if selectedReceipt}
-		<section class="receipt-rail" aria-label="Receipts for selected run">
-			<div class="strip-label">RECEIPTS <span>{receipts.length}</span></div>
+		<section class="receipt-rail" aria-label={zh("Receipts for selected run")}>
+			<div class="strip-label">{zh("RECEIPTS")} <span>{receipts.length}</span></div>
 			<div class="receipt-list">
 				{#each receipts as receipt, index (receipt.receipt_id)}
 					<button
@@ -248,7 +249,7 @@
 						onclick={() => chooseReceipt(receipt)}
 					>
 						<span>#{String(index + 1).padStart(2, '0')}</span>
-						<small>{receipt.retrieved.length} evidence</small>
+						<small>{receipt.retrieved.length} {zh("evidence")}</small>
 						<i class:risk-high={receipt.decay_risk === 'high'} class:risk-medium={receipt.decay_risk === 'medium'}>{receipt.decay_risk}</i>
 					</button>
 				{/each}
@@ -256,23 +257,23 @@
 		</section>
 	{/if}
 
-	<section class="volume-stage" aria-label="Three dimensional witness volume">
+	<section class="volume-stage" aria-label={zh("Three dimensional witness volume")}>
 		<div class="volume-caption">
-			<p class="eyebrow"><span></span> WITNESS STRATA / RECEIPT-SCOPED PROOF VOLUME</p>
-			<h2>One run. One proof boundary.</h2>
-			<p>Trace time becomes depth. Activation pins its stratum. Each smoked-glass specimen is an exact memory that crossed this run&rsquo;s evidence boundary.</p>
-			<div class="volume-key" aria-label="Witness volume legend">
-				<span><i class="path"></i> verified path</span>
-				<span><i class="retrieved"></i> retrieved</span>
-				<span><i class="mutation"></i> mutation</span>
-				<span><i class="suppressed"></i> suppressed</span>
+			<p class="eyebrow"><span></span> {zh("WITNESS STRATA / RECEIPT-SCOPED PROOF VOLUME")}</p>
+			<h2>{zh("One run. One proof boundary.")}</h2>
+			<p>{zh("Trace time becomes depth. Activation pins its stratum. Each smoked-glass specimen is an exact memory that crossed this run’s evidence boundary.")}</p>
+			<div class="volume-key" aria-label={zh("Witness volume legend")}>
+				<span><i class="path"></i> {zh("verified path")}</span>
+				<span><i class="retrieved"></i> {zh("retrieved")}</span>
+				<span><i class="mutation"></i> {zh("mutation")}</span>
+				<span><i class="suppressed"></i> {zh("suppressed")}</span>
 			</div>
 		</div>
 
-		<div class="volume-controls" aria-label="Witness playback controls">
-			<div class="control-label"><span>TRACE SLICER</span><b>{Math.round(playhead * Math.max(0, witnessScene.eventCount))} / {witnessScene.eventCount}</b></div>
+		<div class="volume-controls" aria-label={zh("Witness playback controls")}>
+			<div class="control-label"><span>{zh("TRACE SLICER")}</span><b>{Math.round(playhead * Math.max(0, witnessScene.eventCount))} / {witnessScene.eventCount}</b></div>
 			<input
-				aria-label="Trace event position"
+				aria-label={zh("Trace event position")}
 				type="range"
 				min="0"
 				max="1"
@@ -281,46 +282,46 @@
 				oninput={() => witnessVolume?.setPlayhead(playhead)}
 			/>
 			<button class="replay-button" onclick={() => witnessVolume?.replay()} disabled={!witnessScene.shards.length}>
-				Replay evidence <span aria-hidden="true">↗</span>
+				{zh("Replay evidence")} <span aria-hidden="true">↗</span>
 			</button>
 		</div>
 
 		<aside class="inspector" aria-live="polite">
 			<div class="panel-heading">
 				<div>
-					<p class="eyebrow"><span></span> SELECTED SPECIMEN</p>
-					<h2>{selectedShard ? selectedShard.role : 'Select a shard'}</h2>
+					<p class="eyebrow"><span></span> {zh("SELECTED SPECIMEN")}</p>
+					<h2>{selectedShard ? selectedShard.role : zh("Select a shard")}</h2>
 				</div>
 				{#if selectedReceipt}
-					<span class="trust">{Math.round(selectedReceipt.trust_floor * 100)}% trust</span>
+					<span class="trust">{Math.round(selectedReceipt.trust_floor * 100)}{zh("% trust")}</span>
 				{/if}
 			</div>
 
 			{#if selectedShard}
 				<div class="specimen" class:scarred={selectedShard.suppressed}>
-					<div class="specimen-cap">MEMORY / {selectedShard.id.slice(0, 12)}</div>
+					<div class="specimen-cap">{zh("MEMORY /")} {selectedShard.id.slice(0, 12)}</div>
 					<p>{selectedShard.content || selectedShard.label}</p>
 				</div>
 				<dl class="readout">
-					<div><dt>Activation</dt><dd>{Math.round(selectedShard.activation * 100)}%</dd></div>
-					<div><dt>Retention</dt><dd>{Math.round(selectedShard.retention * 100)}%</dd></div>
-					<div><dt>State</dt><dd>{selectedShard.suppressed ? 'suppressed' : selectedShard.mutated ? 'mutated' : 'witnessed'}</dd></div>
+					<div><dt>{zh("Activation")}</dt><dd>{Math.round(selectedShard.activation * 100)}%</dd></div>
+					<div><dt>{zh("Retention")}</dt><dd>{Math.round(selectedShard.retention * 100)}%</dd></div>
+					<div><dt>{zh("State")}</dt><dd>{selectedShard.suppressed ? zh("suppressed") : selectedShard.mutated ? zh("mutated") : zh("witnessed")}</dd></div>
 				</dl>
 				<button class="memory-button" onclick={() => openMemory(selectedShard.id)}>
-					Inspect memory <Icon name="chevron" size={14} />
+					{zh("Inspect memory")} <Icon name="chevron" size={14} />
 				</button>
 			{:else}
-				<p class="inspector-empty">Choose any visible evidence wafer. The chamber never substitutes an unrelated corpus edge for a proof path.</p>
+				<p class="inspector-empty">{zh("Choose any visible evidence wafer. The chamber never substitutes an unrelated corpus edge for a proof path.")}</p>
 			{/if}
 
 			{#if selectedReceipt}
 				<div class="receipt-seal" class:unsealed={isTraceEvidence}>
-					<span>{isTraceEvidence ? 'UNSEALED TRACE EVIDENCE' : 'RECEIPT SEALED'}</span>
+					<span>{isTraceEvidence ? zh("UNSEALED TRACE EVIDENCE") : zh("RECEIPT SEALED")}</span>
 					<code>{selectedReceipt.receipt_id}</code>
 					<div>
-						<b>{selectedReceipt.retrieved.length}</b> retrieved
-						<b>{selectedReceipt.suppressed.length}</b> suppressed
-						<b>{selectedReceipt.mutations.length}</b> mutations
+						<b>{selectedReceipt.retrieved.length}</b> {zh("retrieved")}
+						<b>{selectedReceipt.suppressed.length}</b> {zh("suppressed")}
+						<b>{selectedReceipt.mutations.length}</b> {zh("mutations")}
 					</div>
 				</div>
 			{/if}
@@ -329,7 +330,7 @@
 		{#if !loading && !witnessScene.shards.length}
 			<div class="volume-empty">
 				<Icon name="blackbox" size={26} />
-				<p>Choose a recorded run with retrieval evidence to unseal its 3D witness volume.</p>
+				<p>{zh("Choose a recorded run with retrieval evidence to unseal its 3D witness volume.")}</p>
 			</div>
 		{/if}
 	</section>

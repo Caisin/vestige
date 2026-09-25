@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onDestroy, onMount } from 'svelte';
 	import ObservatoryCanvas from '$lib/components/ObservatoryCanvas.svelte';
 	import { api } from '$stores/api';
@@ -145,7 +146,7 @@
 		} catch (err) {
 			memories = [];
 			total = 0;
-			error = err instanceof Error ? err.message : 'UNKNOWN MEMORY FETCH ERROR';
+			error = err instanceof Error ? err.message : zh("UNKNOWN MEMORY FETCH ERROR");
 		} finally {
 			loading = false;
 			fieldPass?.setCells(buildFieldCells());
@@ -153,13 +154,13 @@
 		}
 	}
 
-	function sanitizeAscii(value: string): string {
+	function safeLabel(value: string): string {
 		return value
 			.replace(/[\u2014\u2013]/g, '-')
 			.replace(/[\u2018\u2019]/g, "'")
 			.replace(/[\u201C\u201D]/g, '"')
 			.replace(/\u2026/g, '...')
-			.replace(/[^\x20-\x7E]/g, '?');
+			.replace(/[\x00-\x1F\x7F]/g, ' ');
 	}
 
 	// Live viewport aspect (canvas px) — same source portraitAdapt reads, never a
@@ -184,7 +185,7 @@
 	// portrait row never ends mid-token ("Jul 202"); falls back to a hard slice for
 	// a single unbroken token.
 	function trimSnippet(text: string, cap: number): string {
-		const s = sanitizeAscii(text).replace(/\s+/g, ' ').trim();
+		const s = safeLabel(text).replace(/\s+/g, ' ').trim();
 		if (s.length <= cap) return s;
 		const hard = s.slice(0, cap);
 		const lastSpace = hard.lastIndexOf(' ');
@@ -193,8 +194,8 @@
 
 	function memoryLine(memory: Memory, portrait: boolean): string {
 		const pct = `${Math.round(memory.retentionStrength * 100)}%`;
-		if (portrait) return sanitizeAscii(`${trimSnippet(memory.content, 28)}  ${pct}`);
-		return sanitizeAscii(`${trimSnippet(memory.content, 52)} | ${memory.id.slice(0, 8)} | ${pct}`);
+		if (portrait) return safeLabel(`${trimSnippet(memory.content, 28)}  ${pct}`);
+		return safeLabel(`${trimSnippet(memory.content, 52)} | ${memory.id.slice(0, 8)} | ${pct}`);
 	}
 
 	function clamp01(value: number): number {
@@ -205,7 +206,7 @@
 		return {
 			id: 'memories:status',
 			kind: 'memory-status',
-			text: sanitizeAscii(text),
+			text: safeLabel(text),
 			x: -0.58,
 			y: 0.02,
 			size: 0.044,
@@ -220,7 +221,7 @@
 	function buildTextItems(): MemoryTextItem[] {
 		if (loading) return [statusItem('LOADING MEMORY FIELD...', CYAN)];
 		if (error) return [statusItem(`ERROR - ${error}`.slice(0, 72), SCARLET)];
-		if (memories.length === 0) return [statusItem('EMPTY MEMORY FIELD', MUTED)];
+		if (memories.length === 0) return [statusItem(zh("EMPTY MEMORY FIELD"), MUTED)];
 
 		// Persistent on-canvas affordance: a plain click selects; shift and alt are
 		// the only modifiers that mutate. Anchored low so it never collides with the
@@ -378,12 +379,12 @@
 	async function suppressSelected() {
 		if (!selectedMemory) return;
 		try {
-			await api.memories.suppress(selectedMemory.id, 'suppressed from memory library');
+			await api.memories.suppress(selectedMemory.id, zh("suppressed from memory library"));
 			suppressedIds = new Set(suppressedIds).add(selectedMemory.id);
 			error = null;
 			fieldPass?.setCells(buildFieldCells());
 		} catch (cause) {
-			error = cause instanceof Error ? cause.message : 'Unable to suppress memory';
+			error = cause instanceof Error ? cause.message : zh("Unable to suppress memory");
 		}
 	}
 
@@ -399,13 +400,13 @@
 			error = null;
 			fieldPass?.setCells(buildFieldCells());
 		} catch (cause) {
-			error = cause instanceof Error ? cause.message : 'Unable to restore memory';
+			error = cause instanceof Error ? cause.message : zh("Unable to restore memory");
 		}
 	}
 </script>
 
 <svelte:head>
-	<title>Memories · Vestige</title>
+	<title>{zh("Memories · Vestige")}</title>
 </svelte:head>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -416,25 +417,25 @@
 <main class="memory-library">
 	<header class="library-head">
 		<div>
-			<p class="eyebrow">LOCAL MEMORY LIBRARY</p>
-			<h1>Memories that can prove where an answer came from.</h1>
-			<p>Each signal in the field is a real local memory. Select one to inspect or manage it.</p>
+			<p class="eyebrow">{zh("LOCAL MEMORY LIBRARY")}</p>
+			<h1>{zh("Memories that can prove where an answer came from.")}</h1>
+			<p>{zh("Each signal in the field is a real local memory. Select one to inspect or manage it.")}</p>
 		</div>
-		<div class="library-stat"><strong>{total}</strong><span>memories indexed locally</span></div>
+		<div class="library-stat"><strong>{total}</strong><span>{zh("memories indexed locally")}</span></div>
 	</header>
 
 	<section class="library-grid">
 		<div class="memory-list glass-panel">
 			<div class="list-tools">
-				<label for="memory-search">Search your memory</label>
-				<input id="memory-search" bind:value={search} placeholder="Try refund, policy, project…" />
+				<label for="memory-search">{zh("Search your memory")}</label>
+				<input id="memory-search" bind:value={search} placeholder={zh("Try refund, policy, project…")} />
 			</div>
 			{#if loading}
-				<div class="state-line">Loading your local memory…</div>
+				<div class="state-line">{zh("Loading your local memory…")}</div>
 			{:else if error}
 				<div class="state-line error">{error}</div>
 			{:else if filteredMemories.length === 0}
-				<div class="state-line">No memory matches that search.</div>
+				<div class="state-line">{zh("No memory matches that search.")}</div>
 			{:else}
 				<div class="memory-rows">
 					{#each filteredMemories as memory (memory.id)}
@@ -444,7 +445,7 @@
 							onclick={() => (selectedMemoryId = memory.id)}
 						>
 							<span class="memory-dot" style={`--strength:${Math.round(memory.retentionStrength * 100)}%`}></span>
-							<span class="memory-copy"><strong>{memory.content}</strong><small>{memory.id.slice(0, 8)} · {Math.round(memory.retentionStrength * 100)}% retention</small></span>
+							<span class="memory-copy"><strong>{memory.content}</strong><small>{memory.id.slice(0, 8)} · {Math.round(memory.retentionStrength * 100)}{zh("% retention")}</small></span>
 							<MemoryStateChip retention={memory.retentionStrength} compact />
 						</button>
 					{/each}
@@ -454,28 +455,28 @@
 
 		<aside class="inspector glass-panel">
 			{#if selectedMemory}
-				<p class="eyebrow">SELECTED MEMORY</p>
+				<p class="eyebrow">{zh("SELECTED MEMORY")}</p>
 				<h2>{selectedMemory.content}</h2>
-				<div class="metric-row"><span>Retention</span><strong>{Math.round(selectedMemory.retentionStrength * 100)}%</strong></div>
-				<div class="metric-row"><span>Retrieval strength</span><strong>{Math.round((selectedMemory.retrievalStrength ?? 0) * 100)}%</strong></div>
-				<div class="metric-row"><span>Accessibility</span><MemoryStateChip retention={selectedMemory.retentionStrength} /></div>
+				<div class="metric-row"><span>{zh("Retention")}</span><strong>{Math.round(selectedMemory.retentionStrength * 100)}%</strong></div>
+				<div class="metric-row"><span>{zh("Retrieval strength")}</span><strong>{Math.round((selectedMemory.retrievalStrength ?? 0) * 100)}%</strong></div>
+				<div class="metric-row"><span>{zh("Accessibility")}</span><MemoryStateChip retention={selectedMemory.retentionStrength} /></div>
 				<div class="tags">{#each selectedMemory.tags as tag}<span>{tag}</span>{/each}</div>
 				<code>{selectedMemory.id}</code>
 				<div class="action-row">
 					{#if suppressedIds.has(selectedMemory.id)}
-						<button type="button" class="secondary" onclick={unsuppressSelected}>Restore retrieval</button>
+						<button type="button" class="secondary" onclick={unsuppressSelected}>{zh("Restore retrieval")}</button>
 					{:else}
-						<button type="button" class="danger" onclick={suppressSelected}>Suppress from retrieval</button>
+						<button type="button" class="danger" onclick={suppressSelected}>{zh("Suppress from retrieval")}</button>
 					{/if}
 				</div>
-				<p class="inspector-note">Managing a memory is explicit. This does not rewrite its content. State chips are retention-derived until the backend exposes the true accessibility field.</p>
+				<p class="inspector-note">{zh("Managing a memory is explicit. This does not rewrite its content. State chips are retention-derived until the backend exposes the true accessibility field.")}</p>
 				<div class="sources">
-					<p class="eyebrow">SOURCES</p>
+					<p class="eyebrow">{zh("SOURCES")}</p>
 					<MemoryAuditTrail memoryId={selectedMemory.id} />
 				</div>
 				<div class="legend-slot"><MemoryStateLegend /></div>
 			{:else}
-				<div class="empty-inspector"><p class="eyebrow">FIELD IS LIVE</p><h2>Select a memory to inspect its state.</h2><p>The ambient field reacts to real retention and retrieval strength. The details stay readable here.</p></div>
+				<div class="empty-inspector"><p class="eyebrow">{zh("FIELD IS LIVE")}</p><h2>{zh("Select a memory to inspect its state.")}</h2><p>{zh("The ambient field reacts to real retention and retrieval strength. The details stay readable here.")}</p></div>
 			{/if}
 		</aside>
 	</section>

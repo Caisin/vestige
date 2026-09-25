@@ -184,6 +184,11 @@ pub const MIGRATIONS: &[Migration] = &[
         description: "Versioned intention graphs and atomic deterministic command journal",
         up: MIGRATION_V36_UP,
     },
+    Migration {
+        version: 37,
+        description: "Writer studio: sources, versioned roles, leased Agent tasks and drafts",
+        up: crate::writer::SCHEMA,
+    },
 ];
 
 /// A database migration

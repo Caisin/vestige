@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onMount } from 'svelte';
 	import { api } from '$stores/api';
 	import { eventFeed } from '$stores/websocket';
@@ -82,8 +83,8 @@
 	}
 
 	function precedentText(claim: SanhedrinClaim | null | undefined): string[] {
-		if (!claim?.precedent?.length) return ['No precedent attached.'];
-		return claim.precedent.map((p) => p.summary ?? p.command ?? 'Precedent recorded.').slice(0, 3);
+		if (!claim?.precedent?.length) return [zh("No precedent attached.")];
+		return claim.precedent.map((p) => p.summary ?? p.command ?? zh("Precedent recorded.")).slice(0, 3);
 	}
 </script>
 
@@ -96,14 +97,14 @@
 			onclick={() => (expanded = !expanded)}
 		>
 			<span class="label">Sanhedrin</span>
-			<span class="levels" aria-label="Verdict levels">
+			<span class="levels" aria-label={zh("Verdict levels")}>
 				{#each LEVELS as level}
 					<span class:active={level === verdict} aria-current={level === verdict ? 'true' : undefined}>
 						{level}
 					</span>
 				{/each}
 			</span>
-			<span class="sr-only">Current verdict: {verdict}</span>
+			<span class="sr-only">{zh("Current verdict:")} {zh(String(verdict))}</span>
 			<span class="summary-text">
 				{#if error}
 					{error}
@@ -115,18 +116,18 @@
 		</button>
 
 		{#if expanded && receipt}
-			<div class="receipt" role="region" aria-label="Sanhedrin veto receipt">
+			<div class="receipt" role="region" aria-label={zh("Sanhedrin veto receipt")}>
 				<div class="receipt-grid">
 					<div>
-						<div class="field-label">Claim</div>
+						<div class="field-label">{zh("Claim")}</div>
 						<p>{displayClaim?.text ?? receipt.draftPreview}</p>
 					</div>
 					<div>
-						<div class="field-label">Verdict</div>
+						<div class="field-label">{zh("Verdict")}</div>
 						<p>{displayClaim?.decision ?? receipt.overall} · {displayClaim?.evidence_state ?? verdict}</p>
 					</div>
 					<div>
-						<div class="field-label">Precedent</div>
+						<div class="field-label">{zh("Precedent")}</div>
 						<ul>
 							{#each precedentText(displayClaim) as item}
 								<li>{item}</li>
@@ -134,27 +135,27 @@
 						</ul>
 					</div>
 					<div>
-						<div class="field-label">Fix</div>
-						<p>{displayClaim?.fix || 'No change required.'}</p>
+						<div class="field-label">{zh("Fix")}</div>
+						<p>{displayClaim?.fix || zh("No change required.")}</p>
 					</div>
 				</div>
 
 				<div class="appeal-row">
-					<span>Appeal</span>
+					<span>{zh("Appeal")}</span>
 					{#if appealClaim && receipt.verdictBar === 'VETO'}
 						<button type="button" disabled={Boolean(appealing)} onclick={() => appeal('stale')}>
-							{appealing === 'stale' ? 'Saving' : 'Stale'}
+							{appealing === 'stale' ? zh("Saving") : zh("Stale")}
 						</button>
 						<button type="button" disabled={Boolean(appealing)} onclick={() => appeal('wrong')}>
-							{appealing === 'wrong' ? 'Saving' : 'Wrong'}
+							{appealing === 'wrong' ? zh("Saving") : zh("Wrong")}
 						</button>
 						<button type="button" disabled={Boolean(appealing)} onclick={() => appeal('too_strict')}>
-							{appealing === 'too_strict' ? 'Saving' : 'Too strict'}
+							{appealing === 'too_strict' ? zh("Saving") : zh("Too strict")}
 						</button>
 					{:else if receipt.verdictBar === 'APPEALED'}
-						<p>Appeal recorded.</p>
+						<p>{zh("Appeal recorded.")}</p>
 					{:else}
-						<p>No appealable veto in this receipt.</p>
+						<p>{zh("No appealable veto in this receipt.")}</p>
 					{/if}
 				</div>
 			</div>

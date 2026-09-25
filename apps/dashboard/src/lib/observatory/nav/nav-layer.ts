@@ -1,3 +1,4 @@
+import { zh } from '$lib/i18n';
 import type { ObservatoryEngine, FramePass } from '$lib/observatory/engine';
 import { CAUSAL, MEDIUM, RETENTION, rgb01 } from '$lib/observatory/cognitive-palette';
 import { TextLayerPass, type TextLayerItem } from '$lib/observatory/text/text-layer';
@@ -221,7 +222,7 @@ class TextNavLayer implements NavLayerPass {
 			{
 				id: 'route-nav:rail',
 				kind: 'route-nav-rail',
-				text: 'COGNITIVE OS',
+				text: zh("COGNITIVE OS"),
 				x: NAV_X,
 				y: NAV_Y + 0.075,
 				size: 0.021,

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onDestroy, onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
@@ -49,7 +50,8 @@
 	// It must ONLY be on when actually recording (?capture=1 or ?frame=N) — NOT for
 	// normal users, or they get an invisible cursor and cannot navigate. Was
 	// hardcoded `true`, which made every real visit un-navigable.
-	const captureMode = params.has('capture') || freezeFrame !== null;
+	const captureMode =
+		(params.has('capture') && params.get('capture') !== '0') || freezeFrame !== null;
 
 	const CYAN = [...rgb01(CAUSAL.forward), 1] satisfies [number, number, number, number];
 	const GREEN = [...rgb01(RETENTION.recall), 0.76] satisfies [number, number, number, number];
@@ -247,7 +249,7 @@
 				receipt = await api.receipts.get(receiptParam);
 				if (receiptBackfill(receipt)) demo = 'salience-rescue';
 			} catch (err) {
-				receiptError = err instanceof Error ? err.message : 'Receipt unavailable';
+				receiptError = err instanceof Error ? err.message : zh("Receipt unavailable");
 			}
 		} else if (brainParam) {
 			const shape = decodeBrainParam(brainParam);
@@ -300,7 +302,7 @@
 			}
 		} catch (err) {
 			graphData = null;
-			error = err instanceof Error ? err.message : 'UNKNOWN OBSERVATORY GRAPH ERROR';
+			error = err instanceof Error ? err.message : zh("UNKNOWN OBSERVATORY GRAPH ERROR");
 		} finally {
 			loading = false;
 			textPass?.setText(buildTextItems());
@@ -349,13 +351,13 @@
 		});
 	}
 
-	function sanitizeAscii(value: string): string {
+	function safeLabel(value: string): string {
 		return value
 			.replace(/[\u2014\u2013]/g, '-')
 			.replace(/[\u2018\u2019]/g, "'")
 			.replace(/[\u201C\u201D]/g, '"')
 			.replace(/\u2026/g, '...')
-			.replace(/[^\x20-\x7E]/g, '?');
+			.replace(/[\x00-\x1F\x7F]/g, ' ');
 	}
 
 	function clamp01(value: number): number {
@@ -364,7 +366,7 @@
 
 	function demoLabel(mode: DemoMode): string {
 		const [head] = mode.split('-');
-		return sanitizeAscii(head.toUpperCase());
+		return safeLabel(head.toUpperCase());
 	}
 
 	function graphMetric(value: number, max: number): number {
@@ -372,16 +374,16 @@
 	}
 
 	function nodeLine(node: GraphNode): string {
-		const label = sanitizeAscii(node.label).replace(/\s+/g, ' ').trim().slice(0, 44);
-		const tag = node.tags[0] ? sanitizeAscii(node.tags[0]).slice(0, 14) : sanitizeAscii(node.type);
-		return sanitizeAscii(`${label} | ${node.id.slice(0, 8)} | ${tag} | ${Math.round(clamp01(node.retention) * 100)}%`);
+		const label = safeLabel(node.label).replace(/\s+/g, ' ').trim().slice(0, 44);
+		const tag = node.tags[0] ? safeLabel(node.tags[0]).slice(0, 14) : safeLabel(node.type);
+		return safeLabel(`${label} | ${node.id.slice(0, 8)} | ${tag} | ${Math.round(clamp01(node.retention) * 100)}%`);
 	}
 
 	function statusItem(text: string, color = OXYGEN): ObservatoryTextItem {
 		return {
 			id: 'observatory:status',
 			kind: 'observatory-status',
-			text: sanitizeAscii(text),
+			text: safeLabel(text),
 			x: -0.48,
 			y: 0.02,
 			size: 0.044,
@@ -441,7 +443,7 @@
 			id: 'observatory:exit',
 			kind: 'observatory-exit',
 			action: 'exit',
-			text: sanitizeAscii('EXIT'),
+			text: safeLabel('EXIT'),
 			x: anchorX,
 			y: 0.86,
 			size: 0.03,
@@ -481,7 +483,7 @@
 
 		if (loading) return [...items, statusItem('LOADING MEMORY FIELD...', CYAN)];
 		if (error) return [...items, statusItem(`ERROR - ${error}`.slice(0, 60), SCARLET)];
-		if (!graph || graph.nodeCount === 0) return [...items, statusItem('NO MEMORIES IN FIELD', GREEN)];
+		if (!graph || graph.nodeCount === 0) return [...items, statusItem(zh("NO MEMORIES IN FIELD"), GREEN)];
 
 		// Telemetry — a compact block BELOW the nav list (not a right-hand column),
 		// so it never shares a row with anything. Short labels only; the long
@@ -499,7 +501,7 @@
 			items.push({
 				id: `observatory:telemetry:${i}`,
 				kind: 'observatory-telemetry',
-				text: sanitizeAscii(text),
+				text: safeLabel(text),
 				x: anchorX,
 				y: telTop - i * telStep,
 				size: 0.024,
@@ -557,7 +559,7 @@
 			id: 'observatory:exit',
 			kind: 'observatory-exit',
 			action: 'exit',
-			text: sanitizeAscii('EXIT'),
+			text: safeLabel('EXIT'),
 			x: 0.75,
 			y: 0.82,
 			size: 0.03,
@@ -572,7 +574,7 @@
 
 		if (loading) return [...items, statusItem('LOADING MEMORY FIELD...', CYAN)];
 		if (error) return [...items, statusItem(`ERROR - ${error}`.slice(0, 76), SCARLET)];
-		if (!graph || graph.nodeCount === 0) return [...items, statusItem('NO MEMORIES IN FIELD', GREEN)];
+		if (!graph || graph.nodeCount === 0) return [...items, statusItem(zh("NO MEMORIES IN FIELD"), GREEN)];
 
 		const telemetry = [
 			[`NODES ${graph.nodeCount}`, graphMetric(graph.nodeCount, Math.max(1, graph.nodes.length, 200))],
@@ -584,7 +586,7 @@
 			items.push({
 				id: `observatory:telemetry:${i}`,
 				kind: 'observatory-telemetry',
-				text: sanitizeAscii(text),
+				text: safeLabel(text),
 				x: 0.39,
 				y: 0.72 - i * 0.045,
 				size: 0.022,
@@ -645,7 +647,7 @@
 	async function startExport() {
 		if (exporting) return;
 		if (!loopExportSupported()) {
-			exportError = 'This browser cannot encode video (WebCodecs unavailable).';
+			exportError = zh("This browser cannot encode video (WebCodecs unavailable).");
 			return;
 		}
 		exporting = true;
@@ -661,7 +663,7 @@
 			const deadline = Date.now() + 20_000;
 			let engine: ObservatoryEngine | null = currentExportEngine();
 			while (!engine || engine.params[2] <= 0) {
-				if (Date.now() > deadline) throw new Error('export stage never became ready');
+				if (Date.now() > deadline) throw new Error(zh("export stage never became ready"));
 				await new Promise((r) => setTimeout(r, 120));
 				engine = currentExportEngine();
 			}
@@ -676,7 +678,7 @@
 				: loopExportFilename(seedValue, demo);
 			downloadClip(clip, name);
 		} catch (e) {
-			exportError = e instanceof Error ? e.message : 'Export failed';
+			exportError = e instanceof Error ? e.message : zh("Export failed");
 		} finally {
 			exporting = false;
 			exportProgress = null;
@@ -701,11 +703,11 @@
 	// cards) sits ON TOP of the living WebGPU field so the page is instantly
 	// legible and operable with a normal cursor — the field stays the backdrop.
 	const DEMO_CARDS: { mode: DemoMode; label: string; blurb: string }[] = [
-		{ mode: 'recall-path', label: 'Recall', blurb: 'Watch a memory get retrieved — the path lights up.' },
-		{ mode: 'engram-birth', label: 'Engram', blurb: 'A new memory forms and wires into the field.' },
-		{ mode: 'salience-rescue', label: 'Salience', blurb: 'The few memories that matter ignite gold.' },
-		{ mode: 'forgetting-horizon', label: 'Forgetting', blurb: 'FSRS decay pulls weak memories toward the dark.' },
-		{ mode: 'firewall', label: 'Firewall', blurb: 'A contradiction is caught and quarantined.' }
+		{ mode: 'recall-path', label: zh("Recall"), blurb: zh("Watch a memory get retrieved — the path lights up.") },
+		{ mode: 'engram-birth', label: zh("Engram"), blurb: zh("A new memory forms and wires into the field.") },
+		{ mode: 'salience-rescue', label: zh("Salience"), blurb: zh("The few memories that matter ignite gold.") },
+		{ mode: 'forgetting-horizon', label: zh("Forgetting"), blurb: zh("FSRS decay pulls weak memories toward the dark.") },
+		{ mode: 'firewall', label: zh("Firewall"), blurb: zh("A contradiction is caught and quarantined.") }
 	];
 	const demoCards = DEMO_CARDS.filter((c) => DEMO_MODES.includes(c.mode));
 	function centerShort(): string {
@@ -758,7 +760,7 @@
 				`[brain-print] ${bundle.print.printId} traits=${bundle.print.traits.map((t) => t.id).join(',')} vector=${bundle.print.vector.length}`
 			);
 		} catch (e) {
-			printError = e instanceof Error ? e.message : 'Brain print failed';
+			printError = e instanceof Error ? e.message : zh("Brain print failed");
 		} finally {
 			printing = false;
 		}
@@ -775,7 +777,7 @@
 			permalinkCopied = true;
 			console.info(`[brain-print] permalink ${href}`);
 		} catch {
-			printError = 'Clipboard unavailable — copy the URL from the address bar.';
+			printError = zh("Clipboard unavailable — copy the URL from the address bar.");
 		}
 	}
 
@@ -804,7 +806,7 @@
 			});
 			downloadBlob(card.blob, card.filename);
 		} catch (e) {
-			printError = e instanceof Error ? e.message : 'Memory report failed';
+			printError = e instanceof Error ? e.message : zh("Memory report failed");
 		} finally {
 			wrapping = false;
 		}
@@ -876,7 +878,7 @@
 </script>
 
 <svelte:head>
-	<title>Observatory · Vestige</title>
+	<title>{zh("Observatory · Vestige")}</title>
 </svelte:head>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -905,46 +907,47 @@
 	number is real /api/graph data; each card drives the same switchDemo() the
 	canvas used, so the interaction is honest and now discoverable.
 -->
+{#if !captureMode}
 <div class="obs-ui">
 	<header class="obs-head">
-		<h1 class="obs-title">{backfillEvidence ? 'Backfill Replay' : receipt ? 'Memory Replay' : 'Cognitive Observatory'}</h1>
+		<h1 class="obs-title">{backfillEvidence ? zh("Backfill Replay") : receipt ? zh("Memory Replay") : zh("Cognitive Observatory")}</h1>
 		<p class="obs-sub">
 			{#if backfillEvidence}
-				This field replays only the recorded Backfill candidate evidence in receipt <code>{receipt?.receipt_id}</code>.
+				{zh("This field replays only the recorded Backfill candidate evidence in receipt")} <code>{receipt?.receipt_id}</code>.
 			{:else if receipt}
-				This field contains only memories named by receipt <code>{receipt.receipt_id}</code>.
+				{zh("This field contains only memories named by receipt")} <code>{receipt.receipt_id}</code>.
 			{:else}
-				Your agent's live memory field. Play a cognitive moment and watch the mind react.
+				{zh("Your agent's live memory field. Play a cognitive moment and watch the mind react.")}
 			{/if}
 		</p>
 		<div class="obs-stats">
 			{#if receipt}
-				<span class="obs-stat obs-proof"><b>Proven:</b> retrieved in this run</span>
-				<span class="obs-stat obs-attributed"><b>Attributed:</b> likely influence</span>
+				<span class="obs-stat obs-proof"><b>{zh("Proven:")}</b> {zh("retrieved in this run")}</span>
+				<span class="obs-stat obs-attributed"><b>{zh("Attributed:")}</b> {zh("likely influence")}</span>
 			{:else if receiptError}
 				<span class="obs-stat obs-err"><b>!</b> {receiptError}</span>
 			{/if}
 			{#if loading}
-				<span class="obs-stat"><b>…</b> loading field</span>
+				<span class="obs-stat"><b>…</b> {zh("loading field")}</span>
 			{:else if error}
 				<span class="obs-stat obs-err"><b>!</b> {error}</span>
 			{:else if graphData}
-				<span class="obs-stat"><b>{graphData.nodeCount.toLocaleString()}</b> memories</span>
-				<span class="obs-stat"><b>{graphData.edgeCount.toLocaleString()}</b> connections</span>
-				<span class="obs-stat"><b>{centerShort()}</b> center</span>
+				<span class="obs-stat"><b>{graphData.nodeCount.toLocaleString('zh-CN')}</b> {zh("memories")}</span>
+				<span class="obs-stat"><b>{graphData.edgeCount.toLocaleString('zh-CN')}</b> {zh("connections")}</span>
+				<span class="obs-stat"><b>{centerShort()}</b> {zh("center")}</span>
 			{/if}
 		</div>
 	</header>
 
-	<nav class="obs-demos" aria-label={receipt ? 'Receipt evidence' : 'Cognitive moments'}>
+	<nav class="obs-demos" aria-label={receipt ? zh("Receipt evidence") : zh("Cognitive moments")}>
 		{#if receipt}
-			<span class="obs-demos-label">Receipt evidence only</span>
+			<span class="obs-demos-label">{zh("Receipt evidence only")}</span>
 			<span class="obs-card is-active receipt-scope">
-				<span class="obs-card-label">{receipt.retrieved.length} retrieved · {receipt.suppressed.length} suppressed</span>
-				<span class="obs-card-blurb">This proves memory retrieval. It does not claim an answer changed.</span>
+				<span class="obs-card-label">{receipt.retrieved.length} {zh("retrieved ·")} {receipt.suppressed.length} {zh("suppressed")}</span>
+				<span class="obs-card-blurb">{zh("This proves memory retrieval. It does not claim an answer changed.")}</span>
 			</span>
 		{:else}
-			<span class="obs-demos-label">Play a moment</span>
+			<span class="obs-demos-label">{zh("Play a moment")}</span>
 			{#each demoCards as card (card.mode)}
 				<button
 					type="button"
@@ -968,25 +971,26 @@
 			oncopy={copyPrintPermalink}
 		/>
 		<button class="obs-exit" onclick={startWrappedCard} disabled={wrapping || exporting} type="button">
-			{wrapping ? 'Rendering report…' : 'Memory report PNG'}
+			{wrapping ? zh("Rendering report…") : zh("Memory report PNG")}
 		</button>
 		<button class="obs-exit" onclick={startExport} disabled={exporting} type="button">
 			{exporting
 				? exportProgress
 					? exportProgress.stage === 'finalize'
-						? 'Sealing clip…'
+						? zh("Sealing clip…")
 						: `Rendering ${exportProgress.done}/${exportProgress.total}`
-					: 'Preparing…'
+					: zh("Preparing…")
 				: receipt
-					? 'Export receipt replay ↓'
-					: 'Export loop ↓'}
+					? zh("Export receipt replay ↓")
+					: zh("Export loop ↓")}
 		</button>
 		{#if exportError}
 			<span class="obs-export-error">{exportError}</span>
 		{/if}
-		<a class="obs-exit" href="{base}/graph">Open full graph →</a>
+		<a class="obs-exit" href="{base}/graph">{zh("Open full graph →")}</a>
 	</nav>
 </div>
+{/if}
 
 {#if exporting}
 	<!-- Hidden export stage: fixed 1920×1080, DPR 1, deterministic (live off),
@@ -1019,17 +1023,20 @@
 	   only the actual controls capture the pointer. Normal cursor everywhere. */
 	.obs-ui {
 		position: fixed;
-		inset: 0;
+		inset: 0 0 var(--os-content-bottom, 0px) var(--os-content-left, 0px);
 		z-index: 10;
 		pointer-events: none;
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
+		gap: 1.5rem;
+		overflow-y: auto;
 		padding: 1.5rem clamp(1rem, 3vw, 2.5rem);
 		cursor: auto;
 	}
 	.obs-ui > * {
 		pointer-events: auto;
+		flex-shrink: 0;
 	}
 
 	.obs-head {
@@ -1073,7 +1080,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
-		width: min(24rem, 84vw);
+		width: min(24rem, 100%);
 	}
 	.obs-demos-label {
 		font-size: 0.7rem;
@@ -1148,7 +1155,7 @@
 
 	@media (max-aspect-ratio: 85/100) {
 		.obs-ui {
-			padding: 1rem 1rem 5.5rem;
+			padding: 1rem;
 		}
 		.obs-demos {
 			width: 100%;

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onDestroy, onMount } from 'svelte';
 	import { api } from '$stores/api';
 	import type { IntentionItem } from '$types';
@@ -77,7 +78,7 @@
 			intentions = [];
 			predictions = [];
 			total = 0;
-			error = err instanceof Error ? err.message : 'UNKNOWN INTENTION FETCH ERROR';
+			error = err instanceof Error ? err.message : zh("UNKNOWN INTENTION FETCH ERROR");
 		} finally {
 			loading = false;
 		}
@@ -135,13 +136,13 @@
 		dispose(): void { this.field.dispose(); }
 	}
 
-	function sanitizeAscii(value: string): string {
+	function safeLabel(value: string): string {
 		return value
 			.replace(/[\u2014\u2013]/g, '-')
 			.replace(/[\u2018\u2019]/g, "'")
 			.replace(/[\u201C\u201D]/g, '"')
 			.replace(/\u2026/g, '...')
-			.replace(/[^\x20-\x7E]/g, '?');
+			.replace(/[\x00-\x1F\x7F]/g, ' ');
 	}
 
 	function clamp01(value: number): number {
@@ -168,9 +169,9 @@
 		try {
 			const data = JSON.parse(intention.trigger_data || '{}') as Record<string, unknown>;
 			const candidate = data.condition ?? data.topic ?? data.at ?? data.in_minutes ?? data.inMinutes ?? data.codebase;
-			return sanitizeAscii(String(candidate ?? intention.trigger_type)).replace(/\s+/g, ' ').slice(0, 26);
+			return safeLabel(String(candidate ?? intention.trigger_type)).replace(/\s+/g, ' ').slice(0, 26);
 		} catch {
-			return sanitizeAscii(intention.trigger_type).slice(0, 26);
+			return safeLabel(intention.trigger_type).slice(0, 26);
 		}
 	}
 
@@ -180,7 +181,7 @@
 			...intentions.map((intention, index) => ({
 			source: { kind: 'receipt' as const, id: intention.id },
 			index,
-			label: sanitizeAscii(intention.content).slice(0, 48),
+			label: safeLabel(intention.content).slice(0, 48),
 			retention: statusWeight(intention),
 			activation: intentionDepth(intention),
 			trust: intentionDepth(intention),
@@ -190,7 +191,7 @@
 			...predictions.map((prediction, offset) => ({
 				source: { kind: 'memory' as const, id: prediction.id },
 				index: intentions.length + offset,
-				label: sanitizeAscii(prediction.content).slice(0, 48),
+				label: safeLabel(prediction.content).slice(0, 48),
 				retention: clamp01(prediction.retention),
 				// Real continuous urgency (FSRS decay + review schedule) drives brightness.
 				// Fall back to the high/medium/low band only if an older backend omits it.
@@ -211,7 +212,7 @@
 		events: [],
 		receipts: intentions.map((intention, index) => ({
 			source: { kind: 'receipt', id: intention.id },
-			label: sanitizeAscii(intention.status),
+			label: safeLabel(intention.status),
 			nodeIndices: [index]
 		})),
 		scalars: {
@@ -255,8 +256,8 @@
 	}
 
 	const filterOptions: DropdownOption[] = [
-		{ value: ACTIVE_FILTER, label: 'Active intentions', icon: 'intentions' },
-		{ value: ALL_FILTER, label: 'All (incl. fired / snoozed)', icon: 'filter' }
+		{ value: ACTIVE_FILTER, label: zh("Active intentions"), icon: 'intentions' },
+		{ value: ALL_FILTER, label: zh("All (incl. fired / snoozed)"), icon: 'filter' }
 	];
 
 	// Live proof, all from the fetched payloads.
@@ -273,7 +274,7 @@
 		const t = new Date(value).getTime();
 		if (!Number.isFinite(t)) return null;
 		try {
-			return new Date(t).toLocaleString(undefined, {
+			return new Date(t).toLocaleString('zh-CN', {
 				month: 'short',
 				day: 'numeric',
 				hour: '2-digit',
@@ -291,7 +292,7 @@
 </script>
 
 <svelte:head>
-	<title>Intentions · Vestige</title>
+	<title>{zh("Intentions · Vestige")}</title>
 </svelte:head>
 
 <RouteStage
@@ -313,19 +314,19 @@
 	<div class="pointer-events-auto">
 		<PageHeader
 			icon="intentions"
-			title="Intentions"
-			subtitle="Standing goals and intentions Vestige is tracking for you."
+			title={zh("Intentions")}
+			subtitle={zh("Standing goals and intentions Vestige is tracking for you.")}
 			accent="synapse"
 		>
 			<div class="flex items-center gap-2">
 				<span class="text-dim text-sm tabular-nums inline-flex items-center gap-1.5">
-					<AnimatedNumber value={visibleCount} /> {filter === ACTIVE_FILTER ? 'active' : 'total'}
+					<AnimatedNumber value={visibleCount} /> {filter === ACTIVE_FILTER ? zh("active") : zh("total")}
 				</span>
 				<!-- (3) PRIMARY ACTION: explicit, labelled filter swap (real api reload). -->
 				<Dropdown
 					options={filterOptions}
 					value={filter}
-					label="Show"
+					label={zh("Show")}
 					icon="filter"
 					onChange={setFilter}
 				/>
@@ -336,14 +337,14 @@
 	{#if error}
 		<!-- (5) STATE GUIDANCE — error -->
 		<div class="glass-panel pointer-events-auto flex flex-col items-center gap-3 rounded-2xl p-10 text-center">
-			<div class="text-sm text-decay">Couldn't load intentions</div>
+			<div class="text-sm text-decay">{zh("Couldn't load intentions")}</div>
 			<div class="max-w-md text-xs text-muted break-words">{error}</div>
 			<button
 				type="button"
 				onclick={() => loadIntentions(filter)}
 				class="mt-2 rounded-lg bg-synapse/20 px-4 py-2 text-xs font-medium text-synapse-glow transition hover:bg-synapse/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-synapse/60"
 			>
-				Retry
+				{zh("Retry")}
 			</button>
 		</div>
 	{:else if loading}
@@ -365,7 +366,7 @@
 					<AnimatedNumber value={visibleCount} />
 				</div>
 				<div class="text-xs text-dim mt-1">
-					{filter === ACTIVE_FILTER ? 'active intentions' : 'intentions (all states)'}
+					{filter === ACTIVE_FILTER ? zh("active intentions") : zh("intentions (all states)")}
 				</div>
 			</div>
 			<div use:reveal={{ delay: 60, y: 12 }} class="p-4 glass rounded-xl lift">
@@ -375,13 +376,13 @@
 						<AnimatedNumber value={highPriorityCount} />
 					</div>
 				</div>
-				<div class="text-xs text-dim mt-1">high / critical priority</div>
+				<div class="text-xs text-dim mt-1">{zh("high / critical priority")}</div>
 			</div>
 			<div use:reveal={{ delay: 120, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="text-2xl font-bold tabular-nums" style="color: #22c7de">
 					<AnimatedNumber value={predictedCount} />
 				</div>
-				<div class="text-xs text-dim mt-1">predicted needs (FSRS)</div>
+				<div class="text-xs text-dim mt-1">{zh("predicted needs (FSRS)")}</div>
 			</div>
 		</div>
 
@@ -394,13 +395,11 @@
 					<Icon name="intentions" size={26} draw />
 				</div>
 				<div class="text-sm font-medium text-bright">
-					No {filter === ACTIVE_FILTER ? 'active ' : ''}intentions
+					{zh("No")} {filter === ACTIVE_FILTER ? zh("active") : ''}{zh("intentions")}
 				</div>
 				<div class="max-w-md text-xs text-muted leading-relaxed">
-					An intention is a standing goal Vestige holds for you — a
-					<span class="text-dim">prospective memory</span> that stays dormant until its trigger
-					fires (a time, a topic you return to, or a codebase you open). Nothing is being
-					tracked yet.
+					{zh("An intention is a standing goal Vestige holds for you — a")}
+					<span class="text-dim">{zh("prospective memory")}</span> {zh("that stays dormant until its trigger fires (a time, a topic you return to, or a codebase you open). Nothing is being tracked yet.")}
 				</div>
 				{#if filter === ACTIVE_FILTER}
 					<button
@@ -408,7 +407,7 @@
 						onclick={() => setFilter(ALL_FILTER)}
 						class="mt-1 rounded-lg bg-synapse/20 px-4 py-2 text-xs font-medium text-synapse-glow transition hover:bg-synapse/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-synapse/60"
 					>
-						Show all intentions (incl. fired &amp; snoozed)
+						{zh("Show all intentions (incl. fired & snoozed)")}
 					</button>
 				{/if}
 			</div>
@@ -418,7 +417,7 @@
 				<!-- Intention list -->
 				<div class="glass-panel rounded-2xl p-3 space-y-2 max-h-[560px] overflow-y-auto">
 					<div class="flex items-center justify-between px-1 pb-2 sticky top-0 bg-deep/60 backdrop-blur-sm z-10">
-						<span class="text-xs text-dim uppercase tracking-wider">Intentions</span>
+						<span class="text-xs text-dim uppercase tracking-wider">{zh("Intentions")}</span>
 						<span class="text-xs text-muted tabular-nums"><AnimatedNumber value={visibleCount} /></span>
 					</div>
 
@@ -444,7 +443,7 @@
 								>
 									{priorityLabel(intention.priority)}
 								</span>
-								<span class="text-[10px] text-muted ml-auto capitalize">{intention.status}</span>
+								<span class="text-[10px] text-muted ml-auto capitalize">{zh(String(intention.status))}</span>
 							</div>
 							<div class="text-sm text-text leading-snug">{intention.content}</div>
 							<div class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted">
@@ -453,7 +452,7 @@
 									{intention.trigger_type}{trigger && trigger !== intention.trigger_type ? ` · ${trigger}` : ''}
 								</span>
 								{#if fmtDate(intention.deadline)}
-									<span>due {fmtDate(intention.deadline)}</span>
+									<span>{zh("due")} {fmtDate(intention.deadline)}</span>
 								{/if}
 							</div>
 						</button>
@@ -465,15 +464,15 @@
 					{#if selectedIntention}
 						<div class="flex items-start justify-between gap-3 border-b border-subtle/20 pb-3">
 							<div class="min-w-0">
-								<div class="font-mono text-[10px] uppercase tracking-[0.2em] text-synapse-glow">Intention</div>
+								<div class="font-mono text-[10px] uppercase tracking-[0.2em] text-synapse-glow">{zh("Intention")}</div>
 								<div class="mt-1 flex items-center gap-2">
 									<span
 										class="text-[10px] uppercase tracking-wider"
 										style="color: {priorityColor(selectedIntention.priority)}"
 									>
-										{priorityLabel(selectedIntention.priority)} priority
+										{priorityLabel(selectedIntention.priority)} {zh("priority")}
 									</span>
-									<span class="text-[10px] text-muted capitalize">· {selectedIntention.status}</span>
+									<span class="text-[10px] text-muted capitalize">· {zh(String(selectedIntention.status))}</span>
 								</div>
 							</div>
 							<button
@@ -481,7 +480,7 @@
 								onclick={() => selectRow(selectedIntention.id)}
 								class="rounded-lg border border-subtle/30 px-2.5 py-1 text-xs text-muted transition hover:border-synapse/40 hover:text-text"
 							>
-								Close
+								{zh("Close")}
 							</button>
 						</div>
 
@@ -489,7 +488,7 @@
 
 						<div class="mt-4 space-y-3 text-xs">
 							<div>
-								<div class="text-[10px] uppercase tracking-wider text-muted">Trigger</div>
+								<div class="text-[10px] uppercase tracking-wider text-muted">{zh("Trigger")}</div>
 								<div class="mt-0.5 text-text">
 									{selectedIntention.trigger_type}
 								</div>
@@ -499,19 +498,19 @@
 							</div>
 							{#if fmtDate(selectedIntention.created_at)}
 								<div>
-									<div class="text-[10px] uppercase tracking-wider text-muted">Created</div>
+									<div class="text-[10px] uppercase tracking-wider text-muted">{zh("Created")}</div>
 									<div class="mt-0.5 text-dim">{fmtDate(selectedIntention.created_at)}</div>
 								</div>
 							{/if}
 							{#if fmtDate(selectedIntention.deadline)}
 								<div>
-									<div class="text-[10px] uppercase tracking-wider text-muted">Deadline</div>
+									<div class="text-[10px] uppercase tracking-wider text-muted">{zh("Deadline")}</div>
 									<div class="mt-0.5 text-dim">{fmtDate(selectedIntention.deadline)}</div>
 								</div>
 							{/if}
 							{#if fmtDate(selectedIntention.snoozed_until)}
 								<div>
-									<div class="text-[10px] uppercase tracking-wider text-muted">Snoozed until</div>
+									<div class="text-[10px] uppercase tracking-wider text-muted">{zh("Snoozed until")}</div>
 									<div class="mt-0.5 text-dim">{fmtDate(selectedIntention.snoozed_until)}</div>
 								</div>
 							{/if}
@@ -522,10 +521,9 @@
 							<div class="text-dim opacity-60 breathe">
 								<Icon name="intentions" size={34} strokeWidth={1.2} />
 							</div>
-							<p class="text-dim text-sm">Select an intention</p>
+							<p class="text-dim text-sm">{zh("Select an intention")}</p>
 							<p class="max-w-[220px] text-xs text-muted leading-relaxed">
-								Click a row (or a node in the field) to read its trigger, priority, and
-								deadline. Selecting never changes it.
+								{zh("Click a row (or a node in the field) to read its trigger, priority, and deadline. Selecting never changes it.")}
 							</p>
 						</div>
 					{/if}

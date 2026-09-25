@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	/**
 	 * Telemetry strip — top instrument overlay (§7.3).
 	 *
@@ -68,7 +69,7 @@
 		<!-- Center: node/edge counts (center id sheds below lg) -->
 		<div class="hidden sm:flex items-center gap-4">
 			<span class="text-[#ffffff]/[0.55] whitespace-nowrap">
-				{nodeCount} nodes · {edgeCount} edges
+				{nodeCount} {zh("nodes ·")} {edgeCount} {zh("edges")}
 			</span>
 			{#if centerId}
 				<span class="hidden lg:inline text-[#ffffff]/[0.5] whitespace-nowrap">
@@ -80,10 +81,10 @@
 		<!-- Right: frame, fps, controls — frame padded so the counter never jitters -->
 		<div class="flex items-center gap-3">
 			<span class="text-[#ffffff]/[0.55] whitespace-nowrap"
-				>frame: {String(frameCount).padStart(3, ' ')}</span
+				>{zh("frame:")} {String(frameCount).padStart(3, ' ')}</span
 			>
 			{#if freezeFrame !== null}
-				<span class="text-[#a6dcff] tracking-widest whitespace-nowrap">CAPTURE</span>
+				<span class="text-[#a6dcff] tracking-widest whitespace-nowrap">{zh("CAPTURE")}</span>
 			{:else if fpsEstimate > 0}
 				<span class="text-[#5dcaa5] whitespace-nowrap w-[6ch] text-right">
 					{fpsEstimate}fps
@@ -92,7 +93,7 @@
 			<button
 				class="text-[#ffffff]/[0.5] hover:text-[#5dcaa5] transition-colors cursor-pointer pointer-events-auto whitespace-nowrap"
 				onclick={copyDemoUrl}
-				title="Copy shareable demo URL"
+				title={zh("Copy shareable demo URL")}
 			>
 				[url]
 			</button>

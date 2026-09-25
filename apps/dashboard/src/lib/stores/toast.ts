@@ -1,3 +1,4 @@
+import { zh } from '$lib/i18n';
 // Pulse Toast — v2.2
 // Subscribes to the WebSocket event feed and surfaces meaningful cognitive
 // events as ephemeral toast notifications. This is the "brain coming alive"
@@ -123,13 +124,13 @@ function createToastStore() {
 				const insights = Number(d.insights_generated ?? 0);
 				const ms = Number(d.duration_ms ?? 0);
 				const parts: string[] = [];
-				parts.push(`Replayed ${replayed} ${replayed === 1 ? 'memory' : 'memories'}`);
-				if (found > 0) parts.push(`${found} new connection${found === 1 ? '' : 's'}`);
-				if (insights > 0) parts.push(`${insights} insight${insights === 1 ? '' : 's'}`);
+				parts.push(`重放 ${replayed} 条记忆`);
+				if (found > 0) parts.push(`${found} 条新连接`);
+				if (insights > 0) parts.push(`${insights} 条洞见`);
 				return {
 					type: event.type,
-					title: 'Dream consolidated',
-					body: `${parts.join(' · ')} in ${(ms / 1000).toFixed(1)}s`,
+					title: zh("Dream consolidated"),
+					body: `${parts.join(' · ')} · 耗时 ${(ms / 1000).toFixed(1)} 秒`,
 					color,
 					dwellMs: 7000,
 				};
@@ -141,12 +142,12 @@ function createToastStore() {
 				const embeds = Number(d.embeddings_generated ?? 0);
 				const ms = Number(d.duration_ms ?? 0);
 				const tail: string[] = [];
-				if (decay > 0) tail.push(`${decay} decayed`);
-				if (embeds > 0) tail.push(`${embeds} embedded`);
+				if (decay > 0) tail.push(`${decay} 条已衰减`);
+				if (embeds > 0) tail.push(`${embeds} 条已生成向量`);
 				return {
 					type: event.type,
-					title: 'Consolidation swept',
-					body: `${nodes} node${nodes === 1 ? '' : 's'}${tail.length ? ' · ' + tail.join(' · ') : ''} in ${(ms / 1000).toFixed(1)}s`,
+					title: zh("Consolidation swept"),
+					body: `${nodes} 个节点${tail.length ? ' · ' + tail.join(' · ') : ''} · 耗时 ${(ms / 1000).toFixed(1)} 秒`,
 					color,
 					dwellMs: 6000,
 				};
@@ -160,8 +161,8 @@ function createToastStore() {
 				const weight = Number(d.weight ?? 0);
 				return {
 					type: event.type,
-					title: 'Bridge discovered',
-					body: `${kind} · weight ${weight.toFixed(2)}`,
+					title: zh("Bridge discovered"),
+					body: `${zh(kind)} · 权重 ${weight.toFixed(2)}`,
 					color,
 					dwellMs: 4500,
 				};
@@ -171,8 +172,8 @@ function createToastStore() {
 				const r = Number(d.new_retention ?? 0);
 				return {
 					type: event.type,
-					title: 'Memory promoted',
-					body: `retention ${(r * 100).toFixed(0)}%`,
+					title: zh("Memory promoted"),
+					body: `保持度 ${(r * 100).toFixed(0)}%`,
 					color,
 					dwellMs: 4500,
 				};
@@ -182,8 +183,8 @@ function createToastStore() {
 				const r = Number(d.new_retention ?? 0);
 				return {
 					type: event.type,
-					title: 'Memory demoted',
-					body: `retention ${(r * 100).toFixed(0)}%`,
+					title: zh("Memory demoted"),
+					body: `保持度 ${(r * 100).toFixed(0)}%`,
 					color,
 					dwellMs: 4500,
 				};
@@ -194,10 +195,10 @@ function createToastStore() {
 				const cascade = Number(d.estimated_cascade ?? 0);
 				return {
 					type: event.type,
-					title: 'Forgetting',
+					title: zh("Forgetting"),
 					body: cascade > 0
-						? `suppression #${count} · Rac1 cascade ~${cascade} neighbors`
-						: `suppression #${count}`,
+						? `第 ${count} 次抑制 · Rac1 级联约影响 ${cascade} 个相邻记忆`
+						: `第 ${count} 次抑制`,
 					color,
 					dwellMs: 5500,
 				};
@@ -207,8 +208,8 @@ function createToastStore() {
 				const remaining = Number(d.remaining_count ?? 0);
 				return {
 					type: event.type,
-					title: 'Recovered',
-					body: remaining > 0 ? `${remaining} suppression${remaining === 1 ? '' : 's'} remain` : 'fully unsuppressed',
+					title: zh("Recovered"),
+					body: remaining > 0 ? `剩余 ${remaining} 层抑制` : '已完全解除抑制',
 					color,
 					dwellMs: 5000,
 				};
@@ -219,8 +220,8 @@ function createToastStore() {
 				const neighbors = Number(d.neighbors_affected ?? 0);
 				return {
 					type: event.type,
-					title: 'Rac1 cascade',
-					body: `${seeds} seed${seeds === 1 ? '' : 's'} · ${neighbors} dendritic spine${neighbors === 1 ? '' : 's'} pruned`,
+					title: zh("Rac1 cascade"),
+					body: `${seeds} 个起点 · 已修剪 ${neighbors} 个树突棘`,
 					color,
 					dwellMs: 6000,
 				};
@@ -229,7 +230,7 @@ function createToastStore() {
 			case 'MemoryDeleted': {
 				return {
 					type: event.type,
-					title: 'Memory deleted',
+					title: zh("Memory deleted"),
 					body: String(d.id ?? '').slice(0, 8),
 					color,
 					dwellMs: 4000,
@@ -310,28 +311,28 @@ export function fireDemoSequence(): void {
 	const demos: Omit<Toast, 'id' | 'createdAt'>[] = [
 		{
 			type: 'DreamCompleted',
-			title: 'Dream consolidated',
+			title: zh("Dream consolidated"),
 			body: 'Replayed 127 memories · 43 new connections · 5 insights in 2.4s',
 			color: EVENT_TYPE_COLORS.DreamCompleted,
 			dwellMs: 7000,
 		},
 		{
 			type: 'ConnectionDiscovered',
-			title: 'Bridge discovered',
+			title: zh("Bridge discovered"),
 			body: 'semantic · weight 0.87',
 			color: EVENT_TYPE_COLORS.ConnectionDiscovered,
 			dwellMs: 4500,
 		},
 		{
 			type: 'MemorySuppressed',
-			title: 'Forgetting',
+			title: zh("Forgetting"),
 			body: 'suppression #2 · Rac1 cascade ~8 neighbors',
 			color: EVENT_TYPE_COLORS.MemorySuppressed,
 			dwellMs: 5500,
 		},
 		{
 			type: 'ConsolidationCompleted',
-			title: 'Consolidation swept',
+			title: zh("Consolidation swept"),
 			body: '892 nodes · 156 decayed · 48 embedded in 1.1s',
 			color: EVENT_TYPE_COLORS.ConsolidationCompleted,
 			dwellMs: 6000,

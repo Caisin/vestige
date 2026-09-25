@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onMount } from 'svelte';
 	import { api } from '$stores/api';
 	import {
@@ -67,7 +68,7 @@
 	const hiddenCount = $derived(split.hiddenCount);
 </script>
 
-<div class="audit-trail space-y-3" aria-label="Audit trail">
+<div class="audit-trail space-y-3" aria-label={zh("Audit trail")}>
 	{#if loading}
 		<div class="space-y-2">
 			{#each Array(5) as _}
@@ -75,11 +76,11 @@
 			{/each}
 		</div>
 	{:else if errored}
-		<p class="text-xs text-decay italic">Audit trail failed to load.</p>
+		<p class="text-xs text-decay italic">{zh("Audit trail failed to load.")}</p>
 	{:else if !memoryId}
-		<p class="text-xs text-muted italic">No memory selected.</p>
+		<p class="text-xs text-muted italic">{zh("No memory selected.")}</p>
 	{:else if events.length === 0}
-		<p class="text-xs text-muted italic">No audit events recorded yet.</p>
+		<p class="text-xs text-muted italic">{zh("No audit events recorded yet.")}</p>
 	{:else}
 		<ol class="relative pl-6 border-l border-synapse/15 space-y-3">
 			{#each visibleEvents as ev, i (ev.timestamp + i)}
@@ -134,13 +135,13 @@
 									<span class="text-muted font-mono text-[10px]">{ev.triggered_by}</span>
 								{/if}
 							</div>
-							<span class="text-[10px] text-muted font-mono" title={new Date(ev.timestamp).toLocaleString()}>
+							<span class="text-[10px] text-muted font-mono" title={new Date(ev.timestamp).toLocaleString('zh-CN')}>
 								{relativeTime(ev.timestamp)}
 							</span>
 						</div>
 						{#if delta}
 							<div class="text-[11px] text-dim font-mono">
-								retention {delta}
+								{zh("retention")} {delta}
 							</div>
 						{/if}
 						{#if ev.reason}
@@ -160,7 +161,7 @@
 				}}
 				class="text-xs text-synapse-glow hover:text-bright transition-colors underline-offset-4 hover:underline"
 			>
-				{showAllOlder ? 'Hide older events' : `Show ${hiddenCount} older event${hiddenCount === 1 ? '' : 's'}…`}
+				{showAllOlder ? zh("Hide older events") : `Show ${hiddenCount} older event$…`}
 			</button>
 		{/if}
 	{/if}

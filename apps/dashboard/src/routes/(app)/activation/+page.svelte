@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { zh } from '$lib/i18n';
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
 	import { page } from '$app/stores';
@@ -88,7 +89,7 @@
 				loading = false;
 			}
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to load seed memories';
+			error = e instanceof Error ? e.message : zh("Failed to load seed memories");
 			loading = false;
 		} finally {
 			seedsLoading = false;
@@ -107,7 +108,7 @@
 			activated = computeActivation(res, fromId);
 			fieldPass?.setCells(buildFieldCells());
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to spread activation';
+			error = e instanceof Error ? e.message : zh("Failed to spread activation");
 			graph = null;
 			activated = [];
 		} finally {
@@ -262,7 +263,7 @@
 </script>
 
 <svelte:head>
-	<title>Spreading Activation · Vestige</title>
+	<title>{zh("Spreading Activation · Vestige")}</title>
 </svelte:head>
 
 <RouteStage
@@ -272,7 +273,7 @@
 	passes={createActivationPasses}
 	{loading}
 	{error}
-	emptyLabel="PICK A SEED THOUGHT TO SPREAD ACTIVATION"
+	emptyLabel={zh("PICK A SEED THOUGHT TO SPREAD ACTIVATION")}
 	onpick={handleRoutePick}
 />
 
@@ -281,13 +282,13 @@
 	<div class="pointer-events-auto">
 		<PageHeader
 			icon="activation"
-			title="Spreading Activation"
-			subtitle="Watch activation spread through the memory graph from a seed thought."
+			title={zh("Spreading Activation")}
+			subtitle={zh("Watch activation spread through the memory graph from a seed thought.")}
 			accent="synapse"
 		>
 			{#if activated.length > 0}
 				<span class="text-dim text-sm tabular-nums inline-flex items-center gap-1.5">
-					<AnimatedNumber value={litCount} /> lit
+					<AnimatedNumber value={litCount} /> {zh("lit")}
 				</span>
 			{/if}
 		</PageHeader>
@@ -299,14 +300,14 @@
 			<div class="flex h-12 w-12 items-center justify-center rounded-xl border border-decay/30 bg-decay/10 text-decay">
 				<Icon name="close" size={22} />
 			</div>
-			<div class="text-sm text-decay">Couldn't spread activation</div>
+			<div class="text-sm text-decay">{zh("Couldn't spread activation")}</div>
 			<div class="max-w-md text-xs text-muted">{error}</div>
 			<button
 				type="button"
 				onclick={reignite}
 				class="mt-2 rounded-lg bg-synapse/20 px-4 py-2 text-xs font-medium text-synapse-glow transition hover:bg-synapse/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-synapse/60"
 			>
-				Retry
+				{zh("Retry")}
 			</button>
 		</div>
 	{:else if loading && activated.length === 0}
@@ -325,19 +326,19 @@
 				<div class="text-2xl text-bright font-bold tabular-nums">
 					<AnimatedNumber value={litCount} />
 				</div>
-				<div class="text-xs text-dim mt-1">memories activated</div>
+				<div class="text-xs text-dim mt-1">{zh("memories activated")}</div>
 			</div>
 			<div use:reveal={{ delay: 60, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="text-2xl font-bold tabular-nums" style="color: #22C7DE">
 					<AnimatedNumber value={edgeCount} />
 				</div>
-				<div class="text-xs text-dim mt-1">edges the signal traveled</div>
+				<div class="text-xs text-dim mt-1">{zh("edges the signal traveled")}</div>
 			</div>
 			<div use:reveal={{ delay: 120, y: 12 }} class="p-4 glass rounded-xl lift">
 				<div class="text-2xl text-bright font-bold tabular-nums">
-					<AnimatedNumber value={reach} /><span class="text-sm text-dim ml-1">hops</span>
+					<AnimatedNumber value={reach} /><span class="text-sm text-dim ml-1">{zh("hops")}</span>
 				</div>
-				<div class="text-xs text-dim mt-1">deepest reach from seed</div>
+				<div class="text-xs text-dim mt-1">{zh("deepest reach from seed")}</div>
 			</div>
 		</div>
 
@@ -346,23 +347,23 @@
 			<Dropdown
 				options={seedOptions}
 				value={seedId}
-				label="Seed thought"
+				label={zh("Seed thought")}
 				icon="activation"
-				placeholder={seedsLoading ? 'Loading memories…' : 'Pick a memory'}
+				placeholder={seedsLoading ? zh("Loading memories…") : zh("Pick a memory")}
 				onChange={onSeedChange}
 			/>
 			<button
 				type="button"
 				onclick={reignite}
 				disabled={!seedId || loading}
-				title={!seedId ? 'Pick a seed memory first' : loading ? 'Spreading…' : 'Re-fire the spread'}
+				title={!seedId ? zh("Pick a seed memory first") : loading ? zh("Spreading…") : zh("Re-fire the spread")}
 				class="inline-flex items-center gap-2 rounded-xl bg-synapse/20 px-4 py-2.5 text-sm font-medium text-synapse-glow transition hover:bg-synapse/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-synapse/60 disabled:cursor-not-allowed disabled:opacity-40"
 			>
 				<Icon name="sparkle" size={15} draw />
-				{loading ? 'Spreading…' : 'Spread activation'}
+				{loading ? zh("Spreading…") : zh("Spread activation")}
 			</button>
 			{#if !seedId && !seedsLoading}
-				<span class="text-xs text-muted">No memories yet — add one to seed a spread.</span>
+				<span class="text-xs text-muted">{zh("No memories yet — add one to seed a spread.")}</span>
 			{/if}
 		</div>
 
@@ -373,11 +374,11 @@
 					<Icon name="activation" size={26} draw />
 				</div>
 				<div class="text-sm font-medium text-bright">
-					{seedMemory ? 'This seed has no connected memories yet.' : 'Pick a seed thought to spread activation.'}
+					{seedMemory ? zh("This seed has no connected memories yet.") : zh("Pick a seed thought to spread activation.")}
 				</div>
 				<div class="max-w-sm text-xs text-muted">
-					Activation fans out across the memory graph. Choose a seed above, then hit
-					<span class="text-synapse-glow">Spread activation</span> to see which memories light up.
+					{zh("Activation fans out across the memory graph. Choose a seed above, then hit")}
+					<span class="text-synapse-glow">{zh("Spread activation")}</span> {zh("to see which memories light up.")}
 				</div>
 			</div>
 		{:else}
@@ -386,7 +387,7 @@
 				<!-- Activated set readout -->
 				<div class="glass-panel rounded-2xl p-3 space-y-1.5 max-h-[560px] overflow-y-auto">
 					<div class="flex items-center justify-between px-1 pb-2 sticky top-0 bg-deep/60 backdrop-blur-sm z-10">
-						<span class="text-xs text-dim uppercase tracking-wider">Activated set</span>
+						<span class="text-xs text-dim uppercase tracking-wider">{zh("Activated set")}</span>
 						<span class="text-xs text-muted tabular-nums"><AnimatedNumber value={litCount} /></span>
 					</div>
 					{#each activated as a, i (a.node.id)}
@@ -406,9 +407,9 @@
 									style="background: {isSeed ? '#22C7DE' : strengthColor(a.strength)}"
 								></span>
 								{#if isSeed}
-									<span class="text-[10px] uppercase tracking-wider text-[#22C7DE]">Seed</span>
+									<span class="text-[10px] uppercase tracking-wider text-[#22C7DE]">{zh("Seed")}</span>
 								{:else}
-									<span class="text-[10px] uppercase tracking-wider text-muted">{a.hops} hop{a.hops === 1 ? '' : 's'}</span>
+									<span class="text-[10px] uppercase tracking-wider text-muted">{a.hops} {zh("hop")}</span>
 								{/if}
 								<span class="ml-auto text-[11px] tabular-nums text-dim">
 									{(a.strength * 100).toFixed(0)}%
@@ -430,31 +431,31 @@
 				<aside use:reveal={{ delay: 120, y: 16 }} class="glass rounded-2xl p-4 space-y-3 self-start">
 					{#if selected}
 						<div class="flex items-center justify-between gap-2 border-b border-subtle/20 pb-2">
-							<span class="text-[10px] uppercase tracking-[0.18em] text-synapse-glow">Activated memory</span>
+							<span class="text-[10px] uppercase tracking-[0.18em] text-synapse-glow">{zh("Activated memory")}</span>
 							<button
 								type="button"
 								onclick={() => (selectedId = null)}
 								class="rounded-lg border border-subtle/30 px-2.5 py-1 text-[11px] text-muted transition hover:border-synapse/40 hover:text-synapse-glow"
 							>
-								Clear
+								{zh("Clear")}
 							</button>
 						</div>
 						<p class="text-sm text-text leading-relaxed">{selected.node.label}</p>
 						<div class="grid grid-cols-2 gap-2 pt-1">
 							<div class="rounded-lg bg-white/[0.03] p-2.5">
-								<div class="text-[10px] uppercase tracking-wider text-muted">activation</div>
+								<div class="text-[10px] uppercase tracking-wider text-muted">{zh("activation")}</div>
 								<div class="mt-0.5 font-mono text-lg" style="color: #22C7DE">{(selected.strength * 100).toFixed(0)}%</div>
 							</div>
 							<div class="rounded-lg bg-white/[0.03] p-2.5">
-								<div class="text-[10px] uppercase tracking-wider text-muted">distance</div>
-								<div class="mt-0.5 font-mono text-lg text-bright">{selected.hops} hop{selected.hops === 1 ? '' : 's'}</div>
+								<div class="text-[10px] uppercase tracking-wider text-muted">{zh("distance")}</div>
+								<div class="mt-0.5 font-mono text-lg text-bright">{selected.hops} {zh("hop")}</div>
 							</div>
 							<div class="rounded-lg bg-white/[0.03] p-2.5">
-								<div class="text-[10px] uppercase tracking-wider text-muted">retention</div>
+								<div class="text-[10px] uppercase tracking-wider text-muted">{zh("retention")}</div>
 								<div class="mt-0.5 font-mono text-lg text-bright">{(clamp01(selected.node.retention) * 100).toFixed(0)}%</div>
 							</div>
 							<div class="rounded-lg bg-white/[0.03] p-2.5">
-								<div class="text-[10px] uppercase tracking-wider text-muted">type</div>
+								<div class="text-[10px] uppercase tracking-wider text-muted">{zh("type")}</div>
 								<div class="mt-0.5 font-mono text-sm text-dim truncate">{selected.node.type || '—'}</div>
 							</div>
 						</div>
@@ -468,22 +469,20 @@
 					{:else}
 						<div class="flex items-center gap-2 border-b border-subtle/20 pb-2">
 							<Icon name="sparkle" size={15} />
-							<span class="text-[10px] uppercase tracking-[0.18em] text-dim">What you're seeing</span>
+							<span class="text-[10px] uppercase tracking-[0.18em] text-dim">{zh("What you're seeing")}</span>
 						</div>
 						<p class="text-xs text-muted leading-relaxed">
-							Each lit dot is a memory the seed reached. Brightness and strength fall off with every
-							hop across the graph — the seed sits at
-							<span class="text-[#22C7DE]">100%</span>, its neighbors dimmer, distant memories faintest.
-							Click any dot or row to inspect it.
+							{zh("Each lit dot is a memory the seed reached. Brightness and strength fall off with every hop across the graph — the seed sits at")}
+							<span class="text-[#22C7DE]">100%</span>{zh(", its neighbors dimmer, distant memories faintest. Click any dot or row to inspect it.")}
 						</p>
 						{#if seedMemory}
 							<div class="rounded-lg bg-white/[0.03] p-3">
-								<div class="text-[10px] uppercase tracking-wider text-muted mb-1">Current seed</div>
+								<div class="text-[10px] uppercase tracking-wider text-muted mb-1">{zh("Current seed")}</div>
 								<p class="text-xs text-text leading-relaxed">{preview(seedMemory.content, 160)}</p>
 							</div>
 						{/if}
 						<div class="rounded-lg bg-white/[0.03] p-3">
-							<div class="text-[10px] uppercase tracking-wider text-muted">peak neighbor strength</div>
+							<div class="text-[10px] uppercase tracking-wider text-muted">{zh("peak neighbor strength")}</div>
 							<div class="mt-0.5 font-mono text-lg" style="color: #22C7DE">{(peakStrength * 100).toFixed(0)}%</div>
 						</div>
 					{/if}
