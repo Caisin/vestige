@@ -100,6 +100,7 @@ pub struct Access {
 }
 pub struct Hub {
     pub config: Config,
+    local_mcp: bool,
     pub provider: provider::Provider,
     pub(super) db: Mutex<rusqlite::Connection>,
     pub(super) key: [u8; 32],
@@ -149,9 +150,14 @@ impl Hub {
             tx.commit()?;
         }
 
+        let local_mcp = config.local_mcp
+            || std::env::var("VESTIGE_LOCAL_MCP_MODE")
+                .map(|value| matches!(value.as_str(), "1" | "true" | "yes" | "on"))
+                .unwrap_or(false);
         Ok(Arc::new(Self {
             provider: provider::Provider::new(config.clone())?,
             config,
+            local_mcp,
             db: Mutex::new(db),
             key,
             root,

@@ -3,6 +3,7 @@
 #[cfg(target_os = "macos")]
 mod snapshot;
 
+use serde::Serialize;
 use std::{
     collections::BTreeMap,
     fs,
@@ -12,13 +13,165 @@ use std::{
     time::{Duration, Instant},
 };
 use tauri::{
-    Manager, WebviewUrl, WebviewWindowBuilder,
+    Manager, State, WebviewUrl, WebviewWindowBuilder,
     menu::{Menu, MenuItem, PredefinedMenuItem, Submenu},
     tray::TrayIconBuilder,
 };
 
 #[derive(Default)]
 struct Service(Mutex<Option<Child>>);
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct LocalMcpStatus {
+    running: bool,
+    owned_by_app: bool,
+    pid: Option<u32>,
+    dashboard_url: String,
+    mcp_url: String,
+    data_dir: String,
+    config_file: String,
+    service_log: String,
+    health: Option<serde_json::Value>,
+    config: BTreeMap<String, String>,
+}
+
+fn port(environment: &BTreeMap<String, String>, key: &str, default: u16) -> u16 {
+    environment
+        .get(key)
+        .and_then(|value| value.parse().ok())
+        .unwrap_or(default)
+}
+
+fn local_mcp_status(service: &Service) -> Result<LocalMcpStatus, String> {
+    let environment = service_environment()?;
+    let dashboard_port = port(&environment, "VESTIGE_DASHBOARD_PORT", 3927);
+    let mcp_port = port(&environment, "VESTIGE_HTTP_PORT", 3928);
+    let dashboard_url = format!("http://127.0.0.1:{dashboard_port}");
+    let mcp_url = format!("http://127.0.0.1:{mcp_port}/mcp");
+    let client = reqwest::blocking::Client::builder()
+        .no_proxy()
+        .timeout(Duration::from_secs(2))
+        .build()
+        .map_err(|error| error.to_string())?;
+    let health = client
+        .get(format!("{dashboard_url}/api/health"))
+        .send()
+        .ok()
+        .filter(|response| response.status().is_success())
+        .and_then(|response| response.json::<serde_json::Value>().ok());
+    let (owned_by_app, pid) = service
+        .0
+        .lock()
+        .map_err(|_| "服务状态锁错误")?
+        .as_ref()
+        .map(|child| (true, Some(child.id())))
+        .unwrap_or((false, None));
+    let data = data_dir()?;
+    let mut display_config = BTreeMap::new();
+    for key in [
+        "VESTIGE_DATA_DIR",
+        "VESTIGE_DASHBOARD_PORT",
+        "VESTIGE_HTTP_PORT",
+        "VESTIGE_HTTP_BIND",
+        "VESTIGE_DASHBOARD_ENABLED",
+        "VESTIGE_HTTP_ENABLED",
+        "VESTIGE_AUTH_CONFIG",
+        "VESTIGE_QWEN_DEVICE",
+        "VESTIGE_RERANKER_MODEL",
+    ] {
+        if let Some(value) = environment.get(key) {
+            display_config.insert(key.to_string(), value.clone());
+        }
+    }
+    let auth_file = display_config
+        .get("VESTIGE_AUTH_CONFIG")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| data.join("auth.json"));
+    if let Ok(bytes) = fs::read(&auth_file) {
+        if let Ok(value) = serde_json::from_slice::<serde_json::Value>(&bytes) {
+            for (key, output_key) in [
+                ("public_origin", "AUTH_PUBLIC_ORIGIN"),
+                ("kx_api", "AUTH_KX_API"),
+            ] {
+                if let Some(value) = value.get(key).and_then(|value| value.as_str()) {
+                    display_config.insert(output_key.to_string(), value.to_string());
+                }
+            }
+            display_config.insert(
+                "AUTH_KX_CONFIGURED".into(),
+                if value.get("kx_api").is_some() {
+                    "是"
+                } else {
+                    "否"
+                }
+                .into(),
+            );
+            display_config.insert(
+                "AUTH_OAUTH_CONFIGURED".into(),
+                if value.get("oauth").is_some() {
+                    "是"
+                } else {
+                    "否"
+                }
+                .into(),
+            );
+            // Never return client_secret or upstream credentials to the webview.
+        }
+    }
+    Ok(LocalMcpStatus {
+        running: health.is_some(),
+        owned_by_app,
+        pid,
+        dashboard_url,
+        mcp_url,
+        data_dir: data.to_string_lossy().into_owned(),
+        config_file: auth_file.to_string_lossy().into_owned(),
+        service_log: data
+            .join("desktop-service.log")
+            .to_string_lossy()
+            .into_owned(),
+        health,
+        config: display_config,
+    })
+}
+
+#[tauri::command]
+async fn local_mcp_status_command(
+    service: State<'_, Arc<Service>>,
+) -> Result<LocalMcpStatus, String> {
+    let service = service.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || local_mcp_status(&service))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
+async fn local_mcp_start_command(
+    app: tauri::AppHandle,
+    service: State<'_, Arc<Service>>,
+) -> Result<LocalMcpStatus, String> {
+    let service = service.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        connect(&app, &service)?;
+        local_mcp_status(&service)
+    })
+    .await
+    .map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
+async fn local_mcp_stop_command(
+    service: State<'_, Arc<Service>>,
+) -> Result<LocalMcpStatus, String> {
+    let service = service.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        stop_owned(&service);
+        local_mcp_status(&service)
+    })
+    .await
+    .map_err(|error| error.to_string())?
+}
 
 fn show(app: &tauri::AppHandle) {
     #[cfg(target_os = "macos")]
@@ -39,14 +192,32 @@ fn data_dir() -> Result<PathBuf, String> {
 // Login redirects stay in this WebView so the state-binding cookie survives.
 // Remote pages still receive no Tauri IPC capabilities.
 fn login_origins(settings: &BTreeMap<String, String>) -> Vec<String> {
-    let path = settings.get("VESTIGE_AUTH_CONFIG").map(PathBuf::from)
+    let path = settings
+        .get("VESTIGE_AUTH_CONFIG")
+        .map(PathBuf::from)
         .or_else(|| data_dir().ok().map(|p| p.join("auth.json")));
-    let config = path.and_then(|p| fs::read(p).ok()).and_then(|b| serde_json::from_slice::<serde_json::Value>(&b).ok());
-    let Some(config) = config else { return vec![]; };
-    let mut origins = vec!["https://login.dingtalk.com".to_string(), "https://oapi.dingtalk.com".to_string(), "https://passport.dingtalk.com".to_string()];
-    for value in [config.get("kx_api"), config.get("oauth").and_then(|o| o.get("authorize_url"))].into_iter().flatten() {
+    let config = path
+        .and_then(|p| fs::read(p).ok())
+        .and_then(|b| serde_json::from_slice::<serde_json::Value>(&b).ok());
+    let Some(config) = config else {
+        return vec![];
+    };
+    let mut origins = vec![
+        "https://login.dingtalk.com".to_string(),
+        "https://oapi.dingtalk.com".to_string(),
+        "https://passport.dingtalk.com".to_string(),
+    ];
+    for value in [
+        config.get("kx_api"),
+        config.get("oauth").and_then(|o| o.get("authorize_url")),
+    ]
+    .into_iter()
+    .flatten()
+    {
         if let Some(url) = value.as_str().and_then(|s| tauri::Url::parse(s).ok()) {
-            if url.scheme() == "https" { origins.push(url.origin().ascii_serialization()); }
+            if url.scheme() == "https" {
+                origins.push(url.origin().ascii_serialization());
+            }
         }
     }
     origins
@@ -98,7 +269,15 @@ fn service_environment() -> Result<BTreeMap<String, String>, String> {
             }
         }
     }
-    for key in ["HOME", "PATH", "TMPDIR", "LANG", "USER", "LOGNAME", "VESTIGE_AUTH_CONFIG"] {
+    for key in [
+        "HOME",
+        "PATH",
+        "TMPDIR",
+        "LANG",
+        "USER",
+        "LOGNAME",
+        "VESTIGE_AUTH_CONFIG",
+    ] {
         if let Ok(value) = std::env::var(key) {
             values.insert(key.into(), value);
         }
@@ -107,6 +286,9 @@ fn service_environment() -> Result<BTreeMap<String, String>, String> {
         ("VESTIGE_DASHBOARD_ENABLED", "1"),
         ("VESTIGE_HTTP_ENABLED", "1"),
         ("VESTIGE_HTTP_BIND", "127.0.0.1"),
+        // The desktop login session authorizes only the loopback MCP bridge;
+        // remote listeners continue to require explicit Agent credentials.
+        ("VESTIGE_LOCAL_MCP_MODE", "1"),
         ("VESTIGE_AUTO_CONSOLIDATE_MERGE", "0"),
         ("RUST_LOG", "info"),
         ("TOKENIZERS_PARALLELISM", "false"),
@@ -228,13 +410,21 @@ fn main() {
     let service = Arc::new(Service::default());
     let setup_service = service.clone();
     let app = tauri::Builder::default()
+        .manage(service.clone())
+        .invoke_handler(tauri::generate_handler![
+            local_mcp_status_command,
+            local_mcp_start_command,
+            local_mcp_stop_command,
+        ])
         .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
             if args.iter().any(|arg| arg == "--quit") {
                 app.exit(0);
             } else if args.iter().any(|arg| arg == "--close-window") {
                 if let Some(window) = app.get_webview_window("main") {
                     eprintln!("Desktop close-window command received");
-                    if let Err(error) = window.close() { eprintln!("Window close failed: {error}"); }
+                    if let Err(error) = window.close() {
+                        eprintln!("Window close failed: {error}");
+                    }
                 }
             } else {
                 #[cfg(target_os = "macos")]
@@ -273,7 +463,11 @@ fn main() {
                             || url.origin().ascii_serialization() == "http://tauri.localhost"
                             || url.origin().ascii_serialization() == origin
                             || identity_origins.contains(&url.origin().ascii_serialization())
-                        || (url.scheme() == "blob" && url.path().strip_prefix(&origin).is_some_and(|suffix| suffix.starts_with('/')))
+                            || (url.scheme() == "blob"
+                                && url
+                                    .path()
+                                    .strip_prefix(&origin)
+                                    .is_some_and(|suffix| suffix.starts_with('/')))
                         {
                             return true;
                         }
@@ -299,27 +493,54 @@ fn main() {
                     // instead of re-entering that mutex on the event thread.
                     let window = hidden.clone();
                     std::thread::spawn(move || {
-                        if let Err(error) = window.hide() { eprintln!("Window hide failed: {error}"); }
-                        eprintln!("Desktop window visibility after close: {:?}", window.is_visible());
+                        if let Err(error) = window.hide() {
+                            eprintln!("Window hide failed: {error}");
+                        }
+                        eprintln!(
+                            "Desktop window visibility after close: {:?}",
+                            window.is_visible()
+                        );
                     });
                 }
             });
-            let application_menu = Submenu::with_items(app, "Vestige", true, &[
-                &PredefinedMenuItem::about(app, Some("关于编剧工作台"), None)?,
-                &PredefinedMenuItem::separator(app)?,
-                &PredefinedMenuItem::hide(app, Some("隐藏工作台"))?,
-                &PredefinedMenuItem::quit(app, Some("退出应用"))?,
-            ])?;
-            let edit_menu = Submenu::with_items(app, "编辑", true, &[
-                &PredefinedMenuItem::undo(app, Some("撤销"))?, &PredefinedMenuItem::redo(app, Some("重做"))?,
-                &PredefinedMenuItem::separator(app)?, &PredefinedMenuItem::cut(app, Some("剪切"))?,
-                &PredefinedMenuItem::copy(app, Some("复制"))?, &PredefinedMenuItem::paste(app, Some("粘贴"))?,
-                &PredefinedMenuItem::select_all(app, Some("全选"))?,
-            ])?;
-            let window_menu = Submenu::with_items(app, "窗口", true, &[
-                &PredefinedMenuItem::minimize(app, Some("最小化"))?, &PredefinedMenuItem::close_window(app, Some("关闭窗口"))?,
-            ])?;
-            app.set_menu(Menu::with_items(app, &[&application_menu, &edit_menu, &window_menu])?)?;
+            let application_menu = Submenu::with_items(
+                app,
+                "Vestige",
+                true,
+                &[
+                    &PredefinedMenuItem::about(app, Some("关于编剧工作台"), None)?,
+                    &PredefinedMenuItem::separator(app)?,
+                    &PredefinedMenuItem::hide(app, Some("隐藏工作台"))?,
+                    &PredefinedMenuItem::quit(app, Some("退出应用"))?,
+                ],
+            )?;
+            let edit_menu = Submenu::with_items(
+                app,
+                "编辑",
+                true,
+                &[
+                    &PredefinedMenuItem::undo(app, Some("撤销"))?,
+                    &PredefinedMenuItem::redo(app, Some("重做"))?,
+                    &PredefinedMenuItem::separator(app)?,
+                    &PredefinedMenuItem::cut(app, Some("剪切"))?,
+                    &PredefinedMenuItem::copy(app, Some("复制"))?,
+                    &PredefinedMenuItem::paste(app, Some("粘贴"))?,
+                    &PredefinedMenuItem::select_all(app, Some("全选"))?,
+                ],
+            )?;
+            let window_menu = Submenu::with_items(
+                app,
+                "窗口",
+                true,
+                &[
+                    &PredefinedMenuItem::minimize(app, Some("最小化"))?,
+                    &PredefinedMenuItem::close_window(app, Some("关闭窗口"))?,
+                ],
+            )?;
+            app.set_menu(Menu::with_items(
+                app,
+                &[&application_menu, &edit_menu, &window_menu],
+            )?)?;
             let open = MenuItem::with_id(app, "open", "打开编剧工作台", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "退出应用", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&open, &quit])?;
@@ -373,7 +594,13 @@ fn main() {
     app.run(move |app, event| match event {
         tauri::RunEvent::Exit => stop_owned(&service),
         #[cfg(target_os = "macos")]
-        tauri::RunEvent::Reopen { has_visible_windows, .. } => { eprintln!("Desktop reopen event, visible={has_visible_windows}"); show(app); },
+        tauri::RunEvent::Reopen {
+            has_visible_windows,
+            ..
+        } => {
+            eprintln!("Desktop reopen event, visible={has_visible_windows}");
+            show(app);
+        }
         _ => {}
     });
 }

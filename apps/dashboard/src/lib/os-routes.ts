@@ -49,6 +49,7 @@ export interface OsRoute {
 
 // ── The registry — all 20 customer organs (order = canonical display order) ──
 export const OS_ROUTES: OsRoute[] = [
+    { href: '/local-service', label: '本地 MCP 服务', purpose: '查看、启动和停止 Tauri 随包提供的本地 MCP 服务。', group: 'System', icon: 'settings', stage: 'dom', visibility: 'dock', ready: true },
     { href: '/account', label: '账户与空间', purpose: '管理私人记忆、共享成员和 Agent 凭据。', group: 'System', icon: 'settings', stage: 'dom', visibility: 'dock', ready: true },
     { href: '/writer', label: '编剧工作台', purpose: '从作品证据提炼方法，通过对话调校角色，与 Agent 完成原创剧本。', group: 'Primary', shortcut: 'W', icon: 'reasoning', stage: 'dom', visibility: 'dock', ready: true },
 	// PRIMARY — the spine of the product, in the persistent dock.

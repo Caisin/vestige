@@ -5,6 +5,67 @@ use rusqlite::{OptionalExtension, params};
 use serde_json::{Value, json};
 
 impl Hub {
+    pub fn local_mode(&self) -> bool {
+        self.local_mcp
+    }
+
+    /// Bind the current browser login to the loopback MCP bridge. The bridge
+    /// has no bearer token by design; it is only reachable on localhost and
+    /// only while this expiring, server-validated browser session exists.
+    pub fn bind_local(&self, grant: &Grant) -> Result<()> {
+        if !self.local_mode() {
+            return Ok(());
+        }
+        self.db(|c| {
+            c.execute(
+                "INSERT INTO local_bindings(singleton,credential,updated) VALUES(1,?1,?2)
+                 ON CONFLICT(singleton) DO UPDATE SET credential=excluded.credential, updated=excluded.updated",
+                params![grant.credential, now()],
+            )?;
+            Ok(())
+        })
+    }
+
+    pub fn unbind_local(&self, credential: &str) -> Result<()> {
+        self.db(|c| {
+            c.execute(
+                "DELETE FROM local_bindings WHERE singleton=1 AND credential=?1",
+                [credential],
+            )?;
+            Ok(())
+        })
+    }
+
+    /// Resolve the currently logged-in browser identity for a local Agent.
+    /// No token is accepted from the request. Membership, expiry, and the
+    /// selected workspace are checked again for every MCP request.
+    pub async fn local_grant(&self) -> Result<Grant> {
+        let grant = self.db(|c| {
+            c.query_row(
+                "SELECT t.id,t.user_id,t.workspace,m.role,t.permission,t.kind
+                 FROM local_bindings b JOIN credentials t ON t.id=b.credential
+                 JOIN members m ON m.workspace=t.workspace AND m.user_id=t.user_id
+                 WHERE b.singleton=1 AND t.kind='session' AND t.expires>?1",
+                [now()],
+                |r| {
+                    let role: String = r.get(3)?;
+                    let permission: String = r.get(4)?;
+                    Ok(Grant {
+                        credential: r.get(0)?,
+                        user: r.get(1)?,
+                        workspace: r.get(2)?,
+                        role: lesser(&role, &permission).into(),
+                        kind: r.get(5)?,
+                    })
+                },
+            )
+            .optional()?
+            .ok_or_else(|| Error::unauthorized("请先在本地客户端登录"))
+        })?;
+        self.check(&grant)?;
+        Ok(grant)
+    }
+
     pub fn db<T>(&self, f: impl FnOnce(&mut rusqlite::Connection) -> Result<T>) -> Result<T> {
         let mut connection = self.db.lock().map_err(|_| Error::internal())?;
         f(&mut connection)

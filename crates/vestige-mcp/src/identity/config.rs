@@ -7,6 +7,8 @@ use url::Url;
 pub struct Config {
     pub public_origin: String,
     pub kx_api: String,
+    #[serde(default)]
+    pub local_mcp: bool,
     #[serde(default = "default_app")]
     pub kx_app_id: String,
     #[serde(default)]

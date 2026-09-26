@@ -27,13 +27,20 @@ async fn identity(h: &Hub, headers: &HeaderMap) -> Result<super::Grant> {
     if headers.contains_key("origin") {
         csrf(h, headers)?;
     }
-    let token = headers
+    let Some(token) = headers
         .get("authorization")
         .and_then(|s| s.to_str().ok())
         .and_then(|s| s.split_once(' '))
         .filter(|(s, _)| s.eq_ignore_ascii_case("bearer"))
         .map(|(_, s)| s)
-        .ok_or_else(|| Error::unauthorized("请使用个人空间 Agent 凭据"))?;
+    else {
+        if h.local_mode() {
+            return h.local_grant().await;
+        }
+        return Err(Error::unauthorized(
+            "请先在本地客户端登录，或使用个人空间 Agent 凭据",
+        ));
+    };
     h.authenticate(token, "agent").await
 }
 pub async fn post(

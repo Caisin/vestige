@@ -12,6 +12,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@tauri-apps/api": "^2.11.1",
     "mediabunny": "^1.55.5",
     "three": "^0.172.0"
   },

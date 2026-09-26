@@ -69,6 +69,7 @@ impl Fixture {
         let config = Config {
             public_origin: ORIGIN.into(),
             kx_api: upstream,
+            local_mcp: false,
             kx_app_id: "admin".into(),
             legacy_owner_subject: None,
             oauth: None,
@@ -848,6 +849,45 @@ async fn websocket_is_scoped_and_closes_on_logout() {
     .await
     .expect("revoked WebSocket must close");
     task.abort();
+}
+
+#[tokio::test]
+async fn local_loopback_mcp_uses_logged_in_session_without_bearer_token() {
+    let f = Fixture::new().await;
+    let mut config = f.hub.config.clone();
+    config.local_mcp = true;
+    let hub = Hub::new(config, f.hub.legacy.clone()).unwrap();
+    let token = hub
+        .new_session(
+            provider::Identity {
+                issuer: hub.config.kx_api.clone(),
+                subject: "alice".into(),
+                name: "alice".into(),
+            },
+            "kx",
+            "test-only:alice",
+            now() + 3600,
+        )
+        .unwrap();
+    let grant = hub.authenticate(&token, "session").await.unwrap();
+    hub.bind_local(&grant).unwrap();
+    let app = router(hub);
+    let request = Request::builder()
+        .method("POST")
+        .uri("/mcp")
+        .header("accept", "application/json, text/event-stream")
+        .header("content-type", "application/json")
+        .body(Body::from(
+            serde_json::json!({
+                "jsonrpc": "2.0", "id": 1, "method": "initialize",
+                "params": {"protocolVersion": crate::protocol::types::MCP_VERSION, "capabilities": {}, "clientInfo": {"name": "local-agent", "version": "1"}}
+            })
+            .to_string(),
+        ))
+        .unwrap();
+    let response = app.oneshot(request).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert!(response.headers().get("mcp-session-id").is_some());
 }
 
 #[tokio::test]

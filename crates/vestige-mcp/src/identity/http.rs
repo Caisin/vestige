@@ -83,6 +83,7 @@ async fn configuration(State(h): State<Arc<Hub>>) -> Json<Value> {
 }
 async fn me(State(h): State<Arc<Hub>>, headers: HeaderMap) -> Result<Json<Value>> {
     let (g, _) = browser(&h, &headers).await?;
+    h.bind_local(&g)?;
     Ok(Json(h.me(&g)?))
 }
 async fn account(
@@ -94,6 +95,13 @@ async fn account(
     let (g, _) = browser(&h, &headers).await?;
     h.check(&g)?;
     let mut r = Json(h.account_action(&g, &a)?).into_response();
+    if a["action"] == "logout" {
+        h.unbind_local(&g.credential)?;
+    } else if a["action"] == "switch" {
+        // Keep the same authenticated browser session bound while its active
+        // workspace changes atomically in the account action above.
+        h.bind_local(&g)?;
+    }
     if a["action"] == "logout" {
         r.headers_mut().insert(
             header::SET_COOKIE,
